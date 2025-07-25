@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { getConsultantById } from '@/lib/data';
@@ -12,8 +13,9 @@ import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { useState } from 'react';
 import SkillsDisplay from '@/components/skills-display';
 
-export default function ConsultantPage({ params }: { params: { id: string } }) {
-  const consultant = getConsultantById(params.id);
+// This is a new component that contains the original client-side logic
+function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consultant }) {
+  const [consultant, setConsultant] = useState(initialConsultant);
   const [skills, setSkills] = useState(consultant?.skills || []);
   const [workflow, setWorkflow] = useState(consultant?.workflow);
 
@@ -30,6 +32,8 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
         };
         setWorkflow(updatedWorkflow);
     }
+     // Also update the resumeStatus on the consultant object
+    setConsultant(prev => prev ? { ...prev, resumeStatus: 'Updated' } : null);
   };
 
   return (
@@ -92,4 +96,15 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
       </div>
     </div>
   );
+}
+
+
+export default function ConsultantPage({ params }: { params: { id: string } }) {
+  const consultant = getConsultantById(params.id);
+  
+  if (!consultant) {
+    notFound();
+  }
+
+  return <ConsultantDashboard initialConsultant={consultant} />;
 }
