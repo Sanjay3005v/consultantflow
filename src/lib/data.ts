@@ -1,13 +1,19 @@
 import type { Consultant } from './types';
 
-export const consultants: Consultant[] = [
+// NOTE: In a real application, this data would be fetched from a database
+// and mutations would be handled by API calls.
+export let consultants: Consultant[] = [
   {
     id: '1',
     name: 'Alice Johnson',
     department: 'Technology',
     status: 'On Bench',
     resumeStatus: 'Pending',
-    attendance: { completed: 8, missed: 2 },
+    attendance: [
+      { date: '2024-07-01', status: 'Present' },
+      { date: '2024-07-08', status: 'Present' },
+      { date: '2024-07-15', status: 'Absent' },
+    ],
     opportunities: 3,
     training: 'In Progress',
     skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
@@ -24,7 +30,11 @@ export const consultants: Consultant[] = [
     department: 'Finance',
     status: 'On Project',
     resumeStatus: 'Updated',
-    attendance: { completed: 10, missed: 0 },
+    attendance: [
+        { date: '2024-07-01', status: 'Present' },
+        { date: '2024-07-08', status: 'Present' },
+        { date: '2024-07-15', status: 'Present' },
+    ],
     opportunities: 5,
     training: 'Completed',
     skills: ['Python', 'Data Analysis', 'SQL', 'Tableau'],
@@ -41,7 +51,11 @@ export const consultants: Consultant[] = [
     department: 'Healthcare',
     status: 'On Bench',
     resumeStatus: 'Updated',
-    attendance: { completed: 9, missed: 1 },
+    attendance: [
+        { date: '2024-07-01', status: 'Present' },
+        { date: '2024-07-08', status: 'Present' },
+        { date: '2024-07-15', status: 'Absent' },
+    ],
     opportunities: 2,
     training: 'Not Started',
     skills: ['HL7', 'FHIR', 'Project Management', 'HIPAA'],
@@ -58,7 +72,11 @@ export const consultants: Consultant[] = [
     department: 'Technology',
     status: 'On Project',
     resumeStatus: 'Updated',
-    attendance: { completed: 10, missed: 0 },
+    attendance: [
+        { date: '2024-07-01', status: 'Present' },
+        { date: '2024-07-08', status: 'Present' },
+        { date: '2024-07-15', status: 'Present' },
+    ],
     opportunities: 6,
     training: 'Completed',
     skills: ['Java', 'Spring Boot', 'Microservices', 'GCP'],
@@ -75,7 +93,11 @@ export const consultants: Consultant[] = [
     department: 'Retail',
     status: 'On Bench',
     resumeStatus: 'Pending',
-    attendance: { completed: 7, missed: 3 },
+    attendance: [
+        { date: '2024-07-01', status: 'Present' },
+        { date: '2024-07-08', status: 'Absent' },
+        { date: '2024-07-15', status: 'Absent' },
+    ],
     opportunities: 1,
     training: 'In Progress',
     skills: ['Salesforce', 'CRM', 'Agile', 'Scrum Master'],
@@ -95,3 +117,20 @@ export const getConsultantById = (id: string): Consultant | undefined => {
 export const getAllConsultants = (): Consultant[] => {
     return consultants;
 }
+
+export const updateConsultantAttendance = (id: string, date: string, status: 'Present' | 'Absent') => {
+    consultants = consultants.map(c => {
+        if (c.id === id) {
+            const newAttendance = [...c.attendance];
+            const recordIndex = newAttendance.findIndex(a => a.date === date);
+            if (recordIndex > -1) {
+                newAttendance[recordIndex].status = status;
+            } else {
+                newAttendance.push({ date, status });
+            }
+            return { ...c, attendance: newAttendance };
+        }
+        return c;
+    });
+    return consultants.find(c => c.id === id);
+};

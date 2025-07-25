@@ -10,13 +10,13 @@ import WorkflowTracker from '@/components/workflow-tracker';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import SkillsDisplay from '@/components/skills-display';
 
 // This is a new component that contains the original client-side logic
 function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consultant }) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  const [skills, setSkills] = useState<SkillAnalysis[]>([]);
+  const [skills, setSkills] = useState<SkillAnalysis[] | string[]>([]);
   const [workflow, setWorkflow] = useState(consultant?.workflow);
 
   if (!consultant) {
@@ -25,6 +25,7 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
 
   const handleSkillsUpdate = (newSkills: SkillAnalysis[]) => {
     setSkills(newSkills);
+    setConsultant(prev => prev ? { ...prev, resumeStatus: 'Updated', skills: newSkills } : null);
     if(workflow){
         const updatedWorkflow = {
             ...workflow,
@@ -32,9 +33,18 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
         };
         setWorkflow(updatedWorkflow);
     }
-     // Also update the resumeStatus on the consultant object
-    setConsultant(prev => prev ? { ...prev, resumeStatus: 'Updated' } : null);
   };
+
+  const attendanceSummary = useMemo(() => {
+    const completed = consultant.attendance.filter(a => a.status === 'Present').length;
+    const total = consultant.attendance.length;
+    return {
+        completed,
+        total,
+        missed: total-completed,
+    }
+  }, [consultant.attendance]);
+
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -55,7 +65,7 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
         />
         <StatusCard
           title="Attendance"
-          value={`${consultant.attendance.completed} / ${consultant.attendance.completed + consultant.attendance.missed} Meetings`}
+          value={`${attendanceSummary.completed} / ${attendanceSummary.total} Meetings`}
           description="Completed / Total"
           icon={CalendarCheck}
         />

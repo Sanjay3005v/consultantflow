@@ -4,16 +4,18 @@ export type SkillAnalysis = {
   reasoning: string;
 };
 
+export type AttendanceRecord = {
+  date: string; // YYYY-MM-DD
+  status: 'Present' | 'Absent';
+};
+
 export type Consultant = {
   id: string;
   name: string;
   department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail';
   status: 'On Bench' | 'On Project';
   resumeStatus: 'Updated' | 'Pending';
-  attendance: {
-    completed: number;
-    missed: number;
-  };
+  attendance: AttendanceRecord[];
   opportunities: number;
   training: 'Not Started' | 'In Progress' | 'Completed';
   skills: string[] | SkillAnalysis[];
