@@ -15,6 +15,7 @@ import SkillsDisplay from '@/components/skills-display';
 export default function ConsultantPage({ params }: { params: { id: string } }) {
   const consultant = getConsultantById(params.id);
   const [skills, setSkills] = useState(consultant?.skills || []);
+  const [workflow, setWorkflow] = useState(consultant?.workflow);
 
   if (!consultant) {
     notFound();
@@ -22,11 +23,13 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
 
   const handleSkillsUpdate = (newSkills: string[]) => {
     setSkills(newSkills);
-    const updatedWorkflow = {
-      ...consultant.workflow,
-      resumeUpdated: true,
-    };
-    // In a real app, you would also update the workflow state
+    if(workflow){
+        const updatedWorkflow = {
+            ...workflow,
+            resumeUpdated: true,
+        };
+        setWorkflow(updatedWorkflow);
+    }
   };
 
   return (
@@ -79,7 +82,7 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
                     <CardTitle>Workflow Progress</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <WorkflowTracker workflow={consultant.workflow} />
+                    {workflow && <WorkflowTracker workflow={workflow} />}
                 </CardContent>
             </Card>
             <SkillsDisplay skills={skills} />
