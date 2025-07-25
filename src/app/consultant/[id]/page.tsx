@@ -1,3 +1,6 @@
+
+'use client';
+
 import { getConsultantById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { User, FileText, CalendarCheck, Target, Award } from 'lucide-react';
@@ -5,13 +8,26 @@ import StatusCard from '@/components/status-card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import type { Consultant } from '@/lib/types';
+import { useState } from 'react';
+import SkillsDisplay from '@/components/skills-display';
 
 export default function ConsultantPage({ params }: { params: { id: string } }) {
   const consultant = getConsultantById(params.id);
+  const [skills, setSkills] = useState(consultant?.skills || []);
 
   if (!consultant) {
     notFound();
   }
+
+  const handleSkillsUpdate = (newSkills: string[]) => {
+    setSkills(newSkills);
+    const updatedWorkflow = {
+      ...consultant.workflow,
+      resumeUpdated: true,
+    };
+    // In a real app, you would also update the workflow state
+  };
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -57,16 +73,19 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Workflow Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <WorkflowTracker workflow={consultant.workflow} />
-            </CardContent>
-        </Card>
+        <div className="lg:col-span-2 space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Workflow Progress</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <WorkflowTracker workflow={consultant.workflow} />
+                </CardContent>
+            </Card>
+            <SkillsDisplay skills={skills} />
+        </div>
         
-        <ResumeAnalyzer consultant={consultant} />
+        <ResumeAnalyzer consultant={consultant} onAnalysisComplete={handleSkillsUpdate} />
       </div>
     </div>
   );

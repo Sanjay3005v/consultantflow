@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -22,9 +23,10 @@ const formSchema = z.object({
 
 type ResumeAnalyzerProps = {
   consultant: Consultant;
+  onAnalysisComplete: (skills: string[]) => void;
 };
 
-export default function ResumeAnalyzer({ consultant }: ResumeAnalyzerProps) {
+export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: ResumeAnalyzerProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ skillVectors: string[]; historyLog: string } | null>(null);
   const { toast } = useToast();
@@ -46,6 +48,7 @@ export default function ResumeAnalyzer({ consultant }: ResumeAnalyzerProps) {
       try {
         const analysisResult = await analyzeResume({ resumeDataUri: dataUri });
         setResult(analysisResult);
+        onAnalysisComplete(analysisResult.skillVectors);
         toast({
           title: 'Analysis Complete',
           description: 'Your resume has been successfully analyzed.',
