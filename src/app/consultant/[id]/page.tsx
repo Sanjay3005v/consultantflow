@@ -16,7 +16,7 @@ import SkillsDisplay from '@/components/skills-display';
 // This is a new component that contains the original client-side logic
 function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consultant }) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  const [skills, setSkills] = useState(consultant?.skills || []);
+  const [skills, setSkills] = useState<SkillAnalysis[]>([]);
   const [workflow, setWorkflow] = useState(consultant?.workflow);
 
   if (!consultant) {
