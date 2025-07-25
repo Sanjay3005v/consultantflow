@@ -170,7 +170,7 @@ export default function AdminConsole({ consultants }: AdminConsoleProps) {
                       </TableCell>
                       <TableCell>
                          <Badge
-                            className={consultant.resumeStatus === 'Updated' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+                            className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
                             variant="outline"
                           >
                           {consultant.resumeStatus}

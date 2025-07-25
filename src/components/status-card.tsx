@@ -13,9 +13,9 @@ type StatusCardProps = {
 export default function StatusCard({ title, value, description, icon: Icon, variant = 'default' }: StatusCardProps) {
   const variantClasses = {
     default: 'text-muted-foreground',
-    success: 'text-green-500',
-    warning: 'text-yellow-500',
-    info: 'text-blue-500',
+    success: 'text-green-400',
+    warning: 'text-yellow-400',
+    info: 'text-blue-400',
   };
 
   return (

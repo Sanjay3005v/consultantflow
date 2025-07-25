@@ -41,7 +41,7 @@ export default function WorkflowTracker({ workflow }: WorkflowTrackerProps) {
           return (
             <li key={step.id} className="flex items-center space-x-3">
               {isCompleted ? (
-                <CheckCircle className="h-6 w-6 text-green-500" />
+                <CheckCircle className="h-6 w-6 text-green-400" />
               ) : (
                 <Circle className="h-6 w-6 text-muted-foreground" />
               )}
