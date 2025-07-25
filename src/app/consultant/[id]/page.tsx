@@ -8,7 +8,7 @@ import StatusCard from '@/components/status-card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import type { Consultant } from '@/lib/types';
+import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { useState } from 'react';
 import SkillsDisplay from '@/components/skills-display';
 
@@ -21,7 +21,7 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
-  const handleSkillsUpdate = (newSkills: string[]) => {
+  const handleSkillsUpdate = (newSkills: SkillAnalysis[]) => {
     setSkills(newSkills);
     if(workflow){
         const updatedWorkflow = {
@@ -45,9 +45,9 @@ export default function ConsultantPage({ params }: { params: { id: string } }) {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <StatusCard
           title="Resume Status"
-          value={consultant.resumeStatus}
+          value={workflow?.resumeUpdated ? 'Updated' : 'Pending'}
           icon={FileText}
-          variant={consultant.resumeStatus === 'Updated' ? 'success' : 'warning'}
+          variant={workflow?.resumeUpdated ? 'success' : 'warning'}
         />
         <StatusCard
           title="Attendance"

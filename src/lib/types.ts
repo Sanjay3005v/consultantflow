@@ -1,3 +1,9 @@
+export type SkillAnalysis = {
+  skill: string;
+  rating: number;
+  reasoning: string;
+};
+
 export type Consultant = {
   id: string;
   name: string;
@@ -10,7 +16,7 @@ export type Consultant = {
   };
   opportunities: number;
   training: 'Not Started' | 'In Progress' | 'Completed';
-  skills: string[];
+  skills: string[] | SkillAnalysis[];
   workflow: {
     resumeUpdated: boolean;
     attendanceReported: boolean;

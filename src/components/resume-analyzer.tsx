@@ -12,10 +12,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeResume } from '@/app/actions';
-import { Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import type { Consultant } from '@/lib/types';
+import { Upload, Loader2, CheckCircle, BrainCircuit } from 'lucide-react';
+import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
+import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from './ui/table';
+import { Progress } from './ui/progress';
 
 const formSchema = z.object({
   resume: z.custom<FileList>().refine((files) => files?.length === 1, 'Resume is required.'),
@@ -23,12 +25,16 @@ const formSchema = z.object({
 
 type ResumeAnalyzerProps = {
   consultant: Consultant;
-  onAnalysisComplete: (skills: string[]) => void;
+  onAnalysisComplete: (skills: SkillAnalysis[]) => void;
 };
 
 export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: ResumeAnalyzerProps) {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ skillVectors: string[]; historyLog: string } | null>(null);
+  const [result, setResult] = useState<{
+    skillAnalysis: SkillAnalysis[];
+    feedback: string;
+    historyLog: string;
+  } | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -48,10 +54,10 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
       try {
         const analysisResult = await analyzeResume({ resumeDataUri: dataUri });
         setResult(analysisResult);
-        onAnalysisComplete(analysisResult.skillVectors);
+        onAnalysisComplete(analysisResult.skillAnalysis);
         toast({
           title: 'Analysis Complete',
-          description: 'Your resume has been successfully analyzed.',
+          description: 'The resume has been successfully analyzed.',
           variant: 'default',
         });
       } catch (error) {
@@ -80,7 +86,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
     <Card>
       <CardHeader>
         <CardTitle>AI Resume Analyzer</CardTitle>
-        <CardDescription>Upload your latest resume to update your skill profile.</CardDescription>
+        <CardDescription>Upload a resume to extract, rate, and get feedback on skills.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -122,18 +128,53 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertTitle>Analysis Successful!</AlertTitle>
-              <AlertDescription>
-                <div className="space-y-2 mt-2">
-                  <h4 className="font-semibold">Extracted Skills:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {result.skillVectors.map((skill, index) => (
-                      <Badge key={index} variant="secondary">{skill}</Badge>
-                    ))}
+              <AlertDescription asChild>
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <h4 className="font-semibold">Skill Analysis:</h4>
+                    <Card className="mt-2">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-1/3">Skill</TableHead>
+                            <TableHead className="w-1/3">Proficiency</TableHead>
+                            <TableHead>Reasoning</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {result.skillAnalysis.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{item.skill}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Progress value={item.rating * 10} className="w-20" />
+                                  <span className="text-muted-foreground">{item.rating}/10</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{item.reasoning}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Card>
                   </div>
-                  <h4 className="font-semibold pt-2">History Log:</h4>
-                  <ScrollArea className="h-24 w-full rounded-md border p-2">
-                    <p className="text-sm">{result.historyLog}</p>
-                  </ScrollArea>
+
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <BrainCircuit className="w-4 h-4" />
+                      Training Feedback
+                    </h4>
+                     <Card className="mt-2 p-3">
+                       <p className="text-sm">{result.feedback}</p>
+                     </Card>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold pt-2">History Log:</h4>
+                    <ScrollArea className="h-24 w-full rounded-md border p-2">
+                      <p className="text-sm">{result.historyLog}</p>
+                    </ScrollArea>
+                  </div>
                 </div>
               </AlertDescription>
             </Alert>

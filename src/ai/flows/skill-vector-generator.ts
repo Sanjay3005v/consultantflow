@@ -21,10 +21,28 @@ const GenerateSkillVectorsInputSchema = z.object({
 export type GenerateSkillVectorsInput = z.infer<typeof GenerateSkillVectorsInputSchema>;
 
 const GenerateSkillVectorsOutputSchema = z.object({
-  skillVectors: z.array(z.string()).describe('An array of skills extracted from the resume.'),
+  skillAnalysis: z
+    .array(
+      z.object({
+        skill: z.string().describe('The name of the skill.'),
+        rating: z
+          .number()
+          .describe(
+            "A rating from 1 to 10 on the consultant's proficiency in this skill, based on the resume."
+          ),
+        reasoning: z.string().describe('A brief explanation for the assigned rating.'),
+      })
+    )
+    .describe('An array of skills extracted from the resume with proficiency ratings.'),
+  feedback: z
+    .string()
+    .describe(
+      'Actionable feedback for the consultant, highlighting areas for improvement and suggesting training.'
+    ),
   historyLog: z.string().describe('A summary of the skills extracted and the analysis process.'),
 });
 export type GenerateSkillVectorsOutput = z.infer<typeof GenerateSkillVectorsOutputSchema>;
+
 
 export async function generateSkillVectors(input: GenerateSkillVectorsInput): Promise<GenerateSkillVectorsOutput> {
   return generateSkillVectorsFlow(input);
@@ -34,17 +52,19 @@ const prompt = ai.definePrompt({
   name: 'skillVectorPrompt',
   input: {schema: GenerateSkillVectorsInputSchema},
   output: {schema: GenerateSkillVectorsOutputSchema},
-  prompt: `You are an expert in resume analysis and skill extraction.
+  prompt: `You are an expert in resume analysis, skill extraction, and talent development.
 
-You will analyze the provided resume and extract the key skills of the consultant.  The skills should be technology focused if possible.
+You will analyze the provided resume and perform the following tasks:
+1. Extract the key technology-focused skills.
+2. For each skill, provide a proficiency rating on a scale of 1 to 10. The rating should be based on the depth and recency of experience mentioned in the resume. For example, a skill mentioned in multiple recent projects with detailed descriptions should get a higher rating than a skill listed in a "skills" section without context.
+3. Provide a brief reasoning for each rating.
+4. Generate actionable feedback for the consultant. This feedback should identify the weakest areas and suggest specific training or projects to improve those skills. This feedback will be passed to a training agent.
+5. Create a concise history log summarizing the analysis process.
 
 Resume:
 {{media url=resumeDataUri}}
 
-Based on the resume, extract skills and generate a history log.
-
-Output the skills as an array of strings and a summary of the analysis process as the history log.
-`,
+Provide the output in the structured format defined by the output schema.`,
 });
 
 const generateSkillVectorsFlow = ai.defineFlow(
