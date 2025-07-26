@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -29,6 +30,8 @@ export type AttendanceMonitorOutput = z.infer<typeof AttendanceMonitorOutputSche
 
 export async function attendanceMonitor(input: AttendanceMonitorInput): Promise<AttendanceMonitorOutput> {
   const {output} = await attendanceMonitorFlow(input);
+  // The flow returns a raw string, but the action expects an object.
+  // We need to wrap it correctly here.
   return { feedbackMessage: output! };
 }
 
