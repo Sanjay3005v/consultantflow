@@ -138,7 +138,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
                         Training Feedback
                         </h4>
                         <Card className="mt-2 p-3">
-                        <p className="text-sm">{result.feedback}</p>
+                        <p className="text-sm whitespace-pre-wrap">{result.feedback}</p>
                         </Card>
                     </div>
                     
