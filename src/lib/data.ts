@@ -124,13 +124,14 @@ const initialConsultants: Consultant[] = [
 ];
 
 // This is the correct way to ensure the in-memory "database" persists in development.
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'production') {
+  global.consultants = initialConsultants;
+} else {
   if (!global.consultants) {
     global.consultants = initialConsultants;
   }
-} else {
-   global.consultants = initialConsultants;
 }
+
 
 export const getConsultantById = (id: string): Consultant | undefined => {
     // Use == to handle potential type mismatch between string and number (e.g., '6' == 6)
