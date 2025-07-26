@@ -1,22 +1,25 @@
 
 'use client';
 
-import React from 'react';
-import { getConsultantById } from '@/lib/data';
+import React, { useEffect, useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { User, FileText, CalendarCheck, Target, Award } from 'lucide-react';
-import StatusCard from '@/components/status-card';
-import WorkflowTracker from '@/components/workflow-tracker';
+import { Award, CalendarCheck, FileText, Target, User } from 'lucide-react';
 import ResumeAnalyzer from '@/components/resume-analyzer';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import type { Consultant } from '@/lib/types';
-import { useState, useMemo, useEffect } from 'react';
 import SkillsDisplay from '@/components/skills-display';
+import StatusCard from '@/components/status-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import WorkflowTracker from '@/components/workflow-tracker';
+import { getConsultantById } from '@/lib/data';
+import type { Consultant } from '@/lib/types';
 
 // This is a new component that contains the original client-side logic
-function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consultant }) {
+function ConsultantDashboard({
+  initialConsultant,
+}: {
+  initialConsultant: Consultant;
+}) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  
+
   useEffect(() => {
     // Keep local state in sync if the initial consultant prop changes
     // This can happen if the parent component re-renders with new data.
@@ -27,34 +30,37 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
     notFound();
   }
 
-  const handleSkillsUpdate = (updatedConsultant: Consultant) => {
+  const handleAnalysisComplete = (updatedConsultant: Consultant) => {
     // The server action now returns the updated consultant object.
     // We use this to update our state directly.
     setConsultant(updatedConsultant);
   };
-  
+
   const attendanceSummary = useMemo(() => {
-    const completed = consultant.attendance.filter(a => a.status === 'Present').length;
+    const completed = consultant.attendance.filter(
+      (a) => a.status === 'Present'
+    ).length;
     const total = consultant.attendance.length;
     return {
-        completed,
-        total,
-        missed: total-completed,
-    }
+      completed,
+      total,
+      missed: total - completed,
+    };
   }, [consultant.attendance]);
-
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <div className="flex items-center space-x-4 mb-8">
-        <User className="w-12 h-12 text-primary" />
+      <div className="mb-8 flex items-center space-x-4">
+        <User className="h-12 w-12 text-primary" />
         <div>
           <h1 className="text-3xl font-bold">{consultant.name}</h1>
-          <p className="text-muted-foreground">{consultant.department} Department</p>
+          <p className="text-muted-foreground">
+            {consultant.department} Department
+          </p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatusCard
           title="Resume Status"
           value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
@@ -88,31 +94,37 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Workflow Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {consultant.workflow && <WorkflowTracker workflow={consultant.workflow} />}
-                </CardContent>
-            </Card>
-            <SkillsDisplay skills={consultant.skills} />
+        <div className="space-y-8 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Workflow Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {consultant.workflow && (
+                <WorkflowTracker workflow={consultant.workflow} />
+              )}
+            </CardContent>
+          </Card>
+          <SkillsDisplay skills={consultant.skills} />
         </div>
-        
-        <ResumeAnalyzer consultant={consultant} onAnalysisComplete={handleSkillsUpdate} />
+
+        <ResumeAnalyzer
+          consultant={consultant}
+          onAnalysisComplete={handleAnalysisComplete}
+        />
       </div>
     </div>
   );
 }
 
-
+// This is the server component that fetches the data
 export default function ConsultantPage({ params }: { params: { id: string } }) {
-  const consultant = getConsultantById(React.use(params).id);
-  
+  const consultant = getConsultantById(params.id);
+
   if (!consultant) {
     notFound();
   }
 
+  // It then renders the client component with the fetched data
   return <ConsultantDashboard initialConsultant={consultant} />;
 }
