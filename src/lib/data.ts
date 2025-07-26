@@ -134,9 +134,14 @@ const initialConsultants: Consultant[] = [
 ];
 
 // This is the correct way to ensure the in-memory "database" persists in development.
-if (!global.consultants) {
+if (process.env.NODE_ENV === 'production') {
   global.consultants = initialConsultants;
+} else {
+  if (!global.consultants) {
+    global.consultants = initialConsultants;
+  }
 }
+
 const consultants = global.consultants;
 
 
