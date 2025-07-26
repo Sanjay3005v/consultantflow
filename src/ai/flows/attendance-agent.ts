@@ -85,7 +85,7 @@ INPUT:
 - Paid Leaves Taken: {{paidLeavesTaken}}
 - Remaining Paid Leaves: {{paidLeavesRemaining}}
 
-Begin the output directly with the feedback message.
+OUTPUT:
 `,
 });
 
