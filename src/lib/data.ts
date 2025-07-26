@@ -117,8 +117,7 @@ export let consultants: Consultant[] = [
 ];
 
 export const getConsultantById = (id: string): Consultant | undefined => {
-    // eslint-disable-next-line eqeqeq
-    return consultants.find(c => c.id == id);
+    return consultants.find(c => c.id === id);
 }
 
 export const getAllConsultants = (): Consultant[] => {

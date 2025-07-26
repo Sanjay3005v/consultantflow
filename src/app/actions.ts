@@ -47,7 +47,6 @@ export async function createNewConsultant(data: { name: string; department: 'Tec
         const newConsultant = createConsultant({
             name: data.name,
             department: data.department,
-            // These are default values for a new consultant
             status: 'On Bench',
             training: 'Not Started',
         });
