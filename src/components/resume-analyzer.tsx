@@ -131,7 +131,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
                 <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Analysis Successful!</AlertTitle>
-                <AlertDescription asChild>
+                <AlertDescription>
                     <div className="space-y-4 mt-2">
                     <div>
                         <h4 className="font-semibold flex items-center gap-2">
