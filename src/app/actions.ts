@@ -43,31 +43,24 @@ export async function analyzeResume(
 }
 
 export async function createNewConsultant(data: Omit<Consultant, 'id' | 'attendance' | 'opportunities' | 'workflow' | 'resumeStatus' | 'skills' | 'status' | 'training'>): Promise<Consultant> {
-    try {
-        const newConsultant = createConsultant({
-            name: data.name,
-            email: data.email,
-            password: data.password,
-            department: data.department,
-            status: 'On Bench',
-            training: 'Not Started',
-        });
-        return newConsultant;
-    } catch (error) {
-        console.error('Error creating new consultant:', error);
-        throw new Error('Failed to create new consultant.');
+    if (findConsultantByEmail(data.email)) {
+        throw new Error('A consultant with this email already exists.');
     }
+    const newConsultant = createConsultant({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        department: data.department,
+        status: 'On Bench',
+        training: 'Not Started',
+    });
+    return newConsultant;
 }
 
 export async function verifyConsultantCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ consultantId: string } | { error: string }> {
-    try {
-        const consultant = findConsultantByEmail(credentials.email);
-        if (consultant && consultant.password === credentials.password) {
-            return { consultantId: consultant.id };
-        }
-        return { error: 'Invalid credentials' };
-    } catch (error) {
-        console.error('Error verifying credentials:', error);
-        return { error: 'An unexpected error occurred.' };
+    const consultant = findConsultantByEmail(credentials.email);
+    if (consultant && consultant.password === credentials.password) {
+        return { consultantId: consultant.id };
     }
+    return { error: 'Invalid credentials' };
 }

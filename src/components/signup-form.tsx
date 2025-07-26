@@ -61,10 +61,10 @@ export default function SignUpForm() {
             });
             // Redirect to the new consultant's dashboard
             router.push(`/consultant/${newConsultant.id}`);
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: 'Uh oh! Something went wrong.',
-                description: 'There was a problem creating your account.',
+                description: error.message || 'There was a problem creating your account.',
                 variant: 'destructive',
             });
         } finally {
