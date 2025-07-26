@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { analyzeResume } from '@/app/actions';
+import { analyzeResume, type AnalyzeResumeResult } from '@/app/actions';
 import { Upload, Loader2, CheckCircle, BrainCircuit } from 'lucide-react';
 import type { Consultant } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
@@ -24,7 +24,7 @@ const formSchema = z.object({
 
 type ResumeAnalyzerProps = {
   consultant: Consultant;
-  onAnalysisComplete: (updatedConsultant: Consultant) => void;
+  onAnalysisComplete: (result: AnalyzeResumeResult) => void;
 };
 
 export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: ResumeAnalyzerProps) {
@@ -52,9 +52,9 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
     reader.onload = async () => {
       const dataUri = reader.result as string;
       try {
-        const { consultant: updatedConsultant, feedback, historyLog } = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
-        setResult({ feedback, historyLog });
-        onAnalysisComplete(updatedConsultant);
+        const analysisResult = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
+        setResult({ feedback: analysisResult.feedback, historyLog: analysisResult.historyLog });
+        onAnalysisComplete(analysisResult);
         setIsOpen(true);
         toast({
           title: 'Analysis Complete',
