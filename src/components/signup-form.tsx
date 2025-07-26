@@ -32,7 +32,7 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
+  password: z.string().min(4, { message: 'Password must be at least 4 characters.' }),
   department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
 });
 

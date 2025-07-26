@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { ArrowRight, User, Shield, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ export default function Home() {
           <CardHeader>
             <div className="flex items-center gap-4">
               <User className="w-8 h-8 text-accent" />
-              <CardTitle className="text-2xl">Consultant View</CardTitle>
+              <CardTitle className="text-2xl">Consultant Login</CardTitle>
             </div>
             <CardDescription className="pt-2">
               Access your personal dashboard, update your resume, and track your progress.
@@ -28,8 +29,8 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/consultant/1">
-                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+              <Link href="/login">
+                Login to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>

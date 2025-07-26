@@ -1,3 +1,4 @@
+
 export type SkillAnalysis = {
   skill: string;
   rating: number;
@@ -12,6 +13,8 @@ export type AttendanceRecord = {
 export type Consultant = {
   id: string;
   name: string;
+  email: string;
+  password: string;
   department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail';
   status: 'On Bench' | 'On Project';
   resumeStatus: 'Updated' | 'Pending';

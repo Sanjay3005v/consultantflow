@@ -14,6 +14,8 @@ const initialConsultants: Consultant[] = [
   {
     id: '1',
     name: 'Alice Johnson',
+    email: 'alice@example.com',
+    password: 'password123',
     department: 'Technology',
     status: 'On Bench',
     resumeStatus: 'Pending',
@@ -35,6 +37,8 @@ const initialConsultants: Consultant[] = [
   {
     id: '2',
     name: 'Bob Williams',
+    email: 'bob@example.com',
+    password: 'password123',
     department: 'Finance',
     status: 'On Project',
     resumeStatus: 'Updated',
@@ -61,6 +65,8 @@ const initialConsultants: Consultant[] = [
   {
     id: '3',
     name: 'Charlie Brown',
+    email: 'charlie@example.com',
+    password: 'password123',
     department: 'Healthcare',
     status: 'On Bench',
     resumeStatus: 'Updated',
@@ -82,6 +88,8 @@ const initialConsultants: Consultant[] = [
   {
     id: '4',
     name: 'Diana Prince',
+    email: 'diana@example.com',
+    password: 'password123',
     department: 'Technology',
     status: 'On Project',
     resumeStatus: 'Updated',
@@ -103,6 +111,8 @@ const initialConsultants: Consultant[] = [
   {
     id: '5',
     name: 'Ethan Hunt',
+    email: 'ethan@example.com',
+    password: 'password123',
     department: 'Retail',
     status: 'On Bench',
     resumeStatus: 'Pending',
@@ -124,7 +134,10 @@ const initialConsultants: Consultant[] = [
 ];
 
 // This is the correct way to ensure the in-memory "database" persists in development.
-const consultants = global.consultants || (global.consultants = initialConsultants);
+if (!global.consultants) {
+  global.consultants = initialConsultants;
+}
+const consultants = global.consultants;
 
 
 export const getConsultantById = (id: string): Consultant | undefined => {
@@ -134,6 +147,10 @@ export const getConsultantById = (id: string): Consultant | undefined => {
 
 export const getAllConsultants = (): Consultant[] => {
     return consultants;
+}
+
+export const findConsultantByEmail = (email: string): Consultant | undefined => {
+    return consultants.find(c => c.email.toLowerCase() === email.toLowerCase());
 }
 
 export const updateConsultantAttendance = (id: string, date: string, status: 'Present' | 'Absent') => {
