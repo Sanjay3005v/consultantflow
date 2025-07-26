@@ -3,7 +3,14 @@ import type { Consultant, SkillAnalysis } from './types';
 
 // NOTE: In a real application, this data would be fetched from a database
 // and mutations would be handled by API calls.
-export let consultants: Consultant[] = [
+
+// Use a global variable to hold the data in development to prevent it from being
+// reset on hot-reloads. In production, this will behave like a normal module-level variable.
+declare global {
+  var consultants: Consultant[];
+}
+
+const initialConsultants: Consultant[] = [
   {
     id: '1',
     name: 'Alice Johnson',
@@ -116,18 +123,26 @@ export let consultants: Consultant[] = [
   },
 ];
 
+if (process.env.NODE_ENV === 'production') {
+  global.consultants = initialConsultants;
+} else {
+  if (!global.consultants) {
+    global.consultants = initialConsultants;
+  }
+}
+
 export const getConsultantById = (id: string): Consultant | undefined => {
     // Use == to handle potential type mismatch between string and number
-    return consultants.find(c => c.id == id);
+    return global.consultants.find(c => c.id == id);
 }
 
 export const getAllConsultants = (): Consultant[] => {
-    return consultants;
+    return global.consultants;
 }
 
 export const updateConsultantAttendance = (id: string, date: string, status: 'Present' | 'Absent') => {
     let updatedConsultant: Consultant | undefined;
-    consultants = consultants.map(c => {
+    global.consultants = global.consultants.map(c => {
         if (c.id === id) {
             const newAttendance = [...c.attendance];
             const recordIndex = newAttendance.findIndex(a => a.date === date);
@@ -146,7 +161,7 @@ export const updateConsultantAttendance = (id: string, date: string, status: 'Pr
 
 export const updateConsultantSkills = (id: string, skills: SkillAnalysis[]) => {
   let updatedConsultant: Consultant | undefined;
-  consultants = consultants.map(c => {
+  global.consultants = global.consultants.map(c => {
     if (c.id === id) {
       updatedConsultant = {
         ...c,
@@ -164,7 +179,7 @@ export const updateConsultantSkills = (id: string, skills: SkillAnalysis[]) => {
 export const createConsultant = (data: Omit<Consultant, 'id' | 'attendance' | 'opportunities' | 'workflow' | 'resumeStatus' | 'skills'>) => {
     const newConsultant: Consultant = {
         ...data,
-        id: (consultants.length + 1).toString(),
+        id: (global.consultants.length + 1).toString(),
         resumeStatus: 'Pending',
         attendance: [],
         opportunities: 0,
@@ -176,6 +191,6 @@ export const createConsultant = (data: Omit<Consultant, 'id' | 'attendance' | 'o
             trainingCompleted: false,
         },
     };
-    consultants.push(newConsultant);
+    global.consultants.push(newConsultant);
     return newConsultant;
 };
