@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeResume } from '@/app/actions';
 import { Upload, Loader2, CheckCircle, BrainCircuit } from 'lucide-react';
-import type { Consultant, SkillAnalysis } from '@/lib/types';
+import type { Consultant } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -52,12 +52,8 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
     reader.onload = async () => {
       const dataUri = reader.result as string;
       try {
-        const updatedConsultant = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
-        setResult(updatedConsultant.skills.length > 0 ? {
-          feedback: (updatedConsultant as any).feedback || 'Feedback generated.', // Placeholder if feedback isn't returned
-          historyLog: (updatedConsultant as any).historyLog || 'Analysis complete.' // Placeholder
-        } : null);
-
+        const { consultant: updatedConsultant, feedback, historyLog } = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
+        setResult({ feedback, historyLog });
         onAnalysisComplete(updatedConsultant);
         setIsOpen(true);
         toast({
