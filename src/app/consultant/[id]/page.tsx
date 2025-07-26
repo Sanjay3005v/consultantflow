@@ -1,7 +1,7 @@
 
-
 'use client';
 
+import React from 'react';
 import { getConsultantById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { User, FileText, CalendarCheck, Target, Award } from 'lucide-react';
@@ -10,28 +10,36 @@ import WorkflowTracker from '@/components/workflow-tracker';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import SkillsDisplay from '@/components/skills-display';
 
 // This is a new component that contains the original client-side logic
 function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consultant }) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  const [skills, setSkills] = useState<SkillAnalysis[] | string[]>([]);
   const [workflow, setWorkflow] = useState(consultant?.workflow);
+
+  useEffect(() => {
+    // This will refresh the consultant data if it changes from the source,
+    // for example, after an analysis is saved.
+    const updatedConsultant = getConsultantById(initialConsultant.id);
+    if(updatedConsultant) {
+        setConsultant(updatedConsultant);
+        setWorkflow(updatedConsultant.workflow);
+    }
+  }, [initialConsultant.id, consultant.resumeStatus]); // Rerun when status changes
 
   if (!consultant) {
     notFound();
   }
 
   const handleSkillsUpdate = (newSkills: SkillAnalysis[]) => {
-    setSkills(newSkills);
-    setConsultant(prev => prev ? { ...prev, resumeStatus: 'Updated', skills: newSkills } : null);
-    if(workflow){
-        const updatedWorkflow = {
-            ...workflow,
-            resumeUpdated: true,
-        };
-        setWorkflow(updatedWorkflow);
+    // We fetch the latest consultant data from our "DB"
+    const updatedConsultant = getConsultantById(consultant.id);
+    if (updatedConsultant) {
+        setConsultant(updatedConsultant);
+        if(updatedConsultant.workflow){
+            setWorkflow(updatedConsultant.workflow);
+        }
     }
   };
 
@@ -99,7 +107,7 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
                     {workflow && <WorkflowTracker workflow={workflow} />}
                 </CardContent>
             </Card>
-            <SkillsDisplay skills={skills} />
+            <SkillsDisplay skills={consultant.skills} />
         </div>
         
         <ResumeAnalyzer consultant={consultant} onAnalysisComplete={handleSkillsUpdate} />
@@ -110,7 +118,7 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
 
 
 export default function ConsultantPage({ params }: { params: { id: string } }) {
-  const consultant = getConsultantById(params.id);
+  const consultant = getConsultantById(React.use(params).id);
   
   if (!consultant) {
     notFound();

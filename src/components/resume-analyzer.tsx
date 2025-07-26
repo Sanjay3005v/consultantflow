@@ -14,11 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { analyzeResume } from '@/app/actions';
 import { Upload, Loader2, CheckCircle, BrainCircuit } from 'lucide-react';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
-import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
-import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from './ui/table';
-import { Progress } from './ui/progress';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 
 
 const formSchema = z.object({
@@ -56,13 +53,13 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
     reader.onload = async () => {
       const dataUri = reader.result as string;
       try {
-        const analysisResult = await analyzeResume({ resumeDataUri: dataUri });
+        const analysisResult = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
         setResult(analysisResult);
         onAnalysisComplete(analysisResult.skillAnalysis);
         setIsOpen(true);
         toast({
           title: 'Analysis Complete',
-          description: 'The resume has been successfully analyzed.',
+          description: 'The resume has been successfully analyzed and saved.',
           variant: 'default',
         });
       } catch (error) {

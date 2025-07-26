@@ -1,14 +1,15 @@
+
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import type { Consultant, AttendanceRecord } from '@/lib/types';
+import React, { useState, useMemo, useEffect } from 'react';
+import type { Consultant, AttendanceRecord, SkillAnalysis } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, TrendingUp, ChevronDown, UserPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +25,24 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { updateConsultantAttendance } from '@/lib/data';
+import { updateConsultantAttendance, createConsultant, getConsultantById } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
+import { Bar, ResponsiveContainer, XAxis, YAxis, BarChart as RechartsBarChart } from 'recharts';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import ResumeAnalyzer from './resume-analyzer';
+import { cn } from '@/lib/utils';
+
+
+const createConsultantSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
+    status: z.enum(['On Bench', 'On Project']),
+    training: z.enum(['Not Started', 'In Progress', 'Completed']),
+});
 
 
 type AdminConsoleProps = {
@@ -39,10 +56,25 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [statusFilter, setStatusFilter] = useState('all');
 
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
+  
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const { toast } = useToast();
+
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const form = useForm<z.infer<typeof createConsultantSchema>>({
+    resolver: zodResolver(createConsultantSchema),
+    defaultValues: {
+        name: '',
+        department: 'Technology',
+        status: 'On Bench',
+        training: 'Not Started',
+    },
+  });
 
   useEffect(() => {
     setConsultants(initialConsultants);
@@ -63,7 +95,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     });
   }, [consultants, searchTerm, departmentFilter, statusFilter]);
 
-  const departments = ['all', ...Array.from(new Set(consultants.map((c) => c.department)))];
+  const departments = ['all', ...Array.from(new Set(initialConsultants.map((c) => c.department)))];
   const statuses = ['all', 'On Bench', 'On Project'];
 
   const generateReport = () => {
@@ -127,6 +159,42 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     return `${present}/${total}`;
   };
 
+  const onCreateSubmit = (values: z.infer<typeof createConsultantSchema>) => {
+    const newConsultant = createConsultant(values);
+    setConsultants(prev => [...prev, newConsultant]);
+    toast({
+        title: 'Consultant Created',
+        description: `Successfully created ${newConsultant.name}.`,
+    });
+    setIsCreateDialogOpen(false);
+    form.reset();
+  };
+
+  const handleOpenAnalyzeDialog = (consultant: Consultant) => {
+    setSelectedConsultant(consultant);
+    setIsAnalyzeDialogOpen(true);
+  };
+
+  const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
+    if (selectedConsultant) {
+      // Re-fetch the consultant from the data source to get the updated skills
+      const updatedConsultant = getConsultantById(selectedConsultant.id);
+      if (updatedConsultant) {
+        setConsultants(prev => prev.map(c => c.id === updatedConsultant.id ? updatedConsultant : c));
+      }
+    }
+    setIsAnalyzeDialogOpen(false);
+  };
+  
+  const hasSkillAnalysis = (consultant: Consultant) => {
+    return Array.isArray(consultant.skills) && consultant.skills.length > 0 && typeof consultant.skills[0] !== 'string';
+  };
+
+  const handleRowToggle = (consultantId: string) => {
+    setExpandedRow(prev => (prev === consultantId ? null : consultantId));
+  };
+
+
   return (
     <div className="space-y-6">
        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -165,22 +233,126 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <CardTitle>Consultant Directory</CardTitle>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>Generate Report</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Consultant Status Report</DialogTitle>
-                  <DialogDescription>
-                    A summary of the currently filtered consultants.
-                  </DialogDescription>
-                </DialogHeader>
-                <pre className="mt-2 w-full rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{generateReport()}</code>
-                </pre>
-              </DialogContent>
-            </Dialog>
+            <div className='flex gap-2'>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                       <Button>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Create Consultant
+                       </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                      <DialogHeader>
+                          <DialogTitle>Create New Consultant</DialogTitle>
+                      </DialogHeader>
+                      <Form {...form}>
+                          <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
+                              <FormField
+                                  control={form.control}
+                                  name="name"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Name</FormLabel>
+                                          <FormControl>
+                                              <Input placeholder="John Doe" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                               <FormField
+                                  control={form.control}
+                                  name="department"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Department</FormLabel>
+                                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a department" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="Technology">Technology</SelectItem>
+                                          <SelectItem value="Healthcare">Healthcare</SelectItem>
+                                          <SelectItem value="Finance">Finance</SelectItem>
+                                          <SelectItem value="Retail">Retail</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="status"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Status</FormLabel>
+                                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a status" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="On Bench">On Bench</SelectItem>
+                                          <SelectItem value="On Project">On Project</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                               <FormField
+                                  control={form.control}
+                                  name="training"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Training</FormLabel>
+                                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select training status" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="Not Started">Not Started</SelectItem>
+                                          <SelectItem value="In Progress">In Progress</SelectItem>
+                                           <SelectItem value="Completed">Completed</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              <DialogFooter>
+                                  <DialogClose asChild>
+                                      <Button variant="outline">Cancel</Button>
+                                  </DialogClose>
+                                  <Button type="submit">Create</Button>
+                              </DialogFooter>
+                          </form>
+                      </Form>
+                  </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>Generate Report</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Consultant Status Report</DialogTitle>
+                    <DialogDescription>
+                      A summary of the currently filtered consultants.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <pre className="mt-2 w-full rounded-md bg-slate-950 p-4">
+                      <code className="text-white">{generateReport()}</code>
+                  </pre>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -217,6 +389,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Status</TableHead>
@@ -228,38 +401,69 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               <TableBody>
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
-                    <TableRow key={consultant.id}>
-                      <TableCell className="font-medium">{consultant.name}</TableCell>
-                      <TableCell>{consultant.department}</TableCell>
-                      <TableCell>
-                        <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
-                          {consultant.status}
-                        </Badge>
-                      </TableCell>
-                       <TableCell>
-                         {getAttendanceSummary(consultant.attendance)}
-                       </TableCell>
-                      <TableCell>
-                         <Badge
-                            className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
-                            variant="outline"
-                          >
-                          {consultant.resumeStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenAttendanceDialog(consultant)}>
-                          <CalendarPlus className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => downloadAttendanceReport(consultant)}>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    <React.Fragment key={consultant.id}>
+                        <TableRow className="cursor-pointer" onClick={() => handleRowToggle(consultant.id)}>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
+                              <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
+                              <span className="sr-only">Toggle details</span>
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium">{consultant.name}</TableCell>
+                          <TableCell>{consultant.department}</TableCell>
+                          <TableCell>
+                            <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
+                              {consultant.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {getAttendanceSummary(consultant.attendance)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                                className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
+                                variant="outline"
+                              >
+                              {consultant.resumeStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className='text-right'>
+                             <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAnalyzeDialog(consultant)}}>
+                               <Brain className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAttendanceDialog(consultant)}}>
+                              <CalendarPlus className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); downloadAttendanceReport(consultant)}}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {hasSkillAnalysis(consultant) && (
+                           <TableRow>
+                               <TableCell colSpan={7}>
+                                   <CollapsibleContent className="w-full">
+                                        <div className="p-4 bg-muted/50 rounded-md">
+                                            <h4 className="font-bold mb-2">Skill Proficiency</h4>
+                                            <div className="h-64">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <RechartsBarChart data={consultant.skills as SkillAnalysis[]}>
+                                                        <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
+                                                        <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                                    </RechartsBarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                   </CollapsibleContent>
+                               </TableCell>
+                           </TableRow>
+                        )}
+                    </React.Fragment>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       No results found.
                     </TableCell>
                   </TableRow>
@@ -315,6 +519,17 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                 </DialogClose>
                 <Button onClick={handleSaveAttendance}>Save</Button>
             </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isAnalyzeDialogOpen} onOpenChange={setIsAnalyzeDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Analyze Resume for {selectedConsultant?.name}</DialogTitle>
+            </DialogHeader>
+            {selectedConsultant && (
+                 <ResumeAnalyzer consultant={selectedConsultant} onAnalysisComplete={handleAnalysisComplete} />
+            )}
         </DialogContent>
       </Dialog>
     </div>

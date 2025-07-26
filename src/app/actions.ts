@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -5,14 +6,22 @@ import {
   type GenerateSkillVectorsInput,
   type GenerateSkillVectorsOutput,
 } from '@/ai/flows/skill-vector-generator';
+import { updateConsultantSkills } from '@/lib/data';
+import type { SkillAnalysis } from '@/lib/types';
+
 
 export async function analyzeResume(
+  consultantId: string,
   input: GenerateSkillVectorsInput
 ): Promise<GenerateSkillVectorsOutput> {
-  // Here you could add logic to save the result to a database,
-  // update the consultant's profile, etc.
   try {
     const result = await generateSkillVectors(input);
+    
+    // Save the analysis result to the "database"
+    if (result.skillAnalysis) {
+        updateConsultantSkills(consultantId, result.skillAnalysis as SkillAnalysis[]);
+    }
+
     return result;
   } catch (error) {
     console.error('Error in analyzeResume server action:', error);
