@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import type { Consultant } from '@/lib/types';
 import type { AnalyzeResumeResult } from '@/app/actions';
+import AttendanceFeedback from './attendance-feedback';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -90,23 +91,28 @@ export default function ConsultantDashboard({
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Workflow Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {consultant.workflow && (
-                <WorkflowTracker workflow={consultant.workflow} />
-              )}
-            </CardContent>
-          </Card>
-          <SkillsDisplay skills={consultant.skills} />
+           <div className="grid gap-8 md:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                    <CardTitle>Workflow Progress</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    {consultant.workflow && (
+                        <WorkflowTracker workflow={consultant.workflow} />
+                    )}
+                    </CardContent>
+                </Card>
+                <AttendanceFeedback consultant={consultant} />
+           </div>
+           <SkillsDisplay skills={consultant.skills} />
         </div>
 
-        <ResumeAnalyzer
-          consultant={consultant}
-          onAnalysisComplete={handleAnalysisComplete}
-        />
+        <div className="space-y-8">
+             <ResumeAnalyzer
+                consultant={consultant}
+                onAnalysisComplete={handleAnalysisComplete}
+                />
+        </div>
       </div>
     </div>
   );

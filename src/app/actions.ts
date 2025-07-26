@@ -6,6 +6,11 @@ import {
   type GenerateSkillVectorsInput,
   type GenerateSkillVectorsOutput,
 } from '@/ai/flows/skill-vector-generator';
+import {
+    attendanceMonitor,
+    type AttendanceMonitorInput,
+    type AttendanceMonitorOutput,
+} from '@/ai/flows/attendance-agent';
 import { updateConsultantSkills, createConsultant, findConsultantByEmail } from '@/lib/data';
 import type { Consultant } from '@/lib/types';
 
@@ -56,4 +61,15 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
         return { consultantId: consultant.id };
     }
     return { error: 'Invalid credentials' };
+}
+
+
+export async function getAttendanceFeedback(input: AttendanceMonitorInput): Promise<AttendanceMonitorOutput> {
+    try {
+        const result = await attendanceMonitor(input);
+        return result;
+    } catch (error) {
+        console.error('Error getting attendance feedback:', error);
+        throw new Error('Failed to get AI-powered attendance feedback.');
+    }
 }
