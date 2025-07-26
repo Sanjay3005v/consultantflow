@@ -16,33 +16,26 @@ import SkillsDisplay from '@/components/skills-display';
 // This is a new component that contains the original client-side logic
 function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consultant }) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  const [workflow, setWorkflow] = useState(consultant?.workflow);
-
+  
   useEffect(() => {
-    // This will refresh the consultant data if it changes from the source,
-    // for example, after an analysis is saved.
-    const updatedConsultant = getConsultantById(initialConsultant.id);
-    if(updatedConsultant) {
-        setConsultant(updatedConsultant);
-        setWorkflow(updatedConsultant.workflow);
-    }
-  }, [initialConsultant.id, consultant.resumeStatus]); // Rerun when status changes
+    // Keep local state in sync if the initial consultant prop changes
+    // This can happen if the parent component re-renders with new data.
+    setConsultant(initialConsultant);
+  }, [initialConsultant]);
 
   if (!consultant) {
     notFound();
   }
 
-  const handleSkillsUpdate = (newSkills: SkillAnalysis[]) => {
-    // We fetch the latest consultant data from our "DB"
+  const handleSkillsUpdate = () => {
+    // Re-fetch the latest consultant data from our "DB" after analysis.
+    // The data is updated on the server, so we need to get the fresh copy.
     const updatedConsultant = getConsultantById(consultant.id);
     if (updatedConsultant) {
-        setConsultant(updatedConsultant);
-        if(updatedConsultant.workflow){
-            setWorkflow(updatedConsultant.workflow);
-        }
+      setConsultant(updatedConsultant);
     }
   };
-
+  
   const attendanceSummary = useMemo(() => {
     const completed = consultant.attendance.filter(a => a.status === 'Present').length;
     const total = consultant.attendance.length;
@@ -67,9 +60,9 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <StatusCard
           title="Resume Status"
-          value={workflow?.resumeUpdated ? 'Updated' : 'Pending'}
+          value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
           icon={FileText}
-          variant={workflow?.resumeUpdated ? 'success' : 'warning'}
+          variant={consultant.workflow?.resumeUpdated ? 'success' : 'warning'}
         />
         <StatusCard
           title="Attendance"
@@ -104,7 +97,7 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
                     <CardTitle>Workflow Progress</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {workflow && <WorkflowTracker workflow={workflow} />}
+                    {consultant.workflow && <WorkflowTracker workflow={consultant.workflow} />}
                 </CardContent>
             </Card>
             <SkillsDisplay skills={consultant.skills} />

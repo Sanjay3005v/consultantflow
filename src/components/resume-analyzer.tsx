@@ -15,7 +15,10 @@ import { analyzeResume } from '@/app/actions';
 import { Upload, Loader2, CheckCircle, BrainCircuit } from 'lucide-react';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 
 
 const formSchema = z.object({
@@ -24,7 +27,7 @@ const formSchema = z.object({
 
 type ResumeAnalyzerProps = {
   consultant: Consultant;
-  onAnalysisComplete: (skills: SkillAnalysis[]) => void;
+  onAnalysisComplete: () => void;
 };
 
 export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: ResumeAnalyzerProps) {
@@ -55,7 +58,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
       try {
         const analysisResult = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
         setResult(analysisResult);
-        onAnalysisComplete(analysisResult.skillAnalysis);
+        onAnalysisComplete();
         setIsOpen(true);
         toast({
           title: 'Analysis Complete',
