@@ -42,7 +42,7 @@ export async function analyzeResume(
   }
 }
 
-export async function createNewConsultant(data: Omit<Consultant, 'id' | 'attendance' | 'opportunities' | 'workflow' | 'resumeStatus' | 'skills' | 'status' | 'training'>): Promise<Consultant> {
+export async function createNewConsultant(data: { name: string; email: string; password: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {
     if (findConsultantByEmail(data.email)) {
         throw new Error('A consultant with this email already exists.');
     }
@@ -51,8 +51,6 @@ export async function createNewConsultant(data: Omit<Consultant, 'id' | 'attenda
         email: data.email,
         password: data.password,
         department: data.department,
-        status: 'On Bench',
-        training: 'Not Started',
     });
     return newConsultant;
 }
