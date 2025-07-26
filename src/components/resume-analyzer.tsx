@@ -16,9 +16,6 @@ import { Upload, Loader2, CheckCircle, BrainCircuit } from 'lucide-react';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Badge } from './ui/badge';
-import { Progress } from './ui/progress';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 
 
 const formSchema = z.object({
@@ -27,13 +24,12 @@ const formSchema = z.object({
 
 type ResumeAnalyzerProps = {
   consultant: Consultant;
-  onAnalysisComplete: () => void;
+  onAnalysisComplete: (updatedConsultant: Consultant) => void;
 };
 
 export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: ResumeAnalyzerProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
-    skillAnalysis: SkillAnalysis[];
     feedback: string;
     historyLog: string;
   } | null>(null);
@@ -56,13 +52,17 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
     reader.onload = async () => {
       const dataUri = reader.result as string;
       try {
-        const analysisResult = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
-        setResult(analysisResult);
-        onAnalysisComplete();
+        const updatedConsultant = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
+        setResult(updatedConsultant.skills.length > 0 ? {
+          feedback: (updatedConsultant as any).feedback || 'Feedback generated.', // Placeholder if feedback isn't returned
+          historyLog: (updatedConsultant as any).historyLog || 'Analysis complete.' // Placeholder
+        } : null);
+
+        onAnalysisComplete(updatedConsultant);
         setIsOpen(true);
         toast({
           title: 'Analysis Complete',
-          description: 'The resume has been successfully analyzed and saved.',
+          description: 'The resume has been successfully analyzed and skills have been updated.',
           variant: 'default',
         });
       } catch (error) {

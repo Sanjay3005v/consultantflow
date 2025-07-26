@@ -9,7 +9,7 @@ import StatusCard from '@/components/status-card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import type { Consultant, SkillAnalysis } from '@/lib/types';
+import type { Consultant } from '@/lib/types';
 import { useState, useMemo, useEffect } from 'react';
 import SkillsDisplay from '@/components/skills-display';
 
@@ -27,13 +27,10 @@ function ConsultantDashboard({ initialConsultant }: { initialConsultant: Consult
     notFound();
   }
 
-  const handleSkillsUpdate = () => {
-    // Re-fetch the latest consultant data from our "DB" after analysis.
-    // The data is updated on the server, so we need to get the fresh copy.
-    const updatedConsultant = getConsultantById(consultant.id);
-    if (updatedConsultant) {
-      setConsultant(updatedConsultant);
-    }
+  const handleSkillsUpdate = (updatedConsultant: Consultant) => {
+    // The server action now returns the updated consultant object.
+    // We use this to update our state directly.
+    setConsultant(updatedConsultant);
   };
   
   const attendanceSummary = useMemo(() => {
