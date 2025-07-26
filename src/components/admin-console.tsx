@@ -25,7 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { updateConsultantAttendance, createConsultant, getConsultantById } from '@/lib/data';
+import { updateConsultantAttendance, createConsultant, getConsultantById, getAllConsultants } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -77,8 +77,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   });
 
   useEffect(() => {
-    setConsultants(initialConsultants);
-  }, [initialConsultants]);
+    // This will refresh the consultant data if it changes from the source,
+    setConsultants(getAllConsultants());
+  }, []);
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter((consultant) => {
@@ -177,11 +178,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
     if (selectedConsultant) {
-      // Re-fetch the consultant from the data source to get the updated skills
-      const updatedConsultant = getConsultantById(selectedConsultant.id);
-      if (updatedConsultant) {
-        setConsultants(prev => prev.map(c => c.id === updatedConsultant.id ? updatedConsultant : c));
-      }
+      // Re-fetch all consultants to get the updated skills
+       setConsultants(getAllConsultants());
     }
     setIsAnalyzeDialogOpen(false);
   };
@@ -401,14 +399,17 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               <TableBody>
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
-                    <React.Fragment key={consultant.id}>
-                        <TableRow className="cursor-pointer" onClick={() => handleRowToggle(consultant.id)}>
-                          <TableCell>
-                            <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
-                              <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
-                              <span className="sr-only">Toggle details</span>
-                            </Button>
-                          </TableCell>
+                    <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
+                      <React.Fragment>
+                        <TableRow className="cursor-pointer">
+                           <TableCell>
+                             <CollapsibleTrigger asChild>
+                               <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
+                                 <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
+                                 <span className="sr-only">Toggle details</span>
+                               </Button>
+                             </CollapsibleTrigger>
+                           </TableCell>
                           <TableCell className="font-medium">{consultant.name}</TableCell>
                           <TableCell>{consultant.department}</TableCell>
                           <TableCell>
@@ -459,7 +460,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                </TableCell>
                            </TableRow>
                         )}
-                    </React.Fragment>
+                      </React.Fragment>
+                    </Collapsible>
                   ))
                 ) : (
                   <TableRow>
