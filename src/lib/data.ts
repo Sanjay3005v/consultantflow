@@ -7,7 +7,7 @@ import type { Consultant, SkillAnalysis } from './types';
 // Use a global variable to hold the data in development to prevent it from being
 // reset on hot-reloads. In production, this will behave like a normal module-level variable.
 declare global {
-  var consultants: Consultant[];
+  var consultants: Consultant[] | undefined;
 }
 
 const initialConsultants: Consultant[] = [
@@ -124,64 +124,61 @@ const initialConsultants: Consultant[] = [
 ];
 
 // This is the correct way to ensure the in-memory "database" persists in development.
-if (process.env.NODE_ENV === 'production') {
-  global.consultants = initialConsultants;
-} else {
-  if (!global.consultants) {
-    global.consultants = initialConsultants;
-  }
-}
+const consultants = global.consultants || (global.consultants = initialConsultants);
 
 
 export const getConsultantById = (id: string): Consultant | undefined => {
     // Use == to handle potential type mismatch between string and number (e.g., '6' == 6)
-    return global.consultants.find(c => c.id == id);
+    return consultants.find(c => c.id == id);
 }
 
 export const getAllConsultants = (): Consultant[] => {
-    return global.consultants;
+    return consultants;
 }
 
 export const updateConsultantAttendance = (id: string, date: string, status: 'Present' | 'Absent') => {
     let updatedConsultant: Consultant | undefined;
-    global.consultants = global.consultants.map(c => {
-        if (c.id === id) {
-            const newAttendance = [...c.attendance];
-            const recordIndex = newAttendance.findIndex(a => a.date === date);
-            if (recordIndex > -1) {
-                newAttendance[recordIndex].status = status;
-            } else {
-                newAttendance.push({ date, status });
-            }
-            updatedConsultant = { ...c, attendance: newAttendance };
-            return updatedConsultant;
-        }
-        return c;
-    });
+    
+    const consultantIndex = consultants.findIndex(c => c.id === id);
+    if (consultantIndex === -1) return undefined;
+
+    const consultant = consultants[consultantIndex];
+    const newAttendance = [...consultant.attendance];
+    const recordIndex = newAttendance.findIndex(a => a.date === date);
+
+    if (recordIndex > -1) {
+        newAttendance[recordIndex].status = status;
+    } else {
+        newAttendance.push({ date, status });
+    }
+    
+    updatedConsultant = { ...consultant, attendance: newAttendance };
+    consultants[consultantIndex] = updatedConsultant;
+
     return updatedConsultant;
 };
 
 export const updateConsultantSkills = (id: string, skills: SkillAnalysis[]) => {
   let updatedConsultant: Consultant | undefined;
-  global.consultants = global.consultants.map(c => {
-    if (c.id === id) {
-      updatedConsultant = {
-        ...c,
-        skills: skills,
-        resumeStatus: 'Updated',
-        workflow: { ...c.workflow, resumeUpdated: true }
-      };
-      return updatedConsultant;
-    }
-    return c;
-  });
+  const consultantIndex = consultants.findIndex(c => c.id === id);
+  if (consultantIndex === -1) return undefined;
+
+  const consultant = consultants[consultantIndex];
+  updatedConsultant = {
+    ...consultant,
+    skills: skills,
+    resumeStatus: 'Updated',
+    workflow: { ...consultant.workflow, resumeUpdated: true }
+  };
+  consultants[consultantIndex] = updatedConsultant;
+  
   return updatedConsultant;
 };
 
 export const createConsultant = (data: Omit<Consultant, 'id' | 'attendance' | 'opportunities' | 'workflow' | 'resumeStatus' | 'skills'>) => {
     const newConsultant: Consultant = {
         ...data,
-        id: (global.consultants.length + 1).toString(),
+        id: (consultants.length + 1).toString(),
         resumeStatus: 'Pending',
         attendance: [],
         opportunities: 0,
@@ -193,6 +190,6 @@ export const createConsultant = (data: Omit<Consultant, 'id' | 'attendance' | 'o
             trainingCompleted: false,
         },
     };
-    global.consultants.push(newConsultant);
+    consultants.push(newConsultant);
     return newConsultant;
 };
