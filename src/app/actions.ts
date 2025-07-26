@@ -46,12 +46,7 @@ export async function createNewConsultant(data: { name: string; email: string; p
     if (findConsultantByEmail(data.email)) {
         throw new Error('A consultant with this email already exists.');
     }
-    const newConsultant = createConsultant({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        department: data.department,
-    });
+    const newConsultant = createConsultant(data);
     return newConsultant;
 }
 
