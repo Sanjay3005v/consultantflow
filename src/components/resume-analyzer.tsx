@@ -137,35 +137,6 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
                 <AlertDescription asChild>
                     <div className="space-y-4 mt-2">
                     <div>
-                        <h4 className="font-semibold">Skill Analysis:</h4>
-                        <Card className="mt-2">
-                        <Table>
-                            <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-1/3">Skill</TableHead>
-                                <TableHead className="w-1/3">Proficiency</TableHead>
-                                <TableHead>Reasoning</TableHead>
-                            </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {result.skillAnalysis.map((item, index) => (
-                                <TableRow key={index}>
-                                <TableCell className="font-medium">{item.skill}</TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
-                                    <Progress value={item.rating * 10} className="w-20" />
-                                    <span className="text-muted-foreground">{item.rating}/10</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{item.reasoning}</TableCell>
-                                </TableRow>
-                            ))}
-                            </TableBody>
-                        </Table>
-                        </Card>
-                    </div>
-
-                    <div>
                         <h4 className="font-semibold flex items-center gap-2">
                         <BrainCircuit className="w-4 h-4" />
                         Training Feedback
