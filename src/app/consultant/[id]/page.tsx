@@ -27,6 +27,8 @@ function ConsultantDashboard({
   }, [initialConsultant]);
 
   if (!consultant) {
+    // This should ideally not be hit if the parent Server Component handles it,
+    // but it's a good safeguard.
     notFound();
   }
 
@@ -116,6 +118,7 @@ function ConsultantDashboard({
     </div>
   );
 }
+
 
 // This is the server component that fetches the data
 export default function ConsultantPage({ params }: { params: { id: string } }) {
