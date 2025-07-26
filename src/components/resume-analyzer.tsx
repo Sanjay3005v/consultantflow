@@ -18,6 +18,8 @@ import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from './ui/table';
 import { Progress } from './ui/progress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 
 const formSchema = z.object({
   resume: z.custom<FileList>().refine((files) => files?.length === 1, 'Resume is required.'),
@@ -35,6 +37,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
     feedback: string;
     historyLog: string;
   } | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -44,6 +47,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     setResult(null);
+    setIsOpen(false);
 
     const file = values.resume[0];
     const reader = new FileReader();
@@ -55,6 +59,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
         const analysisResult = await analyzeResume({ resumeDataUri: dataUri });
         setResult(analysisResult);
         onAnalysisComplete(analysisResult.skillAnalysis);
+        setIsOpen(true);
         toast({
           title: 'Analysis Complete',
           description: 'The resume has been successfully analyzed.',
@@ -124,61 +129,63 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
           </form>
         </Form>
         {result && (
-          <div className="mt-6 space-y-4">
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertTitle>Analysis Successful!</AlertTitle>
-              <AlertDescription asChild>
-                <div className="space-y-4 mt-2">
-                  <div>
-                    <h4 className="font-semibold">Skill Analysis:</h4>
-                    <Card className="mt-2">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-1/3">Skill</TableHead>
-                            <TableHead className="w-1/3">Proficiency</TableHead>
-                            <TableHead>Reasoning</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {result.skillAnalysis.map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{item.skill}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Progress value={item.rating * 10} className="w-20" />
-                                  <span className="text-muted-foreground">{item.rating}/10</span>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">{item.reasoning}</TableCell>
+           <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-6 space-y-4">
+            <CollapsibleContent>
+                <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Analysis Successful!</AlertTitle>
+                <AlertDescription asChild>
+                    <div className="space-y-4 mt-2">
+                    <div>
+                        <h4 className="font-semibold">Skill Analysis:</h4>
+                        <Card className="mt-2">
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-1/3">Skill</TableHead>
+                                <TableHead className="w-1/3">Proficiency</TableHead>
+                                <TableHead>Reasoning</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </Card>
-                  </div>
+                            </TableHeader>
+                            <TableBody>
+                            {result.skillAnalysis.map((item, index) => (
+                                <TableRow key={index}>
+                                <TableCell className="font-medium">{item.skill}</TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                    <Progress value={item.rating * 10} className="w-20" />
+                                    <span className="text-muted-foreground">{item.rating}/10</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-xs text-muted-foreground">{item.reasoning}</TableCell>
+                                </TableRow>
+                            ))}
+                            </TableBody>
+                        </Table>
+                        </Card>
+                    </div>
 
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2">
-                      <BrainCircuit className="w-4 h-4" />
-                      Training Feedback
-                    </h4>
-                     <Card className="mt-2 p-3">
-                       <p className="text-sm">{result.feedback}</p>
-                     </Card>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold pt-2">History Log:</h4>
-                    <ScrollArea className="h-24 w-full rounded-md border p-2">
-                      <p className="text-sm">{result.historyLog}</p>
-                    </ScrollArea>
-                  </div>
-                </div>
-              </AlertDescription>
-            </Alert>
-          </div>
+                    <div>
+                        <h4 className="font-semibold flex items-center gap-2">
+                        <BrainCircuit className="w-4 h-4" />
+                        Training Feedback
+                        </h4>
+                        <Card className="mt-2 p-3">
+                        <p className="text-sm">{result.feedback}</p>
+                        </Card>
+                    </div>
+                    
+                    <div>
+                        <h4 className="font-semibold pt-2">History Log:</h4>
+                        <ScrollArea className="h-24 w-full rounded-md border p-2">
+                        <p className="text-sm">{result.historyLog}</p>
+                        </ScrollArea>
+                    </div>
+                    </div>
+                </AlertDescription>
+                </Alert>
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </CardContent>
     </Card>
