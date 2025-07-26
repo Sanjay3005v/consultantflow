@@ -28,7 +28,6 @@ export async function analyzeResume(
   try {
     const result: GenerateSkillVectorsOutput = await generateSkillVectors(input);
     
-    // Save the analysis result to the "database" and get the updated consultant
     const updatedConsultant = updateConsultantSkills(consultantId, result.skillAnalysis);
     
     if (!updatedConsultant) {

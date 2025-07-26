@@ -29,15 +29,13 @@ export type AttendanceMonitorOutput = z.infer<typeof AttendanceMonitorOutputSche
 
 
 export async function attendanceMonitor(input: AttendanceMonitorInput): Promise<AttendanceMonitorOutput> {
-  const output = await attendanceMonitorFlow(input);
-  // The flow returns a raw string, but the action expects an object.
-  // We need to wrap it correctly here.
-  return { feedbackMessage: output! };
+  return await attendanceMonitorFlow(input);
 }
 
 const prompt = ai.definePrompt({
   name: 'attendanceMonitorPrompt',
   input: {schema: AttendanceMonitorInputSchema},
+  output: {schema: AttendanceMonitorOutputSchema},
   prompt: `You are an Attendance Monitoring AI Agent for a consulting company. Your job is to:
 1. Read the attendance log for a consultant for the current month.
 2. Calculate the attendance percentage.
@@ -46,6 +44,8 @@ const prompt = ai.definePrompt({
 5. Mention the number of paid leaves remaining.
 6. Suggest how many consecutive sessions they need to attend to cross 75%, if applicable.
 7. Keep your tone professional and encouraging.
+
+Return the feedback message in the 'feedbackMessage' field of the output JSON.
 
 EXAMPLES:
 
@@ -58,7 +58,7 @@ Paid Leaves Taken: 2
 Remaining Paid Leaves: 1
 
 OUTPUT:
-Hi Sanjay, your attendance for July is currently 65%. We encourage you to maintain at least 75% attendance. You still have 1 paid leave remaining. Attending the next 4 working days without absence can help you reach your attendance goal. Keep going!
+{ "feedbackMessage": "Hi Sanjay, your attendance for July is currently 65%. We encourage you to maintain at least 75% attendance. You still have 1 paid leave remaining. Attending the next 4 working days without absence can help you reach your attendance goal. Keep going!" }
 
 ---
 
@@ -71,7 +71,7 @@ Paid Leaves Taken: 1
 Remaining Paid Leaves: 2
 
 OUTPUT:
-Hi Riya, great work! Your attendance for July is at 80%, which meets our company’s attendance standards. You also have 2 paid leaves remaining. Keep up the consistency!
+{ "feedbackMessage": "Hi Riya, great work! Your attendance for July is at 80%, which meets our company’s attendance standards. You also have 2 paid leaves remaining. Keep up the consistency!" }
 
 ---
 
@@ -93,7 +93,7 @@ const attendanceMonitorFlow = ai.defineFlow(
   {
     name: 'attendanceMonitorFlow',
     inputSchema: AttendanceMonitorInputSchema,
-    outputSchema: z.string(),
+    outputSchema: AttendanceMonitorOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);
