@@ -117,7 +117,8 @@ export let consultants: Consultant[] = [
 ];
 
 export const getConsultantById = (id: string): Consultant | undefined => {
-    return consultants.find(c => c.id === id);
+    // Use == to handle potential type mismatch between string and number
+    return consultants.find(c => c.id == id);
 }
 
 export const getAllConsultants = (): Consultant[] => {
