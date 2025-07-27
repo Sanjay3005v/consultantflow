@@ -192,6 +192,35 @@ export const updateConsultantSkills = (id: string, skills: SkillAnalysis[]) => {
   return updatedConsultant;
 };
 
+export const addSkillToConsultant = (id: string, newSkill: SkillAnalysis) => {
+    const consultantIndex = consultants.findIndex(c => c.id === id);
+    if (consultantIndex === -1) return undefined;
+
+    const consultant = consultants[consultantIndex];
+    
+    const isSkillAnalysis = (skill: string | SkillAnalysis): skill is SkillAnalysis => {
+        return typeof skill === 'object' && 'rating' in skill;
+    }
+    
+    let currentSkills: SkillAnalysis[] = [];
+    if (consultant.skills.length > 0 && isSkillAnalysis(consultant.skills[0])) {
+        currentSkills = consultant.skills as SkillAnalysis[];
+    }
+    
+    const updatedSkills = [...currentSkills, newSkill];
+
+    const updatedConsultant: Consultant = {
+        ...consultant,
+        skills: updatedSkills,
+        training: 'Completed',
+        workflow: { ...consultant.workflow, trainingCompleted: true }
+    };
+    consultants[consultantIndex] = updatedConsultant;
+    
+    return updatedConsultant;
+};
+
+
 export const createConsultant = (data: { name: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status: 'On Bench' | 'On Project', training: 'Not Started' | 'In Progress' | 'Completed' }) => {
     const newConsultant: Consultant = {
         name: data.name,

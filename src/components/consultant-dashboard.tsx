@@ -10,10 +10,11 @@ import StatusCard from '@/components/status-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import type { Consultant } from '@/lib/types';
-import type { AnalyzeResumeResult } from '@/app/actions';
+import type { AnalyzeCertificateResult, AnalyzeResumeResult } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
+import TrainingUploader from './training-uploader';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -30,10 +31,14 @@ export default function ConsultantDashboard({
     notFound();
   }
 
-  const handleAnalysisComplete = (result: AnalyzeResumeResult) => {
+  const handleResumeAnalysisComplete = (result: AnalyzeResumeResult) => {
     setConsultant(result.consultant);
   };
   
+  const handleCertificateAnalysisComplete = (result: AnalyzeCertificateResult) => {
+    setConsultant(result.consultant);
+  }
+
   const downloadAttendanceReport = () => {
     let reportContent = `Attendance Report for ${consultant.name}\n`;
     reportContent += '=====================================\n';
@@ -141,8 +146,12 @@ export default function ConsultantDashboard({
         <div className="space-y-8">
              <ResumeAnalyzer
                 consultant={consultant}
-                onAnalysisComplete={handleAnalysisComplete}
+                onAnalysisComplete={handleResumeAnalysisComplete}
                 />
+             <TrainingUploader
+                consultant={consultant}
+                onAnalysisComplete={handleCertificateAnalysisComplete}
+              />
         </div>
       </div>
     </div>

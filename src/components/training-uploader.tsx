@@ -1,0 +1,150 @@
+
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { analyzeCertificate, type AnalyzeCertificateResult } from '@/app/actions';
+import { Upload, Loader2, CheckCircle, Award, Download } from 'lucide-react';
+import type { Consultant } from '@/lib/types';
+
+const formSchema = z.object({
+  certificate: z.custom<FileList>().refine((files) => files?.length === 1, 'Certificate is required.'),
+});
+
+type TrainingUploaderProps = {
+  consultant: Consultant;
+  onAnalysisComplete: (result: AnalyzeCertificateResult) => void;
+};
+
+export default function TrainingUploader({ consultant, onAnalysisComplete }: TrainingUploaderProps) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{
+    report: string;
+  } | null>(null);
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+  });
+  
+  const downloadReport = (reportContent: string) => {
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `training_report_${consultant.name.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+    setResult(null);
+
+    const file = values.certificate[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = async () => {
+      const dataUri = reader.result as string;
+      try {
+        const analysisResult = await analyzeCertificate(consultant.id, { certificateDataUri: dataUri });
+        setResult({ report: analysisResult.report });
+        onAnalysisComplete(analysisResult);
+        toast({
+          title: 'Analysis Complete',
+          description: 'The certificate has been analyzed and a new skill has been added.',
+        });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: 'Analysis Failed',
+          description: 'Something went wrong. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    reader.onerror = () => {
+      toast({
+        title: 'File Read Error',
+        description: 'Could not read the selected file.',
+        variant: 'destructive',
+      });
+      setLoading(false);
+    };
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+            <Award className="w-6 h-6 text-primary" />
+            <span>Training Agent</span>
+        </CardTitle>
+        <CardDescription>Upload a training certificate to verify it and add the new skill.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="certificate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Certificate File</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => field.onChange(e.target.files)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Verify Certificate
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+        {result && (
+            <Alert className="mt-6">
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Verification Successful!</AlertTitle>
+                <AlertDescription className="mt-2 space-y-4">
+                   <p className="text-sm whitespace-pre-wrap">{result.report}</p>
+                   <Button variant="outline" size="sm" onClick={() => downloadReport(result.report)} className="w-full">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Report
+                   </Button>
+                </AlertDescription>
+            </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -11,8 +11,13 @@ import {
     type AttendanceMonitorInput,
     type AttendanceMonitorOutput,
 } from '@/ai/flows/attendance-agent';
-import { updateConsultantSkills, createConsultant, findConsultantByEmail } from '@/lib/data';
-import type { Consultant } from '@/lib/types';
+import {
+  analyzeCertificate as analyzeCertificateFlow,
+  type AnalyzeCertificateInput,
+  type AnalyzeCertificateOutput,
+} from '@/ai/flows/training-agent';
+import { updateConsultantSkills, createConsultant, findConsultantByEmail, addSkillToConsultant } from '@/lib/data';
+import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
 export type AnalyzeResumeResult = {
@@ -44,6 +49,33 @@ export async function analyzeResume(
     console.error('Error in analyzeResume server action:', error);
     throw new Error('Failed to analyze resume.');
   }
+}
+
+export type AnalyzeCertificateResult = {
+    consultant: Consultant;
+    report: string;
+}
+
+export async function analyzeCertificate(
+    consultantId: string,
+    input: AnalyzeCertificateInput
+): Promise<AnalyzeCertificateResult> {
+    try {
+        const result: AnalyzeCertificateOutput = await analyzeCertificateFlow(input);
+        const updatedConsultant = addSkillToConsultant(consultantId, result.skillAnalysis);
+
+        if(!updatedConsultant) {
+            throw new Error('Failed to find and update consultant with new skill.');
+        }
+
+        return {
+            consultant: updatedConsultant,
+            report: result.report,
+        }
+    } catch (error) {
+        console.error('Error in analyzeCertificate server action:', error);
+        throw new Error('Failed to analyze certificate.');
+    }
 }
 
 export async function createNewConsultant(data: { name: string; email: string; password: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {

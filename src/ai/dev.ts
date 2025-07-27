@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/skill-vector-generator.ts';
 import '@/ai/flows/attendance-agent.ts';
+import '@/ai/flows/training-agent.ts';
