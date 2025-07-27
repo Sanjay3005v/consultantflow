@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { analyzeCertificate, type AnalyzeCertificateResult } from '@/app/actions';
 import { Upload, Loader2, CheckCircle, Award, Download } from 'lucide-react';
 import type { Consultant } from '@/lib/types';
+import jsPDF from 'jspdf';
 
 const formSchema = z.object({
   certificate: z.custom<FileList>().refine((files) => files?.length === 1, 'Certificate is required.'),
@@ -36,15 +37,14 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
   });
   
   const downloadReport = (reportContent: string) => {
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `training_report_${consultant.name.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    
+    // Add the report text. The splitTextToSize function handles line breaks.
+    const splitText = doc.splitTextToSize(reportContent, 180);
+    doc.text(splitText, 10, 10);
+    
+    // Save the PDF
+    doc.save(`training_report_${consultant.name.replace(/\s+/g, '_')}.pdf`);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -139,7 +139,7 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
                    <p className="text-sm whitespace-pre-wrap">{result.report}</p>
                    <Button variant="outline" size="sm" onClick={() => downloadReport(result.report)} className="w-full">
                         <Download className="mr-2 h-4 w-4" />
-                        Download Report
+                        Download PDF Report
                    </Button>
                 </AlertDescription>
             </Alert>
