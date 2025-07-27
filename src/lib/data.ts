@@ -129,15 +129,16 @@ const initialConsultants: Consultant[] = [
 ];
 
 // This is the correct way to ensure the in-memory "database" persists in development.
-if (process.env.NODE_ENV === 'production') {
-  global.consultants = initialConsultants;
-} else {
+if (process.env.NODE_ENV !== 'production') {
   if (!global.consultants) {
     global.consultants = initialConsultants;
   }
+} else {
+  global.consultants = initialConsultants;
 }
 
-const consultants = global.consultants;
+
+const consultants = global.consultants!;
 
 
 export const getConsultantById = (id: string): Consultant | undefined => {
@@ -205,6 +206,8 @@ export const addSkillToConsultant = (id: string, newSkill: SkillAnalysis) => {
     let currentSkills: SkillAnalysis[] = [];
     if (consultant.skills.length > 0 && isSkillAnalysis(consultant.skills[0])) {
         currentSkills = consultant.skills as SkillAnalysis[];
+    } else if (consultant.skills.length === 0) {
+        currentSkills = [];
     }
     
     const updatedSkills = [...currentSkills, newSkill];
@@ -221,15 +224,15 @@ export const addSkillToConsultant = (id: string, newSkill: SkillAnalysis) => {
 };
 
 
-export const createConsultant = (data: { name: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status: 'On Bench' | 'On Project', training: 'Not Started' | 'In Progress' | 'Completed' }) => {
+export const createConsultant = (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status?: 'On Bench' | 'On Project', training?: 'Not Started' | 'In Progress' | 'Completed' }) => {
     const newConsultant: Consultant = {
         name: data.name,
-        email: `${data.name.toLowerCase().replace(' ', '.')}@example.com`,
-        password: 'password123',
+        email: data.email,
+        password: data.password || 'password123',
         department: data.department,
         id: (consultants.length + 1).toString(),
-        status: data.status,
-        training: data.training,
+        status: data.status || 'On Bench',
+        training: data.training || 'Not Started',
         resumeStatus: 'Pending',
         attendance: [],
         opportunities: 0,
