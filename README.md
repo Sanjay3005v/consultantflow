@@ -14,3 +14,12 @@ The main pages are:
 - **Landing Page**: `src/app/page.tsx`
 - **Consultant Dashboard**: `src/app/consultant/[id]/page.tsx`
 - **Admin Console**: `src/app/admin/page.tsx`
+
+## Impact/Potential Value of the Application
+
+ConsultantFlow is designed to streamline and enhance the management of a consulting workforce. By leveraging AI and a centralized platform, it offers significant value to the business:
+
+*   **Improved Resource Allocation:** AI-powered skill analysis of resumes allows for more accurate and efficient matching of consultants to projects, maximizing talent utilization and project success rates.
+*   **Enhanced Consultant Engagement:** Automated, personalized feedback on attendance and performance keeps consultants engaged and aware of expectations, fostering a culture of accountability and continuous improvement.
+*   **Data-Driven Decision Making:** The Admin Console provides a comprehensive overview of the consultant pool, with real-time data on availability, skills, and performance, enabling smarter staffing and training decisions.
+*   **Operational Efficiency:** Automating manual tasks like resume analysis, attendance tracking, and reporting frees up administrative time, reduces human error, and allows the management team to focus on strategic initiatives.
