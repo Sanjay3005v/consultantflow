@@ -16,6 +16,11 @@ import {
   type AnalyzeCertificateInput,
   type AnalyzeCertificateOutput,
 } from '@/ai/flows/training-agent';
+import {
+  opportunityEngager,
+  type OpportunityEngagerInput,
+  type OpportunityEngagerOutput,
+} from '@/ai/flows/opportunity-agent';
 import { updateConsultantSkills, createConsultant, findConsultantByEmail, addSkillToConsultant } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
@@ -105,3 +110,12 @@ export async function getAttendanceFeedback(input: AttendanceMonitorInput): Prom
     }
 }
 
+export async function getOpportunityFeedback(input: OpportunityEngagerInput): Promise<OpportunityEngagerOutput> {
+    try {
+        const result = await opportunityEngager(input);
+        return result;
+    } catch (error) {
+        console.error('Error getting opportunity feedback:', error);
+        throw new Error('Failed to get AI-powered opportunity feedback.');
+    }
+}

@@ -5,13 +5,16 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
-import { Label } from './ui/label';
-import { Briefcase, Download, Sparkles } from 'lucide-react';
+import { Briefcase, Download, Sparkles, Loader2 } from 'lucide-react';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import jsPDF from 'jspdf';
 import { ScrollArea } from './ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Badge } from './ui/badge';
+import { getOpportunityFeedback } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { format } from 'date-fns';
 
 const jobOpportunities = [
     {
@@ -127,6 +130,9 @@ type OpportunityCenterProps = {
 
 export default function OpportunityCenter({ consultant }: OpportunityCenterProps) {
     const [selectedOpportunities, setSelectedOpportunities] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [feedback, setFeedback] = useState<string | null>(null);
+    const { toast } = useToast();
 
     const handleCheckboxChange = (opportunityId: string) => {
         setSelectedOpportunities(prev =>
@@ -154,6 +160,42 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
             return (matchedSkills / opp.neededSkills.length) >= 0.5;
         }).map(opp => opp.id);
     }, [consultantSkills]);
+
+    const getOpportunityStacks = () => {
+       const stacks = new Set<string>();
+       jobOpportunities.forEach(opp => {
+           opp.neededSkills.forEach(skill => stacks.add(skill));
+       });
+       return Array.from(stacks);
+    }
+
+    async function handleGetFeedback() {
+        setLoading(true);
+        setFeedback(null);
+        try {
+            const result = await getOpportunityFeedback({
+                consultantName: consultant.name,
+                month: format(new Date(), 'MMMM'),
+                opportunitiesProvided: consultant.opportunities,
+                // These are placeholder values. In a real app, this would come from tracking consultant actions.
+                acceptedCount: Math.floor(Math.random() * (consultant.opportunities + 1)),
+                rejectedCount: Math.floor(Math.random() * (consultant.opportunities + 1)),
+                noResponseCount: Math.floor(Math.random() * (consultant.opportunities + 1)),
+                consultantSkills: consultantSkills.map(s => s.charAt(0).toUpperCase() + s.slice(1)), // Capitalize for readability
+                opportunityStacks: getOpportunityStacks(),
+            });
+            setFeedback(result.engagementSummary);
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Feedback Generation Failed',
+                description: 'Something went wrong while contacting the AI agent. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setLoading(false);
+        }
+    }
 
 
     const generatePdf = () => {
@@ -209,7 +251,7 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
                     <span>Opportunity Center</span>
                 </CardTitle>
                 <CardDescription>
-                    Review suggested job opportunities based on your skills and generate a PDF to track them.
+                    Review job opportunities, get AI feedback on your engagement, and generate a PDF to track them.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -248,14 +290,42 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
                             ))}
                         </Accordion>
                     </ScrollArea>
-                    <Button 
-                        onClick={generatePdf} 
-                        disabled={selectedOpportunities.length === 0}
-                        className="w-full"
-                    >
-                        <Download className="mr-2 h-4 w-4" />
-                        Generate Opportunity PDF ({selectedOpportunities.length})
-                    </Button>
+                    <div className="grid grid-cols-2 gap-4">
+                         <Button 
+                            onClick={handleGetFeedback} 
+                            disabled={loading}
+                        >
+                             {loading ? (
+                                <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating...
+                                </>
+                            ) : (
+                                <>
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Get Engagement Feedback
+                                </>
+                            )}
+                        </Button>
+                        <Button 
+                            onClick={generatePdf} 
+                            disabled={selectedOpportunities.length === 0}
+                            variant="outline"
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Generate PDF ({selectedOpportunities.length})
+                        </Button>
+                    </div>
+
+                    {feedback && (
+                        <Alert>
+                            <Sparkles className="h-4 w-4" />
+                            <AlertTitle>AI Engagement Summary</AlertTitle>
+                            <AlertDescription className="mt-2 whitespace-pre-wrap">
+                            {feedback}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                 </div>
             </CardContent>
         </Card>
