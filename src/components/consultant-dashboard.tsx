@@ -15,6 +15,7 @@ import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 import TrainingUploader from './training-uploader';
+import OpportunityCenter from './opportunity-center';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -143,6 +144,7 @@ export default function ConsultantDashboard({
                 </div>
            </div>
            <SkillsDisplay skills={consultant.skills} />
+           <OpportunityCenter consultant={consultant} />
         </div>
 
         <div className="space-y-8">
