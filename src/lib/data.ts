@@ -197,15 +197,15 @@ export const updateConsultantSkills = (id: string, skills: SkillAnalysis[]) => {
   return updatedConsultant;
 };
 
-export const createConsultant = (data: { name: string; email: string; password: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }) => {
+export const createConsultant = (data: { name: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status: 'On Bench' | 'On Project', training: 'Not Started' | 'In Progress' | 'Completed' }) => {
     const newConsultant: Consultant = {
         name: data.name,
-        email: data.email,
-        password: data.password,
+        email: `${data.name.toLowerCase().replace(' ', '.')}@example.com`,
+        password: 'password123',
         department: data.department,
         id: (consultants.length + 1).toString(),
-        status: 'On Bench',
-        training: 'Not Started',
+        status: data.status,
+        training: data.training,
         resumeStatus: 'Pending',
         attendance: [],
         opportunities: 0,
