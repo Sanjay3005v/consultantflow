@@ -66,7 +66,8 @@ export default function ConsultantDashboard({
     const present = consultant.attendance.filter(
       (a) => a.status === 'Present'
     ).length;
-    const total = consultant.attendance.length;
+    // Assuming a total of 22 working days in a month for this calculation.
+    const total = 22;
     const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
     return {
       present,
