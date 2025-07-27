@@ -26,7 +26,7 @@ const initialConsultants: Consultant[] = [
     ],
     opportunities: 3,
     training: 'In Progress',
-    skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
+    skills: [],
     workflow: {
       resumeUpdated: false,
       attendanceReported: true,
@@ -41,7 +41,7 @@ const initialConsultants: Consultant[] = [
     password: 'password123',
     department: 'Finance',
     status: 'On Project',
-    resumeStatus: 'Updated',
+    resumeStatus: 'Pending',
     attendance: [
         { date: '2024-07-01', status: 'Present' },
         { date: '2024-07-08', status: 'Present' },
@@ -49,14 +49,9 @@ const initialConsultants: Consultant[] = [
     ],
     opportunities: 5,
     training: 'Completed',
-    skills: [
-      { skill: 'Python', rating: 9, reasoning: 'Extensive use in multiple data science projects.' },
-      { skill: 'Data Analysis', rating: 8, reasoning: 'Core component of recent roles.' },
-      { skill: 'SQL', rating: 7, reasoning: 'Solid experience with complex queries.' },
-      { skill: 'Tableau', rating: 6, reasoning: 'Mentioned as a secondary tool in projects.' }
-    ],
+    skills: [],
     workflow: {
-      resumeUpdated: true,
+      resumeUpdated: false,
       attendanceReported: true,
       opportunitiesDocumented: true,
       trainingCompleted: true,
@@ -69,7 +64,7 @@ const initialConsultants: Consultant[] = [
     password: 'password123',
     department: 'Healthcare',
     status: 'On Bench',
-    resumeStatus: 'Updated',
+    resumeStatus: 'Pending',
     attendance: [
         { date: '2024-07-01', status: 'Present' },
         { date: '2024-07-08', status: 'Present' },
@@ -77,9 +72,9 @@ const initialConsultants: Consultant[] = [
     ],
     opportunities: 2,
     training: 'Not Started',
-    skills: ['HL7', 'FHIR', 'Project Management', 'HIPAA'],
+    skills: [],
     workflow: {
-      resumeUpdated: true,
+      resumeUpdated: false,
       attendanceReported: true,
       opportunitiesDocumented: true,
       trainingCompleted: false,
@@ -92,7 +87,7 @@ const initialConsultants: Consultant[] = [
     password: 'password123',
     department: 'Technology',
     status: 'On Project',
-    resumeStatus: 'Updated',
+    resumeStatus: 'Pending',
     attendance: [
         { date: '2024-07-01', status: 'Present' },
         { date: '2024-07-08', status: 'Present' },
@@ -100,9 +95,9 @@ const initialConsultants: Consultant[] = [
     ],
     opportunities: 6,
     training: 'Completed',
-    skills: ['Java', 'Spring Boot', 'Microservices', 'GCP'],
+    skills: [],
     workflow: {
-      resumeUpdated: true,
+      resumeUpdated: false,
       attendanceReported: true,
       opportunitiesDocumented: true,
       trainingCompleted: true,
@@ -123,7 +118,7 @@ const initialConsultants: Consultant[] = [
     ],
     opportunities: 1,
     training: 'In Progress',
-    skills: ['Salesforce', 'CRM', 'Agile', 'Scrum Master'],
+    skills: [],
     workflow: {
       resumeUpdated: false,
       attendanceReported: true,
