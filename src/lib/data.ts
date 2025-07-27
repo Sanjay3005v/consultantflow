@@ -54,7 +54,7 @@ const initialConsultants: Consultant[] = [
       resumeUpdated: false,
       attendanceReported: true,
       opportunitiesDocumented: true,
-      trainingCompleted: true,
+      trainingCompleted: false,
     },
   },
   {
@@ -100,7 +100,7 @@ const initialConsultants: Consultant[] = [
       resumeUpdated: false,
       attendanceReported: true,
       opportunitiesDocumented: true,
-      trainingCompleted: true,
+      trainingCompleted: false,
     },
   },
   {
