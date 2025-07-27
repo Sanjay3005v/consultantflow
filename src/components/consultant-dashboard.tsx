@@ -63,14 +63,15 @@ export default function ConsultantDashboard({
   };
 
   const attendanceSummary = useMemo(() => {
-    const completed = consultant.attendance.filter(
+    const present = consultant.attendance.filter(
       (a) => a.status === 'Present'
     ).length;
     const total = consultant.attendance.length;
+    const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
     return {
-      completed,
+      present,
       total,
-      missed: total - completed,
+      percentage,
     };
   }, [consultant.attendance]);
 
@@ -95,8 +96,8 @@ export default function ConsultantDashboard({
         />
         <StatusCard
           title="Attendance"
-          value={`${attendanceSummary.completed} / ${attendanceSummary.total} Meetings`}
-          description="Completed / Total"
+          value={`${attendanceSummary.percentage}%`}
+          description={`${attendanceSummary.present} / ${attendanceSummary.total} Days Present`}
           icon={CalendarCheck}
         />
         <StatusCard
