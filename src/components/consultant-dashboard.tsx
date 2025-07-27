@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Award, CalendarCheck, FileText, Target, User } from 'lucide-react';
+import { Award, CalendarCheck, FileText, Target, User, Download } from 'lucide-react';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import SkillsDisplay from '@/components/skills-display';
 import StatusCard from '@/components/status-card';
@@ -12,6 +12,8 @@ import WorkflowTracker from '@/components/workflow-tracker';
 import type { Consultant } from '@/lib/types';
 import type { AnalyzeResumeResult } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
+import { Button } from './ui/button';
+import { format } from 'date-fns';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -30,6 +32,29 @@ export default function ConsultantDashboard({
 
   const handleAnalysisComplete = (result: AnalyzeResumeResult) => {
     setConsultant(result.consultant);
+  };
+  
+  const downloadAttendanceReport = () => {
+    let reportContent = `Attendance Report for ${consultant.name}\n`;
+    reportContent += '=====================================\n';
+    reportContent += 'Date\t\tStatus\n';
+    reportContent += '-------------------------------------\n';
+    
+    const sortedAttendance = [...consultant.attendance].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    sortedAttendance.forEach(record => {
+      reportContent += `${record.date}\t${record.status}\n`;
+    });
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_report_${consultant.name.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const attendanceSummary = useMemo(() => {
@@ -102,7 +127,13 @@ export default function ConsultantDashboard({
                     )}
                     </CardContent>
                 </Card>
-                <AttendanceFeedback consultant={consultant} />
+                <div className='space-y-4'>
+                    <AttendanceFeedback consultant={consultant} />
+                    <Button onClick={downloadAttendanceReport} variant="outline" className='w-full'>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Attendance Report
+                    </Button>
+                </div>
            </div>
            <SkillsDisplay skills={consultant.skills} />
         </div>
