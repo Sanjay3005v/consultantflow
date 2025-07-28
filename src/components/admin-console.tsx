@@ -412,11 +412,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               <TableBody>
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
-                    <React.Fragment key={consultant.id}>
-                      <TableRow>
+                    <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
+                      <>
+                        <TableRow>
                           <TableCell>
                             <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)} onClick={() => handleRowToggle(consultant.id)}>
+                              <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
                                 <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
                                 <span className="sr-only">Toggle details</span>
                               </Button>
@@ -452,10 +453,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             </Button>
                           </TableCell>
                         </TableRow>
-                      {hasSkillAnalysis(consultant) && (
-                        <TableRow>
+                        {hasSkillAnalysis(consultant) && (
+                           <TableRow>
                             <TableCell colSpan={7} className="p-0">
-                                <CollapsibleContent className={cn("data-[state=closed]:hidden", expandedRow === consultant.id && "data-[state=open]:block")}>
+                                <CollapsibleContent>
                                     <div className="p-4 bg-muted/50 rounded-md m-1 border">
                                         <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                         <div className="h-64">
@@ -469,10 +470,11 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                         </div>
                                     </div>
                                 </CollapsibleContent>
-                            </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
+                             </TableCell>
+                           </TableRow>
+                        )}
+                      </>
+                    </Collapsible>
                   ))
                 ) : (
                   <TableRow>
