@@ -400,8 +400,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
                     <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
-                      <React.Fragment>
-                        <TableRow className="cursor-pointer">
+                      <>
+                        <TableRow className="cursor-pointer" onClick={() => handleRowToggle(consultant.id)}>
                            <TableCell>
                              <CollapsibleTrigger asChild>
                                <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
@@ -442,9 +442,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                         </TableRow>
                         {hasSkillAnalysis(consultant) && (
                            <TableRow>
-                               <TableCell colSpan={7}>
-                                   <CollapsibleContent className="w-full">
-                                        <div className="p-4 bg-muted/50 rounded-md">
+                               <TableCell colSpan={7} className="p-0">
+                                   <CollapsibleContent>
+                                        <div className="p-4 bg-muted/50 rounded-md m-1 border">
                                             <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                             <div className="h-64">
                                                 <ResponsiveContainer width="100%" height="100%">
@@ -460,7 +460,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                </TableCell>
                            </TableRow>
                         )}
-                      </React.Fragment>
+                      </>
                     </Collapsible>
                   ))
                 ) : (
