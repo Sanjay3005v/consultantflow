@@ -23,3 +23,18 @@ ConsultantFlow is designed to streamline and enhance the management of a consult
 *   **Enhanced Consultant Engagement:** Automated, personalized feedback on attendance and performance keeps consultants engaged and aware of expectations, fostering a culture of accountability and continuous improvement.
 *   **Data-Driven Decision Making:** The Admin Console provides a comprehensive overview of the consultant pool, with real-time data on availability, skills, and performance, enabling smarter staffing and training decisions.
 *   **Operational Efficiency:** Automating manual tasks like resume analysis, attendance tracking, and reporting frees up administrative time, reduces human error, and allows the management team to focus on strategic initiatives.
+
+## Technologies Used
+
+The application is built with a modern, robust, and scalable technology stack:
+
+*   **Framework**: [Next.js](https://nextjs.org/) (with React) for a high-performance, server-first web application.
+*   **Language**: [TypeScript](https://www.typescriptlang.org/) for robust type-safety and improved developer experience.
+*   **Generative AI**: [Genkit](https://firebase.google.com/docs/genkit) with [Google's Gemini models](https://deepmind.google/technologies/gemini/) to power the AI agents for resume analysis, feedback generation, and more.
+*   **UI Components**: [ShadCN UI](https://ui.shadcn.com/) for a set of accessible, and composable components.
+*   **Styling**: [Tailwind CSS](https://tailwindcss.com/) for a utility-first CSS framework that enables rapid UI development.
+*   **Forms**: [React Hook Form](https://react-hook-form.com/) and [Zod](https://zod.dev/) for efficient, type-safe form validation.
+*   **Data Visualization**: [Recharts](https://recharts.org/) for creating beautiful and interactive charts.
+*   **Icons**: [Lucide React](https://lucide.dev/) for a clean and consistent set of icons.
+*   **PDF Generation**: [jsPDF](https://github.com/parallax/jsPDF) for client-side PDF creation.
+*   **Hosting**: Deployed on [Firebase App Hosting](https://firebase.google.com/docs/app-hosting) for a secure, scalable, and fully-managed hosting solution.
