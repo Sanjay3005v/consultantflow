@@ -60,7 +60,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
   
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const { toast } = useToast();
 
@@ -112,22 +112,35 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const handleOpenAttendanceDialog = (consultant: Consultant) => {
     setSelectedConsultant(consultant);
+    setSelectedDates([]);
     setIsAttendanceDialogOpen(true);
   };
   
   const handleSaveAttendance = () => {
-    if (selectedConsultant && selectedDate) {
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      const updatedConsultant = updateConsultantAttendance(selectedConsultant.id, formattedDate, attendanceStatus);
+    if (selectedConsultant && selectedDates && selectedDates.length > 0) {
+      let updatedConsultant: Consultant | undefined = getConsultantById(selectedConsultant.id);
       
-      setConsultants(prev => prev.map(c => c.id === selectedConsultant.id ? updatedConsultant! : c));
+      selectedDates.forEach(date => {
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        updatedConsultant = updateConsultantAttendance(selectedConsultant.id, formattedDate, attendanceStatus);
+      });
+
+      if (updatedConsultant) {
+        setConsultants(prev => prev.map(c => c.id === selectedConsultant.id ? updatedConsultant! : c));
+      }
 
       toast({
         title: 'Attendance Marked',
-        description: `${selectedConsultant.name}'s attendance for ${formattedDate} marked as ${attendanceStatus}.`,
+        description: `${selectedConsultant.name}'s attendance for ${selectedDates.length} day(s) marked as ${attendanceStatus}.`,
       });
       setIsAttendanceDialogOpen(false);
       setSelectedConsultant(null);
+    } else {
+        toast({
+            title: 'No Dates Selected',
+            description: 'Please select one or more dates to mark attendance.',
+            variant: 'destructive',
+        });
     }
   };
 
@@ -400,11 +413,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
                     <React.Fragment key={consultant.id}>
-                      <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
-                        <TableRow className="cursor-pointer" onClick={() => handleRowToggle(consultant.id)}>
+                      <TableRow>
                           <TableCell>
                             <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
+                              <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)} onClick={() => handleRowToggle(consultant.id)}>
                                 <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
                                 <span className="sr-only">Toggle details</span>
                               </Button>
@@ -440,7 +452,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             </Button>
                           </TableCell>
                         </TableRow>
-                      </Collapsible>
                       {hasSkillAnalysis(consultant) && (
                         <TableRow>
                             <TableCell colSpan={7} className="p-0">
@@ -480,21 +491,20 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Mark Attendance for {selectedConsultant?.name}</DialogTitle>
-                <DialogDescription>Select a date and mark the attendance status.</DialogDescription>
+                <DialogDescription>Select one or more dates and mark the attendance status.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="date" className="text-right">Date</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" className="col-span-3">
-                                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus/>
-                        </PopoverContent>
-                    </Popover>
+                 <div className="grid grid-cols-1 items-center gap-4">
+                    <Label htmlFor="date">Dates</Label>
+                    <Calendar
+                        mode="multiple"
+                        selected={selectedDates}
+                        onSelect={setSelectedDates}
+                        className="rounded-md border"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                        {selectedDates?.length || 0} date(s) selected.
+                    </p>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Status</Label>
@@ -519,7 +529,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                 <DialogClose asChild>
                     <Button variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button onClick={handleSaveAttendance}>Save</Button>
+                <Button onClick={handleSaveAttendance}>Save Attendance</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -537,5 +547,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
-    
