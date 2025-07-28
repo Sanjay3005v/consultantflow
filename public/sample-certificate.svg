@@ -1,0 +1,35 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" style="background-color:#f9f4e9;">
+  <style>
+    .title { font: bold 60px 'Times New Roman', serif; fill: #2c3e50; }
+    .subtitle { font: 40px 'Georgia', serif; fill: #2c3e50; }
+    .name { font: italic 50px 'Brush Script MT', cursive; fill: #e74c3c; }
+    .text { font: 20px 'Helvetica', sans-serif; fill: #34495e; }
+    .date { font: 18px 'Courier New', monospace; fill: #7f8c8d; }
+    .org { font: bold 24px 'Arial', sans-serif; fill: #2980b9; }
+  </style>
+
+  <rect x="20" y="20" width="760" height="560" fill="none" stroke="#c0a062" stroke-width="10"/>
+  <rect x="30" y="30" width="740" height="540" fill="none" stroke="#c0a062" stroke-width="2"/>
+
+  <text x="50%" y="120" text-anchor="middle" class="title">Certificate of Completion</text>
+  <text x="50%" y="180" text-anchor="middle" class="subtitle">This is to certify that</text>
+
+  <text x="50%" y="260" text-anchor="middle" class="name">Alice Johnson</text>
+  <line x1="200" y1="280" x2="600" y2="280" stroke="#e74c3c" stroke-width="1"/>
+
+  <text x="50%" y="330" text-anchor="middle" class="text">has successfully completed the training course</text>
+  <text x="50%" y="360" text-anchor="middle" class="org">"Advanced Cloud Development with Gen AI"</text>
+  <text x="50%" y="390" text-anchor="middle" class="text">on this day.</text>
+
+  <g transform="translate(100, 480)">
+    <text x="0" y="0" class="date">2024-08-15</text>
+    <line x1="0" y1="10" x2="150" y2="10" stroke="#7f8c8d" stroke-width="1"/>
+    <text x="0" y="30" class="text" font-weight="bold">Date</text>
+  </g>
+
+  <g transform="translate(550, 480)">
+    <text x="0" y="0" class="org" font-family="'Brush Script MT', cursive">Tech Training Inc.</text>
+    <line x1="0" y1="10" x2="200" y2="10" stroke="#7f8c8d" stroke-width="1"/>
+    <text x="0" y="30" class="text" font-weight="bold">Issuing Organization</text>
+  </g>
+</svg>
