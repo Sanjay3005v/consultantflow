@@ -415,12 +415,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       <>
                         <TableRow>
                           <TableCell>
-                            <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
-                                <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
-                                <span className="sr-only">Toggle details</span>
-                              </Button>
-                            </CollapsibleTrigger>
+                             <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
+                                    <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
+                                    <span className="sr-only">Toggle details</span>
+                                </Button>
+                             </CollapsibleTrigger>
                           </TableCell>
                           <TableCell className="font-medium">{consultant.name}</TableCell>
                           <TableCell>{consultant.department}</TableCell>
@@ -548,3 +548,4 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
