@@ -399,17 +399,17 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               <TableBody>
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
-                    <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
-                      <>
+                    <React.Fragment key={consultant.id}>
+                      <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
                         <TableRow className="cursor-pointer" onClick={() => handleRowToggle(consultant.id)}>
-                           <TableCell>
-                             <CollapsibleTrigger asChild>
-                               <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
-                                 <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
-                                 <span className="sr-only">Toggle details</span>
-                               </Button>
-                             </CollapsibleTrigger>
-                           </TableCell>
+                          <TableCell>
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
+                                <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
+                                <span className="sr-only">Toggle details</span>
+                              </Button>
+                            </CollapsibleTrigger>
+                          </TableCell>
                           <TableCell className="font-medium">{consultant.name}</TableCell>
                           <TableCell>{consultant.department}</TableCell>
                           <TableCell>
@@ -440,28 +440,28 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             </Button>
                           </TableCell>
                         </TableRow>
-                        {hasSkillAnalysis(consultant) && (
-                           <TableRow>
-                               <TableCell colSpan={7} className="p-0">
-                                   <CollapsibleContent>
-                                        <div className="p-4 bg-muted/50 rounded-md m-1 border">
-                                            <h4 className="font-bold mb-2">Skill Proficiency</h4>
-                                            <div className="h-64">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <RechartsBarChart data={consultant.skills as SkillAnalysis[]}>
-                                                        <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                                                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
-                                                        <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                                    </RechartsBarChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                      </Collapsible>
+                      {hasSkillAnalysis(consultant) && (
+                        <TableRow>
+                            <TableCell colSpan={7} className="p-0">
+                                <CollapsibleContent className={cn("data-[state=closed]:hidden", expandedRow === consultant.id && "data-[state=open]:block")}>
+                                    <div className="p-4 bg-muted/50 rounded-md m-1 border">
+                                        <h4 className="font-bold mb-2">Skill Proficiency</h4>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RechartsBarChart data={consultant.skills as SkillAnalysis[]}>
+                                                    <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
+                                                    <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                                </RechartsBarChart>
+                                            </ResponsiveContainer>
                                         </div>
-                                   </CollapsibleContent>
-                               </TableCell>
-                           </TableRow>
-                        )}
-                      </>
-                    </Collapsible>
+                                    </div>
+                                </CollapsibleContent>
+                            </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   ))
                 ) : (
                   <TableRow>
@@ -537,3 +537,5 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
