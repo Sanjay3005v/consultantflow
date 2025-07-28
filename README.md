@@ -37,6 +37,9 @@ ConsultantFlow is an intelligent workforce management platform designed to strea
     *   **Approach**: AI agents (`opportunity-agent`, `attendance-agent`) generate personalized feedback based on the consultant's activity data (attendance records, opportunity engagement metrics).
     *   **Feature**: With a single click, consultants can receive tailored advice. For example, the attendance agent provides motivational messages and calculates what is needed to meet company benchmarks, fostering a culture of accountability and self-improvement.
 
+## Gen AI Tool Utilization
+
+The application heavily utilizes Genkit, a portable, open-source framework, to build production-ready AI flows powered by Google's Gemini models. This approach involves creating specialized, purpose-built AI agents for distinct business tasks. For instance, the `skill-vector-generator` agent is expertly prompted to analyze resumes, while the `training-agent` is designed to verify certificates. Other agents, like the `attendance-agent` and `opportunity-agent`, focus on generating contextual, personalized feedback. By defining clear input and output schemas with Zod, each agent operates reliably and predictably, transforming unstructured data (like PDFs and images) and behavioral metrics into structured, actionable insights. This strategy moves the application beyond simple automation, creating a system that can intelligently interact with data to drive decision-making and enhance the consultant experience.
 
 ## Technologies Used
 
