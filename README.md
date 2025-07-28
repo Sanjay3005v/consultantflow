@@ -15,14 +15,28 @@ The main pages are:
 - **Consultant Dashboard**: `src/app/consultant/[id]/page.tsx`
 - **Admin Console**: `src/app/admin/page.tsx`
 
-## Impact/Potential Value of the Application
+## Solution Highlights
 
-ConsultantFlow is designed to streamline and enhance the management of a consulting workforce. By leveraging AI and a centralized platform, it offers significant value to the business:
+ConsultantFlow is an intelligent workforce management platform designed to streamline the administration of a consultant pool. By integrating AI-powered agents, it automates key processes, provides data-driven insights, and enhances both consultant engagement and operational efficiency. The solution transitions the management process from manual tracking and subjective assessments to an automated, objective, and scalable system.
 
-*   **Improved Resource Allocation:** AI-powered skill analysis of resumes allows for more accurate and efficient matching of consultants to projects, maximizing talent utilization and project success rates.
-*   **Enhanced Consultant Engagement:** Automated, personalized feedback on attendance and performance keeps consultants engaged and aware of expectations, fostering a culture of accountability and continuous improvement.
-*   **Data-Driven Decision Making:** The Admin Console provides a comprehensive overview of the consultant pool, with real-time data on availability, skills, and performance, enabling smarter staffing and training decisions.
-*   **Operational Efficiency:** Automating manual tasks like resume analysis, attendance tracking, and reporting frees up administrative time, reduces human error, and allows the management team to focus on strategic initiatives.
+## Key Features & Approach
+
+1.  **AI-Powered Resume & Certificate Analysis**:
+    *   **Approach**: Leverages Genkit and Google's Gemini models to create specialized AI agents (`skill-vector-generator`, `training-agent`). These agents analyze unstructured documents (resumes, certificates) provided as data URIs.
+    *   **Feature**: The system automatically extracts technical skills, rates proficiency on a 1-10 scale with detailed reasoning, and provides actionable feedback for training. This data populates the consultant's skill profile, making it immediately available for matching and reporting.
+
+2.  **Unified Consultant & Admin Dashboards**:
+    *   **Approach**: The application utilizes Next.js with Server Components to fetch initial data and interactive "client" components (built with React and ShadCN UI) for a dynamic user experience.
+    *   **Feature**: Consultants access a personalized dashboard to view their workflow progress, skills, and suggested opportunities. Administrators use a central console to search, filter, and manage the entire consultant pool, generate reports, and trigger AI analyses.
+
+3.  **Intelligent Opportunity Center**:
+    *   **Approach**: A matching algorithm within the `OpportunityCenter` component cross-references the consultant's AI-verified skills against a list of available job roles, each detailed with required skills, experience, and responsibilities.
+    *   **Feature**: The system doesn't just list jobs; it actively suggests the most relevant opportunities, marked with a "Suggested" badge. Consultants can select multiple roles and export the details as a single, consolidated PDF for their records.
+
+4.  **Automated Engagement & Performance Feedback**:
+    *   **Approach**: AI agents (`opportunity-agent`, `attendance-agent`) generate personalized feedback based on the consultant's activity data (attendance records, opportunity engagement metrics).
+    *   **Feature**: With a single click, consultants can receive tailored advice. For example, the attendance agent provides motivational messages and calculates what is needed to meet company benchmarks, fostering a culture of accountability and self-improvement.
+
 
 ## Technologies Used
 
@@ -30,7 +44,10 @@ The application is built with a modern, robust, and scalable technology stack:
 
 *   **Framework**: [Next.js](https://nextjs.org/) (with React) for a high-performance, server-first web application.
 *   **Language**: [TypeScript](https://www.typescriptlang.org/) for robust type-safety and improved developer experience.
-*   **Generative AI**: [Genkit](https://firebase.google.com/docs/genkit) with [Google's Gemini models](https://deepmind.google/technologies/gemini/) to power the AI agents for resume analysis, feedback generation, and more.
+*   **Backend**:
+    *   **Next.js Server Actions**: Handle the application's core business logic, such as creating and updating consultant data, running securely on the server.
+    *   **Genkit**: Serves as the dedicated backend for all Generative AI tasks, orchestrating calls to [Google's Gemini models](https://deepmind.google/technologies/gemini/).
+*   **Database**: For this prototype, a **simulated in-memory database** (`src/lib/data.ts`) is used to store consultant data. In a production scenario, this would be replaced with a scalable database like Firestore or a SQL database.
 *   **UI Components**: [ShadCN UI](https://ui.shadcn.com/) for a set of accessible, and composable components.
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/) for a utility-first CSS framework that enables rapid UI development.
 *   **Forms**: [React Hook Form](https://react-hook-form.com/) and [Zod](https://zod.dev/) for efficient, type-safe form validation.
