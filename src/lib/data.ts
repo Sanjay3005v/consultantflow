@@ -1,249 +1,159 @@
+import { db } from './db';
+import { consultants, skills, attendance, NewConsultant } from './db/schema';
+import type { Consultant, SkillAnalysis, AttendanceRecord } from './types';
+import { eq, sql } from 'drizzle-orm';
 
-import type { Consultant, SkillAnalysis } from './types';
-
-// NOTE: In a real application, this data would be fetched from a database
-// and mutations would be handled by API calls.
-
-// Use a global variable to hold the data in development to prevent it from being
-// reset on hot-reloads. In production, this will behave like a normal module-level variable.
-declare global {
-  var consultants: Consultant[] | undefined;
+function mapDbToConsultant(
+    dbConsultant: any, 
+    dbSkills: any[], 
+    dbAttendance: any[]
+): Consultant {
+    return {
+        id: dbConsultant.id.toString(),
+        name: dbConsultant.name,
+        email: dbConsultant.email,
+        password: dbConsultant.password,
+        department: dbConsultant.department,
+        status: dbConsultant.status,
+        resumeStatus: dbConsultant.resumeStatus,
+        opportunities: dbConsultant.opportunities,
+        training: dbConsultant.training,
+        workflow: {
+            resumeUpdated: dbConsultant.resumeUpdated,
+            attendanceReported: dbConsultant.attendanceReported,
+            opportunitiesDocumented: dbConsultant.opportunitiesDocumented,
+            trainingCompleted: dbConsultant.trainingCompleted,
+        },
+        skills: dbSkills.map(s => ({
+            skill: s.skill,
+            rating: s.rating,
+            reasoning: s.reasoning
+        })),
+        attendance: dbAttendance.map(a => ({
+            date: a.date,
+            status: a.status
+        }))
+    };
 }
-
-const initialConsultants: Consultant[] = [
-  {
-    id: '1',
-    name: 'Alice Johnson',
-    email: 'alice@example.com',
-    password: 'password123',
-    department: 'Technology',
-    status: 'On Bench',
-    resumeStatus: 'Pending',
-    attendance: [
-      { date: '2024-07-01', status: 'Present' },
-      { date: '2024-07-08', status: 'Present' },
-      { date: '2024-07-15', status: 'Absent' },
-    ],
-    opportunities: 3,
-    training: 'In Progress',
-    skills: [],
-    workflow: {
-      resumeUpdated: false,
-      attendanceReported: true,
-      opportunitiesDocumented: true,
-      trainingCompleted: false,
-    },
-  },
-  {
-    id: '2',
-    name: 'Bob Williams',
-    email: 'bob@example.com',
-    password: 'password123',
-    department: 'Finance',
-    status: 'On Project',
-    resumeStatus: 'Pending',
-    attendance: [
-        { date: '2024-07-01', status: 'Present' },
-        { date: '2024-07-08', status: 'Present' },
-        { date: '2024-07-15', status: 'Present' },
-    ],
-    opportunities: 5,
-    training: 'Completed',
-    skills: [],
-    workflow: {
-      resumeUpdated: false,
-      attendanceReported: true,
-      opportunitiesDocumented: true,
-      trainingCompleted: false,
-    },
-  },
-  {
-    id: '3',
-    name: 'Charlie Brown',
-    email: 'charlie@example.com',
-    password: 'password123',
-    department: 'Healthcare',
-    status: 'On Bench',
-    resumeStatus: 'Pending',
-    attendance: [
-        { date: '2024-07-01', status: 'Present' },
-        { date: '2024-07-08', status: 'Present' },
-        { date: '2024-07-15', status: 'Absent' },
-    ],
-    opportunities: 2,
-    training: 'Not Started',
-    skills: [],
-    workflow: {
-      resumeUpdated: false,
-      attendanceReported: true,
-      opportunitiesDocumented: true,
-      trainingCompleted: false,
-    },
-  },
-  {
-    id: '4',
-    name: 'Diana Prince',
-    email: 'diana@example.com',
-    password: 'password123',
-    department: 'Technology',
-    status: 'On Project',
-    resumeStatus: 'Pending',
-    attendance: [
-        { date: '2024-07-01', status: 'Present' },
-        { date: '2024-07-08', status: 'Present' },
-        { date: '2024-07-15', status: 'Present' },
-    ],
-    opportunities: 6,
-    training: 'Completed',
-    skills: [],
-    workflow: {
-      resumeUpdated: false,
-      attendanceReported: true,
-      opportunitiesDocumented: true,
-      trainingCompleted: false,
-    },
-  },
-  {
-    id: '5',
-    name: 'Ethan Hunt',
-    email: 'ethan@example.com',
-    password: 'password123',
-    department: 'Retail',
-    status: 'On Bench',
-    resumeStatus: 'Pending',
-    attendance: [
-        { date: '2024-07-01', status: 'Present' },
-        { date: '2024-07-08', status: 'Absent' },
-        { date: '2024-07-15', status: 'Absent' },
-    ],
-    opportunities: 1,
-    training: 'In Progress',
-    skills: [],
-    workflow: {
-      resumeUpdated: false,
-      attendanceReported: true,
-      opportunitiesDocumented: false,
-      trainingCompleted: false,
-    },
-  },
-];
-
-// This is the correct way to ensure the in-memory "database" persists in development.
-if (process.env.NODE_ENV !== 'production') {
-  if (!global.consultants) {
-    global.consultants = initialConsultants;
-  }
-} else {
-  global.consultants = initialConsultants;
-}
-
-
-const consultants = global.consultants!;
 
 
 export const getConsultantById = (id: string): Consultant | undefined => {
-    // Use == to handle potential type mismatch between string and number (e.g., '6' == 6)
-    return consultants.find(c => c.id == id);
+    const consultantId = parseInt(id, 10);
+    if (isNaN(consultantId)) return undefined;
+
+    const dbConsultant = db.select().from(consultants).where(eq(consultants.id, consultantId)).get();
+    if (!dbConsultant) return undefined;
+    
+    const dbSkills = db.select().from(skills).where(eq(skills.consultantId, consultantId)).all();
+    const dbAttendance = db.select().from(attendance).where(eq(attendance.consultantId, consultantId)).all();
+
+    return mapDbToConsultant(dbConsultant, dbSkills, dbAttendance);
 }
 
 export const getAllConsultants = (): Consultant[] => {
-    return consultants;
+    const allDbConsultants = db.select().from(consultants).all();
+    
+    return allDbConsultants.map(dbConsultant => {
+        const dbSkills = db.select().from(skills).where(eq(skills.consultantId, dbConsultant.id)).all();
+        const dbAttendance = db.select().from(attendance).where(eq(attendance.consultantId, dbConsultant.id)).all();
+        return mapDbToConsultant(dbConsultant, dbSkills, dbAttendance);
+    });
 }
 
 export const findConsultantByEmail = (email: string): Consultant | undefined => {
-    return consultants.find(c => c.email.toLowerCase() === email.toLowerCase());
+    const dbConsultant = db.select().from(consultants).where(eq(consultants.email, email.toLowerCase())).get();
+    if (!dbConsultant) return undefined;
+    
+    const dbSkills = db.select().from(skills).where(eq(skills.consultantId, dbConsultant.id)).all();
+    const dbAttendance = db.select().from(attendance).where(eq(attendance.consultantId, dbConsultant.id)).all();
+
+    return mapDbToConsultant(dbConsultant, dbSkills, dbAttendance);
 }
 
 export const updateConsultantAttendance = (id: string, date: string, status: 'Present' | 'Absent') => {
-    let updatedConsultant: Consultant | undefined;
-    
-    const consultantIndex = consultants.findIndex(c => c.id === id);
-    if (consultantIndex === -1) return undefined;
+    const consultantId = parseInt(id, 10);
+    if (isNaN(consultantId)) return undefined;
 
-    const consultant = consultants[consultantIndex];
-    const newAttendance = [...consultant.attendance];
-    const recordIndex = newAttendance.findIndex(a => a.date === date);
+    const existingRecord = db.select().from(attendance)
+        .where(sql`${attendance.consultantId} = ${consultantId} AND ${attendance.date} = ${date}`)
+        .get();
 
-    if (recordIndex > -1) {
-        newAttendance[recordIndex].status = status;
+    if (existingRecord) {
+        db.update(attendance)
+          .set({ status })
+          .where(sql`${attendance.consultantId} = ${consultantId} AND ${attendance.date} = ${date}`)
+          .run();
     } else {
-        newAttendance.push({ date, status });
+        db.insert(attendance)
+          .values({ consultantId, date, status })
+          .run();
     }
     
-    updatedConsultant = { ...consultant, attendance: newAttendance };
-    consultants[consultantIndex] = updatedConsultant;
-
-    return updatedConsultant;
+    return getConsultantById(id);
 };
 
-export const updateConsultantSkills = (id: string, skills: SkillAnalysis[]) => {
-  let updatedConsultant: Consultant | undefined;
-  const consultantIndex = consultants.findIndex(c => c.id === id);
-  if (consultantIndex === -1) return undefined;
+export const updateConsultantSkills = (id: string, newSkills: SkillAnalysis[]) => {
+  const consultantId = parseInt(id, 10);
+  if (isNaN(consultantId)) return undefined;
 
-  const consultant = consultants[consultantIndex];
-  updatedConsultant = {
-    ...consultant,
-    skills: skills,
-    resumeStatus: 'Updated',
-    workflow: { ...consultant.workflow, resumeUpdated: true }
-  };
-  consultants[consultantIndex] = updatedConsultant;
+  // Clear existing skills
+  db.delete(skills).where(eq(skills.consultantId, consultantId)).run();
   
-  return updatedConsultant;
+  // Insert new skills
+  if(newSkills.length > 0) {
+      const skillsToInsert = newSkills.map(s => ({
+          consultantId,
+          ...s
+      }));
+      db.insert(skills).values(skillsToInsert).run();
+  }
+  
+  // Update consultant status
+  db.update(consultants)
+    .set({ resumeStatus: 'Updated', resumeUpdated: true })
+    .where(eq(consultants.id, consultantId))
+    .run();
+  
+  return getConsultantById(id);
 };
 
 export const addSkillToConsultant = (id: string, newSkill: SkillAnalysis) => {
-    const consultantIndex = consultants.findIndex(c => c.id === id);
-    if (consultantIndex === -1) return undefined;
+    const consultantId = parseInt(id, 10);
+    if (isNaN(consultantId)) return undefined;
 
-    const consultant = consultants[consultantIndex];
-    
-    const isSkillAnalysis = (skill: string | SkillAnalysis): skill is SkillAnalysis => {
-        return typeof skill === 'object' && 'rating' in skill;
-    }
-    
-    let currentSkills: SkillAnalysis[] = [];
-    if (consultant.skills.length > 0 && isSkillAnalysis(consultant.skills[0])) {
-        currentSkills = consultant.skills as SkillAnalysis[];
-    } else if (consultant.skills.length === 0) {
-        currentSkills = [];
-    }
-    
-    const updatedSkills = [...currentSkills, newSkill];
+    db.insert(skills).values({
+        consultantId: consultantId,
+        skill: newSkill.skill,
+        rating: newSkill.rating,
+        reasoning: newSkill.reasoning,
+    }).run();
 
-    const updatedConsultant: Consultant = {
-        ...consultant,
-        skills: updatedSkills,
-        training: 'Completed',
-        workflow: { ...consultant.workflow, trainingCompleted: true }
-    };
-    consultants[consultantIndex] = updatedConsultant;
-    
-    return updatedConsultant;
+    db.update(consultants)
+      .set({ training: 'Completed', trainingCompleted: true })
+      .where(eq(consultants.id, consultantId))
+      .run();
+
+    return getConsultantById(id);
 };
 
-
 export const createConsultant = (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status?: 'On Bench' | 'On Project', training?: 'Not Started' | 'In Progress' | 'Completed' }) => {
-    const newConsultant: Consultant = {
+    
+    const newConsultant: NewConsultant = {
         name: data.name,
-        email: data.email,
+        email: data.email.toLowerCase(),
         password: data.password || 'password123',
         department: data.department,
-        id: (consultants.length + 1).toString(),
         status: data.status || 'On Bench',
         training: data.training || 'Not Started',
         resumeStatus: 'Pending',
-        attendance: [],
         opportunities: 0,
-        skills: [],
-        workflow: {
-            resumeUpdated: false,
-            attendanceReported: false,
-            opportunitiesDocumented: false,
-            trainingCompleted: false,
-        },
+        resumeUpdated: false,
+        attendanceReported: false,
+        opportunitiesDocumented: false,
+        trainingCompleted: false,
     };
-    consultants.push(newConsultant);
-    return newConsultant;
+    
+    const result = db.insert(consultants).values(newConsultant).returning({ id: consultants.id }).get();
+    
+    return getConsultantById(result.id.toString())!;
 };

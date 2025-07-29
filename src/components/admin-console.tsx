@@ -38,6 +38,7 @@ import { cn } from '@/lib/utils';
 
 const createConsultantSchema = z.object({
     name: z.string().min(1, 'Name is required'),
+    email: z.string().email('A valid email is required'),
     department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
     status: z.enum(['On Bench', 'On Project']),
     training: z.enum(['Not Started', 'In Progress', 'Completed']),
@@ -69,16 +70,26 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     resolver: zodResolver(createConsultantSchema),
     defaultValues: {
         name: '',
+        email: '',
         department: 'Technology',
         status: 'On Bench',
         training: 'Not Started',
     },
   });
 
+  const refreshConsultants = () => {
+    // This function can be called to refetch all consultants
+    // This is a placeholder for a more robust state management solution
+    // For now, we assume the server action `getAllConsultants` will provide fresh data.
+    // In a real app, you might use React Query or SWR here.
+    const updatedConsultants = getAllConsultants();
+    setConsultants(updatedConsultants);
+  };
+
   useEffect(() => {
-    // This will refresh the consultant data if it changes from the source,
-    setConsultants(getAllConsultants());
-  }, []);
+    // Initial load
+    setConsultants(initialConsultants);
+  }, [initialConsultants]);
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter((consultant) => {
@@ -95,7 +106,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     });
   }, [consultants, searchTerm, departmentFilter, statusFilter]);
 
-  const departments = ['all', ...Array.from(new Set(initialConsultants.map((c) => c.department)))];
+  const departments = ['all', 'Technology', 'Healthcare', 'Finance', 'Retail'];
   const statuses = ['all', 'On Bench', 'On Project'];
 
   const generateReport = () => {
@@ -117,17 +128,13 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   
   const handleSaveAttendance = () => {
     if (selectedConsultant && selectedDates && selectedDates.length > 0) {
-      let updatedConsultant: Consultant | undefined = getConsultantById(selectedConsultant.id);
-      
       selectedDates.forEach(date => {
         const formattedDate = format(date, 'yyyy-MM-dd');
-        updatedConsultant = updateConsultantAttendance(selectedConsultant.id, formattedDate, attendanceStatus);
+        updateConsultantAttendance(selectedConsultant.id, formattedDate, attendanceStatus);
       });
 
-      if (updatedConsultant) {
-        setConsultants(prev => prev.map(c => c.id === selectedConsultant.id ? updatedConsultant! : c));
-      }
-
+      refreshConsultants(); // Refetch data
+      
       toast({
         title: 'Attendance Marked',
         description: `${selectedConsultant.name}'s attendance for ${selectedDates.length} day(s) marked as ${attendanceStatus}.`,
@@ -173,11 +180,11 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const onCreateSubmit = (values: z.infer<typeof createConsultantSchema>) => {
-    const newConsultant = createConsultant(values);
-    setConsultants(prev => [...prev, newConsultant]);
+    createConsultant(values);
+    refreshConsultants(); // Refetch data
     toast({
         title: 'Consultant Created',
-        description: `Successfully created ${newConsultant.name}.`,
+        description: `Successfully created ${values.name}.`,
     });
     setIsCreateDialogOpen(false);
     form.reset();
@@ -189,10 +196,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
-    if (selectedConsultant) {
-      // Re-fetch all consultants to get the updated skills
-       setConsultants(getAllConsultants());
-    }
+    refreshConsultants(); // Refetch data
     setIsAnalyzeDialogOpen(false);
   };
   
@@ -265,6 +269,19 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                           <FormLabel>Name</FormLabel>
                                           <FormControl>
                                               <Input placeholder="John Doe" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                              <FormField
+                                  control={form.control}
+                                  name="email"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Email</FormLabel>
+                                          <FormControl>
+                                              <Input placeholder="john.doe@example.com" type="email" {...field} />
                                           </FormControl>
                                           <FormMessage />
                                       </FormItem>
@@ -548,4 +565,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
