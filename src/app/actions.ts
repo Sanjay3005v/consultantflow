@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { updateConsultantSkills, createConsultant, findConsultantByEmail, addSkillToConsultant } from '@/lib/data';
+import { updateConsultantSkills, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultant, getAllConsultants, updateConsultantAttendance } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -83,11 +83,11 @@ export async function analyzeCertificate(
     }
 }
 
-export async function createNewConsultant(data: { name: string; email: string; password: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {
+export async function createNewConsultant(data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {
     if (findConsultantByEmail(data.email)) {
         throw new Error('A consultant with this email already exists.');
     }
-    const newConsultant = createConsultant(data);
+    const newConsultant = createConsultantData(data);
     return newConsultant;
 }
 
@@ -118,4 +118,12 @@ export async function getOpportunityFeedback(input: OpportunityEngagerInput): Pr
         console.error('Error getting opportunity feedback:', error);
         throw new Error('Failed to get AI-powered opportunity feedback.');
     }
+}
+
+export async function getFreshConsultants(): Promise<Consultant[]> {
+    return getAllConsultants();
+}
+
+export async function markAttendance(consultantId: string, date: string, status: 'Present' | 'Absent'): Promise<Consultant | undefined> {
+    return updateConsultantAttendance(consultantId, date, status);
 }

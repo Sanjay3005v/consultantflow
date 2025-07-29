@@ -24,7 +24,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { updateConsultantAttendance, createConsultant, getConsultantById, getAllConsultants } from '@/lib/data';
+import { createNewConsultant, getFreshConsultants, markAttendance } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -77,17 +77,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     },
   });
 
-  const refreshConsultants = () => {
-    // This function can be called to refetch all consultants
-    // This is a placeholder for a more robust state management solution
-    // For now, we assume the server action `getAllConsultants` will provide fresh data.
-    // In a real app, you might use React Query or SWR here.
-    const updatedConsultants = getAllConsultants();
+  const refreshConsultants = async () => {
+    const updatedConsultants = await getFreshConsultants();
     setConsultants(updatedConsultants);
   };
 
   useEffect(() => {
-    // Initial load
     setConsultants(initialConsultants);
   }, [initialConsultants]);
 
@@ -126,14 +121,13 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     setIsAttendanceDialogOpen(true);
   };
   
-  const handleSaveAttendance = () => {
+  const handleSaveAttendance = async () => {
     if (selectedConsultant && selectedDates && selectedDates.length > 0) {
-      selectedDates.forEach(date => {
-        const formattedDate = format(date, 'yyyy-MM-dd');
-        updateConsultantAttendance(selectedConsultant.id, formattedDate, attendanceStatus);
-      });
+      for (const date of selectedDates) {
+        await markAttendance(selectedConsultant.id, format(date, 'yyyy-MM-dd'), attendanceStatus);
+      }
 
-      refreshConsultants(); // Refetch data
+      await refreshConsultants();
       
       toast({
         title: 'Attendance Marked',
@@ -179,9 +173,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     return `${present}/${total}`;
   };
 
-  const onCreateSubmit = (values: z.infer<typeof createConsultantSchema>) => {
-    createConsultant(values);
-    refreshConsultants(); // Refetch data
+  const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
+    await createNewConsultant(values);
+    await refreshConsultants();
     toast({
         title: 'Consultant Created',
         description: `Successfully created ${values.name}.`,
@@ -196,7 +190,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
-    refreshConsultants(); // Refetch data
+    refreshConsultants();
     setIsAnalyzeDialogOpen(false);
   };
   

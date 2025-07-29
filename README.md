@@ -50,7 +50,7 @@ The application is built with a modern, robust, and scalable technology stack:
 *   **Backend**:
     *   **Next.js Server Actions**: Handle the application's core business logic, such as creating and updating consultant data, running securely on the server.
     *   **Genkit**: Serves as the dedicated backend for all Generative AI tasks, orchestrating calls to [Google's Gemini models](https://deepmind.google/technologies/gemini/).
-*   **Database**: A **SQLite** database is used for data persistence, managed via the **Drizzle ORM** for type-safe database queries.
+*   **Database**: An **in-memory** data store is used for rapid prototyping and development.
 *   **UI Components**: [ShadCN UI](https://ui.shadcn.com/) for a set of accessible, and composable components.
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/) for a utility-first CSS framework that enables rapid UI development.
 *   **Forms**: [React Hook Form](https://react-hook-form.com/) and [Zod](https://zod.dev/) for efficient, type-safe form validation.
