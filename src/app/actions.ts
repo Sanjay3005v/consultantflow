@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { updateConsultantSkills, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultant, getAllConsultants, updateConsultantAttendance } from '@/lib/data';
+import { updateConsultantSkills, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultant, getAllConsultants, updateConsultantAttendance, getAdminCredentials } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -97,6 +97,14 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
         return { consultantId: consultant.id };
     }
     return { error: 'Invalid credentials' };
+}
+
+export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ success: boolean } | { error: string }> {
+    const admin = getAdminCredentials();
+    if (admin.email === credentials.email && admin.password === credentials.password) {
+        return { success: true };
+    }
+    return { error: 'Invalid admin credentials' };
 }
 
 

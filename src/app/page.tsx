@@ -48,7 +48,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/admin">
+              <Link href="/admin/login">
                 Go to Console <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

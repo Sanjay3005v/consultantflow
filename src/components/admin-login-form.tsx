@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { verifyConsultantCredentials } from '@/app/actions';
+import { verifyAdminCredentials } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -26,7 +26,7 @@ const formSchema = z.object({
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
-export default function LoginForm() {
+export default function AdminLoginForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -42,13 +42,12 @@ export default function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      const result = await verifyConsultantCredentials(values);
-      if (result.consultantId) {
+      const result = await verifyAdminCredentials(values);
+      if (result.success) {
         toast({
-          title: 'Login Successful!',
-          description: "You've been successfully logged in.",
+          title: 'Admin Login Successful!',
         });
-        router.push(`/consultant/${result.consultantId}`);
+        router.push(`/admin`);
       } else {
         toast({
           title: 'Login Failed',
@@ -70,8 +69,8 @@ export default function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Consultant Login</CardTitle>
-        <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
+        <CardTitle>Admin Login</CardTitle>
+        <CardDescription>Enter your credentials to access the admin console.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -83,7 +82,7 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                    <FormControl>
-                        <Input type="email" placeholder="you@company.com" {...field} />
+                        <Input type="email" placeholder="admin@company.com" {...field} />
                    </FormControl>
                   <FormMessage />
                 </FormItem>
