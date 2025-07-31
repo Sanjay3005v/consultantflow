@@ -180,3 +180,4 @@ export const createConsultant = async (data: { name: string; email: string; pass
     
     return newConsultant;
 };
+
