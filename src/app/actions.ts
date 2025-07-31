@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { updateConsultantSkillsInDb, createConsultant as createConsultantData, findConsultantByEmail as findConsultantByEmailInDb, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb, getAdminCredentials } from '@/lib/data';
+import { updateConsultantSkillsInDb, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb, getAdminCredentials } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -84,7 +84,7 @@ export async function analyzeCertificate(
 }
 
 export async function createNewConsultant(data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {
-    const existingConsultant = await findConsultantByEmailInDb(data.email);
+    const existingConsultant = await findConsultantByEmail(data.email);
     if (existingConsultant) {
         throw new Error('A consultant with this email already exists.');
     }
@@ -93,7 +93,7 @@ export async function createNewConsultant(data: { name: string; email: string; p
 }
 
 export async function verifyConsultantCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ consultantId: string } | { error: string }> {
-    const consultant = await findConsultantByEmailInDb(credentials.email);
+    const consultant = await findConsultantByEmail(credentials.email);
     if (consultant && consultant.password === credentials.password) {
         return { consultantId: consultant.id };
     }
