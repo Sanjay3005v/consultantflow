@@ -133,6 +133,13 @@ let consultants: Consultant[] = [
     },
 ];
 
+export const getAdminCredentials = () => {
+    return {
+        email: 'admin@company.com',
+        password: 'adminpassword',
+    };
+};
+
 export const getConsultantById = (id: string): Consultant | undefined => {
   return consultants.find((c) => c.id === id);
 };
