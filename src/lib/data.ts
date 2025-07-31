@@ -1,34 +1,29 @@
-import { db } from './db';
-import * as schema from './db/schema';
-import { eq } from 'drizzle-orm';
+
+import { db } from './firebase';
+import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch } from 'firebase/firestore';
 import type { Consultant, SkillAnalysis, AttendanceRecord } from './types';
 
-// Helper to map DB consultant to app consultant type
-const mapDbConsultantToApp = (dbConsultant: any, dbSkills: any[], dbAttendance: any[]): Consultant => {
+// Helper to map Firestore doc to the Consultant type
+const mapDocToConsultant = (doc: any): Consultant => {
+    const data = doc.data();
     return {
-        id: dbConsultant.id,
-        name: dbConsultant.name,
-        email: dbConsultant.email,
-        password: dbConsultant.password,
-        department: dbConsultant.department,
-        status: dbConsultant.status,
-        resumeStatus: dbConsultant.resumeStatus,
-        opportunities: dbConsultant.opportunities,
-        training: dbConsultant.training,
-        skills: dbSkills.map(s => ({
-            skill: s.skill,
-            rating: s.rating,
-            reasoning: s.reasoning,
-        })),
-        attendance: dbAttendance.map(a => ({
-            date: a.date,
-            status: a.status,
-        })),
-        workflow: {
-            resumeUpdated: dbConsultant.workflowResumeUpdated,
-            attendanceReported: dbConsultant.workflowAttendanceReported,
-            opportunitiesDocumented: dbConsultant.workflowOpportunitiesDocumented,
-            trainingCompleted: dbConsultant.workflowTrainingCompleted,
+        id: doc.id,
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        department: data.department,
+        status: data.status,
+        resumeStatus: data.resumeStatus,
+        opportunities: data.opportunities,
+        training: data.training,
+        // Subcollections for skills and attendance are handled separately
+        skills: data.skills || [],
+        attendance: data.attendance || [],
+        workflow: data.workflow || {
+            resumeUpdated: false,
+            attendanceReported: false,
+            opportunitiesDocumented: false,
+            trainingCompleted: false,
         },
     };
 };
@@ -41,119 +36,136 @@ export const getAdminCredentials = () => {
 };
 
 export const getConsultantById = async (id: string): Promise<Consultant | undefined> => {
-    const dbConsultant = await db.query.consultants.findFirst({
-        where: eq(schema.consultants.id, id),
-    });
+    const consultantDocRef = doc(db, 'consultants', id);
+    const consultantDocSnap = await getDoc(consultantDocRef);
 
-    if (!dbConsultant) return undefined;
+    if (!consultantDocSnap.exists()) {
+        return undefined;
+    }
 
-    const dbSkills = await db.select().from(schema.skills).where(eq(schema.skills.consultantId, id));
-    const dbAttendance = await db.select().from(schema.attendance).where(eq(schema.attendance.consultantId, id));
+    const consultant = mapDocToConsultant(consultantDocSnap);
+    
+    // Fetch skills and attendance from subcollections
+    const skillsQuery = query(collection(db, `consultants/${id}/skills`));
+    const skillsSnapshot = await getDocs(skillsQuery);
+    consultant.skills = skillsSnapshot.docs.map(d => d.data() as SkillAnalysis);
 
-    return mapDbConsultantToApp(dbConsultant, dbSkills, dbAttendance);
+    const attendanceQuery = query(collection(db, `consultants/${id}/attendance`));
+    const attendanceSnapshot = await getDocs(attendanceQuery);
+    consultant.attendance = attendanceSnapshot.docs.map(d => d.data() as AttendanceRecord);
+
+    return consultant;
 };
 
 export const getAllConsultants = async (): Promise<Consultant[]> => {
-    const allDbConsultants = await db.select().from(schema.consultants).all();
-    
-    const result: Consultant[] = [];
-    for (const dbConsultant of allDbConsultants) {
-        const dbSkills = await db.select().from(schema.skills).where(eq(schema.skills.consultantId, dbConsultant.id)).all();
-        const dbAttendance = await db.select().from(schema.attendance).where(eq(schema.attendance.consultantId, dbConsultant.id)).all();
-        result.push(mapDbConsultantToApp(dbConsultant, dbSkills, dbAttendance));
+    const consultantsCol = collection(db, 'consultants');
+    const consultantSnapshot = await getDocs(consultantsCol);
+    const consultants: Consultant[] = [];
+    for (const doc of consultantSnapshot.docs) {
+        const consultant = await getConsultantById(doc.id);
+        if (consultant) {
+            consultants.push(consultant);
+        }
     }
-    
-    return result;
+    return consultants;
 };
-
 
 export const findConsultantByEmail = async (email: string): Promise<Consultant | undefined> => {
-    const dbConsultant = await db.query.consultants.findFirst({
-        where: eq(schema.consultants.email, email.toLowerCase()),
-    });
-
-    if (!dbConsultant) return undefined;
+    const q = query(collection(db, 'consultants'), where("email", "==", email.toLowerCase()));
+    const querySnapshot = await getDocs(q);
     
-    return getConsultantById(dbConsultant.id);
+    if (querySnapshot.empty) {
+        return undefined;
+    }
+
+    const consultantDoc = querySnapshot.docs[0];
+    return await getConsultantById(consultantDoc.id);
 };
 
-export const updateConsultantAttendanceInDb = async (id: string, date: string, status: 'Present' | 'Absent') => {
-    const existingRecord = await db.query.attendance.findFirst({
-        where: (attendance, { and }) => and(
-            eq(attendance.consultantId, id),
-            eq(attendance.date, date)
-        ),
-    });
+export const updateConsultantAttendanceInDb = async (id: string, date: string, status: 'Present' | 'Absent'): Promise<Consultant | undefined> => {
+    const attendanceCol = collection(db, `consultants/${id}/attendance`);
+    const q = query(attendanceCol, where("date", "==", date));
+    const querySnapshot = await getDocs(q);
 
-    if (existingRecord) {
-        await db.update(schema.attendance)
-            .set({ status })
-            .where(eq(schema.attendance.id, existingRecord.id));
+    if (!querySnapshot.empty) {
+        // Update existing record
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, { status });
     } else {
-        await db.insert(schema.attendance).values({ consultantId: id, date, status });
-    }
-    return getConsultantById(id);
-};
-
-export const updateConsultantSkillsInDb = async (id: string, newSkills: SkillAnalysis[]) => {
-    // Clear existing skills
-    await db.delete(schema.skills).where(eq(schema.skills.consultantId, id));
-
-    // Insert new skills
-    if (newSkills.length > 0) {
-        await db.insert(schema.skills).values(
-            newSkills.map(skill => ({
-                consultantId: id,
-                skill: skill.skill,
-                rating: skill.rating,
-                reasoning: skill.reasoning,
-            }))
-        );
+        // Add new record
+        await addDoc(attendanceCol, { date, status });
     }
     
-    // Update consultant status
-    await db.update(schema.consultants)
-        .set({ resumeStatus: 'Updated', workflowResumeUpdated: true })
-        .where(eq(schema.consultants.id, id));
-
     return getConsultantById(id);
 };
 
-export const addSkillToConsultantInDb = async (id: string, newSkill: SkillAnalysis) => {
-    await db.insert(schema.skills).values({
-        consultantId: id,
-        skill: newSkill.skill,
-        rating: newSkill.rating,
-        reasoning: newSkill.reasoning,
+
+export const updateConsultantSkillsInDb = async (consultantId: string, newSkills: SkillAnalysis[]): Promise<Consultant | undefined> => {
+    const skillsColRef = collection(db, `consultants/${consultantId}/skills`);
+    
+    // Batch delete existing skills
+    const existingSkillsSnapshot = await getDocs(skillsColRef);
+    const batch = writeBatch(db);
+    existingSkillsSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
     });
     
-    await db.update(schema.consultants)
-        .set({ training: 'Completed', workflowTrainingCompleted: true })
-        .where(eq(schema.consultants.id, id));
-        
-    return getConsultantById(id);
+    // Batch write new skills
+    newSkills.forEach(skill => {
+        const newSkillRef = doc(skillsColRef);
+        batch.set(newSkillRef, skill);
+    });
+
+    await batch.commit();
+
+    // Update consultant's main document
+    const consultantDocRef = doc(db, 'consultants', consultantId);
+    await updateDoc(consultantDocRef, {
+        resumeStatus: 'Updated',
+        'workflow.resumeUpdated': true
+    });
+
+    return getConsultantById(consultantId);
 };
 
-export const createConsultant = async (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status?: 'On Bench' | 'On Project', training?: 'Not Started' | 'In Progress' | 'Completed' }) => {
-    const newId = (Math.random() * 1000000).toFixed(0).toString(); // Simple unique ID
+export const addSkillToConsultantInDb = async (consultantId: string, newSkill: SkillAnalysis): Promise<Consultant | undefined> => {
+    const skillsColRef = collection(db, `consultants/${consultantId}/skills`);
+    await addDoc(skillsColRef, newSkill);
     
-    const newConsultant = {
-        id: newId,
+    const consultantDocRef = doc(db, 'consultants', consultantId);
+    await updateDoc(consultantDocRef, {
+        training: 'Completed',
+        'workflow.trainingCompleted': true
+    });
+    
+    return getConsultantById(consultantId);
+};
+
+
+export const createConsultant = async (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail' }): Promise<Consultant> => {
+    const newConsultantData = {
         name: data.name,
         email: data.email.toLowerCase(),
-        password: data.password || 'password123',
+        password: data.password || 'password123', // Should be hashed in a real app
         department: data.department,
-        status: data.status || 'On Bench',
-        training: data.training || 'Not Started',
+        status: 'On Bench' as const,
         resumeStatus: 'Pending' as const,
         opportunities: 0,
-        workflowResumeUpdated: false,
-        workflowAttendanceReported: false,
-        workflowOpportunitiesDocumented: false,
-        workflowTrainingCompleted: false,
+        training: 'Not Started' as const,
+        workflow: {
+            resumeUpdated: false,
+            attendanceReported: false,
+            opportunitiesDocumented: false,
+            trainingCompleted: false,
+        },
     };
-    
-    await db.insert(schema.consultants).values(newConsultant);
 
-    return (await getConsultantById(newId))!;
+    const docRef = await addDoc(collection(db, 'consultants'), newConsultantData);
+
+    const newConsultant = await getConsultantById(docRef.id);
+    if (!newConsultant) {
+        throw new Error("Failed to retrieve newly created consultant.");
+    }
+    
+    return newConsultant;
 };
