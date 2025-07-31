@@ -5,8 +5,8 @@ import ConsultantDashboard from '@/components/consultant-dashboard';
 
 
 // This is the server component that fetches the data
-export default function ConsultantPage({ params }: { params: { id: string } }) {
-  const consultant = getConsultantById(params.id);
+export default async function ConsultantPage({ params }: { params: { id: string } }) {
+  const consultant = await getConsultantById(params.id);
 
   if (!consultant) {
     notFound();

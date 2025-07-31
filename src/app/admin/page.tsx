@@ -1,8 +1,8 @@
 import AdminConsole from '@/components/admin-console';
 import { getAllConsultants } from '@/lib/data';
 
-export default function AdminPage() {
-  const consultants = getAllConsultants();
+export default async function AdminPage() {
+  const consultants = await getAllConsultants();
 
   return (
     <div className="container mx-auto p-4 md:p-8">

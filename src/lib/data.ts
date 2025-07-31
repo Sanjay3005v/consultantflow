@@ -1,137 +1,37 @@
+import { db } from './db';
+import * as schema from './db/schema';
+import { eq } from 'drizzle-orm';
 import type { Consultant, SkillAnalysis, AttendanceRecord } from './types';
 
-let consultants: Consultant[] = [
-    {
-        id: '1',
-        name: 'Alex Johnson',
-        email: 'alex.j@example.com',
-        password: 'password123',
-        department: 'Technology',
-        status: 'On Bench',
-        resumeStatus: 'Pending',
-        attendance: [
-            { date: '2023-07-01', status: 'Present' },
-            { date: '2023-07-02', status: 'Present' },
-        ],
-        opportunities: 5,
-        training: 'In Progress',
-        skills: ['React', 'Node.js', 'TypeScript'],
+// Helper to map DB consultant to app consultant type
+const mapDbConsultantToApp = (dbConsultant: any, dbSkills: any[], dbAttendance: any[]): Consultant => {
+    return {
+        id: dbConsultant.id,
+        name: dbConsultant.name,
+        email: dbConsultant.email,
+        password: dbConsultant.password,
+        department: dbConsultant.department,
+        status: dbConsultant.status,
+        resumeStatus: dbConsultant.resumeStatus,
+        opportunities: dbConsultant.opportunities,
+        training: dbConsultant.training,
+        skills: dbSkills.map(s => ({
+            skill: s.skill,
+            rating: s.rating,
+            reasoning: s.reasoning,
+        })),
+        attendance: dbAttendance.map(a => ({
+            date: a.date,
+            status: a.status,
+        })),
         workflow: {
-            resumeUpdated: false,
-            attendanceReported: true,
-            opportunitiesDocumented: true,
-            trainingCompleted: false,
+            resumeUpdated: dbConsultant.workflowResumeUpdated,
+            attendanceReported: dbConsultant.workflowAttendanceReported,
+            opportunitiesDocumented: dbConsultant.workflowOpportunitiesDocumented,
+            trainingCompleted: dbConsultant.workflowTrainingCompleted,
         },
-    },
-    {
-        id: '2',
-        name: 'Maria Garcia',
-        email: 'maria.g@example.com',
-        password: 'password123',
-        department: 'Healthcare',
-        status: 'On Project',
-        resumeStatus: 'Updated',
-        attendance: [],
-        opportunities: 2,
-        training: 'Completed',
-        skills: [
-            { skill: 'HL7', rating: 8, reasoning: '5 years of experience with HL7 integration projects.' },
-            { skill: 'FHIR', rating: 7, reasoning: 'Certified FHIR professional.' },
-        ],
-        workflow: {
-            resumeUpdated: true,
-            attendanceReported: true,
-            opportunitiesDocumented: true,
-            trainingCompleted: true,
-        },
-    },
-     {
-        id: '3',
-        name: 'Sam Chen',
-        email: 'sam.c@example.com',
-        password: 'password123',
-        department: 'Finance',
-        status: 'On Bench',
-        resumeStatus: 'Pending',
-        attendance: [],
-        opportunities: 8,
-        training: 'Not Started',
-        skills: ['Financial Modeling', 'Risk Analysis'],
-        workflow: {
-            resumeUpdated: false,
-            attendanceReported: false,
-            opportunitiesDocumented: true,
-            trainingCompleted: false,
-        },
-    },
-    {
-        id: '4',
-        name: 'Jessica Williams',
-        email: 'jessica.w@example.com',
-        password: 'password123',
-        department: 'Retail',
-        status: 'On Project',
-        resumeStatus: 'Updated',
-        attendance: [],
-        opportunities: 3,
-        training: 'Completed',
-        skills: [
-            { skill: 'Salesforce Commerce Cloud', rating: 9, reasoning: 'Led three major platform migrations.' },
-            { skill: 'Demandware', rating: 7, reasoning: 'Extensive experience in legacy system.' },
-        ],
-        workflow: {
-            resumeUpdated: true,
-            attendanceReported: true,
-            opportunitiesDocumented: true,
-            trainingCompleted: true,
-        },
-    },
-    {
-        id: '5',
-        name: 'Ben Carter',
-        email: 'ben.c@example.com',
-        password: 'password123',
-        department: 'Technology',
-        status: 'On Bench',
-        resumeStatus: 'Updated',
-        attendance: [],
-        opportunities: 12,
-        training: 'In Progress',
-        skills: [
-            { skill: 'AWS', rating: 8, reasoning: 'AWS Certified Solutions Architect.' },
-            { skill: 'Kubernetes', rating: 6, reasoning: 'Managed container orchestration for two large projects.' },
-            { skill: 'Terraform', rating: 7, reasoning: 'Experience with Infrastructure as Code (IaC).' },
-        ],
-        workflow: {
-            resumeUpdated: true,
-            attendanceReported: false,
-            opportunitiesDocumented: true,
-            trainingCompleted: false,
-        },
-    },
-     {
-        id: '6',
-        name: 'Emily Davis',
-        email: 'emily.d@example.com',
-        password: 'password123',
-        department: 'Technology',
-        status: 'On Project',
-        resumeStatus: 'Updated',
-        attendance: [],
-        opportunities: 4,
-        training: 'Completed',
-        skills: [
-            { skill: 'Cybersecurity', rating: 8, reasoning: 'Certified Ethical Hacker (CEH).' },
-            { skill: 'Penetration Testing', rating: 7, reasoning: 'Conducted regular security audits.' },
-        ],
-        workflow: {
-            resumeUpdated: true,
-            attendanceReported: true,
-            opportunitiesDocumented: true,
-            trainingCompleted: true,
-        },
-    },
-];
+    };
+};
 
 export const getAdminCredentials = () => {
     return {
@@ -140,77 +40,120 @@ export const getAdminCredentials = () => {
     };
 };
 
-export const getConsultantById = (id: string): Consultant | undefined => {
-  return consultants.find((c) => c.id === id);
+export const getConsultantById = async (id: string): Promise<Consultant | undefined> => {
+    const dbConsultant = await db.query.consultants.findFirst({
+        where: eq(schema.consultants.id, id),
+    });
+
+    if (!dbConsultant) return undefined;
+
+    const dbSkills = await db.select().from(schema.skills).where(eq(schema.skills.consultantId, id));
+    const dbAttendance = await db.select().from(schema.attendance).where(eq(schema.attendance.consultantId, id));
+
+    return mapDbConsultantToApp(dbConsultant, dbSkills, dbAttendance);
 };
 
-export const getAllConsultants = (): Consultant[] => {
-  return consultants;
-};
-
-export const findConsultantByEmail = (email: string): Consultant | undefined => {
-    return consultants.find((c) => c.email.toLowerCase() === email.toLowerCase());
-};
-
-export const updateConsultantAttendance = (id: string, date: string, status: 'Present' | 'Absent') => {
-    const consultant = getConsultantById(id);
-    if (consultant) {
-        const existingRecord = consultant.attendance.find(a => a.date === date);
-        if (existingRecord) {
-            existingRecord.status = status;
-        } else {
-            consultant.attendance.push({ date, status });
-        }
-        return consultant;
+export const getAllConsultants = async (): Promise<Consultant[]> => {
+    const allDbConsultants = await db.select().from(schema.consultants).all();
+    
+    const result: Consultant[] = [];
+    for (const dbConsultant of allDbConsultants) {
+        const dbSkills = await db.select().from(schema.skills).where(eq(schema.skills.consultantId, dbConsultant.id)).all();
+        const dbAttendance = await db.select().from(schema.attendance).where(eq(schema.attendance.consultantId, dbConsultant.id)).all();
+        result.push(mapDbConsultantToApp(dbConsultant, dbSkills, dbAttendance));
     }
-    return undefined;
+    
+    return result;
 };
 
 
-export const updateConsultantSkills = (id: string, newSkills: SkillAnalysis[]) => {
-  const consultant = getConsultantById(id);
-  if (consultant) {
-    consultant.skills = newSkills;
-    consultant.resumeStatus = 'Updated';
-    consultant.workflow.resumeUpdated = true;
-    return consultant;
-  }
-  return undefined;
+export const findConsultantByEmail = async (email: string): Promise<Consultant | undefined> => {
+    const dbConsultant = await db.query.consultants.findFirst({
+        where: eq(schema.consultants.email, email.toLowerCase()),
+    });
+
+    if (!dbConsultant) return undefined;
+    
+    return getConsultantById(dbConsultant.id);
 };
 
-export const addSkillToConsultant = (id: string, newSkill: SkillAnalysis) => {
-    const consultant = getConsultantById(id);
-    if (consultant) {
-        const existingSkills = (consultant.skills as SkillAnalysis[]).filter(s => typeof s === 'object');
-        consultant.skills = [...existingSkills, newSkill];
-        consultant.training = 'Completed';
-        consultant.workflow.trainingCompleted = true;
-        return consultant;
+export const updateConsultantAttendanceInDb = async (id: string, date: string, status: 'Present' | 'Absent') => {
+    const existingRecord = await db.query.attendance.findFirst({
+        where: (attendance, { and }) => and(
+            eq(attendance.consultantId, id),
+            eq(attendance.date, date)
+        ),
+    });
+
+    if (existingRecord) {
+        await db.update(schema.attendance)
+            .set({ status })
+            .where(eq(schema.attendance.id, existingRecord.id));
+    } else {
+        await db.insert(schema.attendance).values({ consultantId: id, date, status });
     }
-    return undefined;
+    return getConsultantById(id);
 };
 
-export const createConsultant = (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status?: 'On Bench' | 'On Project', training?: 'Not Started' | 'In Progress' | 'Completed' }) => {
-    const newId = (Math.max(...consultants.map(c => parseInt(c.id, 10))) + 1).toString();
-    const newConsultant: Consultant = {
+export const updateConsultantSkillsInDb = async (id: string, newSkills: SkillAnalysis[]) => {
+    // Clear existing skills
+    await db.delete(schema.skills).where(eq(schema.skills.consultantId, id));
+
+    // Insert new skills
+    if (newSkills.length > 0) {
+        await db.insert(schema.skills).values(
+            newSkills.map(skill => ({
+                consultantId: id,
+                skill: skill.skill,
+                rating: skill.rating,
+                reasoning: skill.reasoning,
+            }))
+        );
+    }
+    
+    // Update consultant status
+    await db.update(schema.consultants)
+        .set({ resumeStatus: 'Updated', workflowResumeUpdated: true })
+        .where(eq(schema.consultants.id, id));
+
+    return getConsultantById(id);
+};
+
+export const addSkillToConsultantInDb = async (id: string, newSkill: SkillAnalysis) => {
+    await db.insert(schema.skills).values({
+        consultantId: id,
+        skill: newSkill.skill,
+        rating: newSkill.rating,
+        reasoning: newSkill.reasoning,
+    });
+    
+    await db.update(schema.consultants)
+        .set({ training: 'Completed', workflowTrainingCompleted: true })
+        .where(eq(schema.consultants.id, id));
+        
+    return getConsultantById(id);
+};
+
+export const createConsultant = async (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail', status?: 'On Bench' | 'On Project', training?: 'Not Started' | 'In Progress' | 'Completed' }) => {
+    const newId = (Math.random() * 1000000).toFixed(0).toString(); // Simple unique ID
+    
+    const newConsultant = {
         id: newId,
         name: data.name,
-        email: data.email,
+        email: data.email.toLowerCase(),
         password: data.password || 'password123',
         department: data.department,
         status: data.status || 'On Bench',
         training: data.training || 'Not Started',
-        resumeStatus: 'Pending',
-        attendance: [],
+        resumeStatus: 'Pending' as const,
         opportunities: 0,
-        skills: [],
-        workflow: {
-            resumeUpdated: false,
-            attendanceReported: false,
-            opportunitiesDocumented: false,
-            trainingCompleted: false,
-        },
+        workflowResumeUpdated: false,
+        workflowAttendanceReported: false,
+        workflowOpportunitiesDocumented: false,
+        workflowTrainingCompleted: false,
     };
-    consultants.push(newConsultant);
-    return newConsultant;
+    
+    await db.insert(schema.consultants).values(newConsultant);
+
+    return (await getConsultantById(newId))!;
 };
