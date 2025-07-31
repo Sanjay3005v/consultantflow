@@ -2,6 +2,7 @@
 import { db } from './firebase';
 import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch } from 'firebase/firestore';
 import type { Consultant, SkillAnalysis, AttendanceRecord } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Helper to map Firestore doc to the Consultant type
 const mapDocToConsultant = (doc: any): Consultant => {
@@ -45,15 +46,18 @@ export const getConsultantById = async (id: string): Promise<Consultant | undefi
 
     const consultant = mapDocToConsultant(consultantDocSnap);
     
-    // Fetch skills and attendance from subcollections
     const skillsQuery = query(collection(db, `consultants/${id}/skills`));
     const skillsSnapshot = await getDocs(skillsQuery);
-    consultant.skills = skillsSnapshot.docs.map(d => d.data() as SkillAnalysis);
+    if (!skillsSnapshot.empty) {
+         consultant.skills = skillsSnapshot.docs.map(d => d.data() as SkillAnalysis);
+    }
 
     const attendanceQuery = query(collection(db, `consultants/${id}/attendance`));
     const attendanceSnapshot = await getDocs(attendanceQuery);
-    consultant.attendance = attendanceSnapshot.docs.map(d => d.data() as AttendanceRecord);
-
+    if(!attendanceSnapshot.empty) {
+        consultant.attendance = attendanceSnapshot.docs.map(d => d.data() as AttendanceRecord);
+    }
+    
     return consultant;
 };
 
@@ -88,11 +92,9 @@ export const updateConsultantAttendanceInDb = async (id: string, date: string, s
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
-        // Update existing record
         const docRef = querySnapshot.docs[0].ref;
         await updateDoc(docRef, { status });
     } else {
-        // Add new record
         await addDoc(attendanceCol, { date, status });
     }
     
@@ -103,14 +105,12 @@ export const updateConsultantAttendanceInDb = async (id: string, date: string, s
 export const updateConsultantSkillsInDb = async (consultantId: string, newSkills: SkillAnalysis[]): Promise<Consultant | undefined> => {
     const skillsColRef = collection(db, `consultants/${consultantId}/skills`);
     
-    // Batch delete existing skills
     const existingSkillsSnapshot = await getDocs(skillsColRef);
     const batch = writeBatch(db);
     existingSkillsSnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
     });
     
-    // Batch write new skills
     newSkills.forEach(skill => {
         const newSkillRef = doc(skillsColRef);
         batch.set(newSkillRef, skill);
@@ -118,7 +118,6 @@ export const updateConsultantSkillsInDb = async (consultantId: string, newSkills
 
     await batch.commit();
 
-    // Update consultant's main document
     const consultantDocRef = doc(db, 'consultants', consultantId);
     await updateDoc(consultantDocRef, {
         resumeStatus: 'Updated',
@@ -146,7 +145,7 @@ export const createConsultant = async (data: { name: string; email: string; pass
     const newConsultantData = {
         name: data.name,
         email: data.email.toLowerCase(),
-        password: data.password || 'password123', // Should be hashed in a real app
+        password: data.password || 'password123',
         department: data.department,
         status: 'On Bench' as const,
         resumeStatus: 'Pending' as const,
@@ -161,6 +160,18 @@ export const createConsultant = async (data: { name: string; email: string; pass
     };
 
     const docRef = await addDoc(collection(db, 'consultants'), newConsultantData);
+
+    const skillsColRef = collection(db, `consultants/${docRef.id}/skills`);
+    await addDoc(skillsColRef, {
+        id: uuidv4(),
+        skill: 'Initial Skill',
+        rating: 0,
+        reasoning: 'Initial empty skill record.'
+    });
+
+    const attendanceColRef = collection(db, `consultants/${docRef.id}/attendance`);
+    await addDoc(attendanceColRef, {});
+
 
     const newConsultant = await getConsultantById(docRef.id);
     if (!newConsultant) {
