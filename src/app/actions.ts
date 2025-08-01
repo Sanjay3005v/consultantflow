@@ -22,6 +22,11 @@ import {
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
 import { candidateCollectorFlow } from '@/ai/flows/chatbot-flow';
+import {
+  projectAllocationAgent,
+  type ProjectAllocationInput,
+  type ProjectAllocationOutput,
+} from '@/ai/flows/project-allocation-agent';
 import { 
     updateConsultantSkillsInDb, 
     createConsultant, 
@@ -138,6 +143,17 @@ export async function getOpportunityFeedback(input: OpportunityEngagerInput): Pr
         throw new Error('Failed to get AI-powered opportunity feedback.');
     }
 }
+
+export async function getProjectAllocations(input: ProjectAllocationInput): Promise<ProjectAllocationOutput> {
+    try {
+        const result = await projectAllocationAgent(input);
+        return result;
+    } catch (error) {
+        console.error('Error getting project allocations:', error);
+        throw new Error('Failed to get AI-powered project allocations.');
+    }
+}
+
 
 export async function getFreshConsultants(): Promise<Consultant[]> {
     return getAllConsultantsFromDb();
