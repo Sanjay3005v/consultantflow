@@ -484,7 +484,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                                 <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                                 <div className="h-64">
                                                     <ResponsiveContainer width="100%" height="100%">
-                                                        <RechartsBarChart data={consultant.skills.filter(s => s && (s as SkillAnalysis).skill) as SkillAnalysis[]}>
+                                                        <RechartsBarChart data={(consultant.skills as SkillAnalysis[]).filter(s => s && s.skill)}>
                                                             <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                                                             <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
                                                             <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
