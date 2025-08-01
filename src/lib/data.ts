@@ -145,7 +145,7 @@ export const createConsultant = async (data: { name: string; email: string; pass
     const newConsultantData = {
         name: data.name,
         email: data.email.toLowerCase(),
-        password: data.password, // This line ensures the password is included
+        password: data.password,
         department: data.department,
         status: 'On Bench' as const,
         resumeStatus: 'Pending' as const,
