@@ -12,7 +12,7 @@ type SkillsDisplayProps = {
 
 export default function SkillsDisplay({ skills }: SkillsDisplayProps) {
     const isSkillAnalysis = (skill: string | SkillAnalysis): skill is SkillAnalysis => {
-        return typeof skill === 'object' && 'rating' in skill;
+        return typeof skill === 'object' && skill !== null && 'rating' in skill;
     }
   
   return (
@@ -51,11 +51,13 @@ export default function SkillsDisplay({ skills }: SkillsDisplayProps) {
                 </Table>
             ) : (
                 <div className="flex flex-wrap gap-2">
-                    {(skills as string[]).map((skill, index) => (
-                    <Badge key={index} variant="default" className="text-lg py-1 px-3">
-                        {skill}
-                    </Badge>
-                    ))}
+                    {(skills as (string | object)[])
+                        .filter(skill => typeof skill === 'string')
+                        .map((skill, index) => (
+                            <Badge key={index} variant="default" className="text-lg py-1 px-3">
+                                {skill as string}
+                            </Badge>
+                     ))}
                 </div>
             )
         ) : (
