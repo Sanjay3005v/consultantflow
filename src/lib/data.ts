@@ -1,7 +1,7 @@
 
 import { db } from './firebase';
-import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch } from 'firebase/firestore';
-import type { Consultant, SkillAnalysis, AttendanceRecord, JobOpportunity } from './types';
+import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import type { Consultant, SkillAnalysis, AttendanceRecord, JobOpportunity, Candidate } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Helper to map Firestore doc to the Consultant type
@@ -206,4 +206,13 @@ export const updateConsultantOpportunitiesInDb = async (consultantId: string, op
         selectedOpportunities: opportunityIds,
     });
     return getConsultantById(consultantId);
+};
+
+export const saveCandidate = async (candidateData: Omit<Candidate, 'id' | 'submittedAt'>): Promise<string> => {
+    const candidatesColRef = collection(db, 'candidates');
+    const docRef = await addDoc(candidatesColRef, {
+        ...candidateData,
+        submittedAt: serverTimestamp(),
+    });
+    return docRef.id;
 };

@@ -39,3 +39,12 @@ export type JobOpportunity = {
     neededYOE: number;
     responsibilities: string;
 }
+
+export type Candidate = {
+    id?: string;
+    name: string;
+    experience: number;
+    role: string;
+    resume: string; // Stored as a data URI
+    submittedAt: Date;
+}
