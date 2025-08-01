@@ -88,12 +88,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter((consultant) => {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase();
       const matchesSearch =
-        consultant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        consultant.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+        consultant.email.toLowerCase().includes(lowerCaseSearchTerm) ||
         (Array.isArray(consultant.skills) && consultant.skills.some((skill: any) =>
           typeof skill === 'string' 
-            ? skill.toLowerCase().includes(searchTerm.toLowerCase())
-            : skill.skill.toLowerCase().includes(searchTerm.toLowerCase())
+            ? skill.toLowerCase().includes(lowerCaseSearchTerm)
+            : skill.skill.toLowerCase().includes(lowerCaseSearchTerm)
         ));
       const matchesDept = departmentFilter === 'all' || consultant.department === departmentFilter;
       const matchesStatus = statusFilter === 'all' || consultant.status === statusFilter;
@@ -379,7 +381,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <Input
-              placeholder="Search by name or skill..."
+              placeholder="Search by name, email, or skill..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-grow"
@@ -559,3 +561,5 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
