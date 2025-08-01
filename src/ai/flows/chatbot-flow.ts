@@ -5,14 +5,14 @@
  * @fileOverview A chatbot flow to collect candidate details.
  *
  * - candidateCollectorFlow - A function that handles the conversation and data collection.
- * - CandidateDetailsSchema - The schema for the candidate's information.
+ * - CandidateDetails - The type for the candidate's information.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { saveCandidate } from '@/lib/data';
 
-export const CandidateDetailsSchema = z.object({
+const CandidateDetailsSchema = z.object({
     name: z.string().describe('The full name of the candidate.'),
     experience: z.number().describe('The years of professional experience the candidate has.'),
     role: z.string().describe('The role the candidate is applying for.'),
