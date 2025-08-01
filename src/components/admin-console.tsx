@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, TrendingUp, ChevronDown, UserPlus } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -572,5 +572,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
-    

@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { updateConsultantSkillsInDb, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb } from '@/lib/data';
+import { updateConsultantSkillsInDb, createConsultant, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -89,7 +89,7 @@ export async function createNewConsultant(data: { name: string; email: string; p
         throw new Error('A consultant with this email already exists.');
     }
     // Pass the whole data object, including the password
-    const newConsultant = await createConsultantData(data);
+    const newConsultant = await createConsultant(data);
     return newConsultant;
 }
 

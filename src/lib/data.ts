@@ -161,12 +161,12 @@ export const createConsultant = async (data: { name: string; email: string; pass
 
     const docRef = await addDoc(collection(db, 'consultants'), newConsultantData);
 
-    // Initialize subcollections
+    // Initialize subcollections with a placeholder document
     const skillsColRef = collection(db, `consultants/${docRef.id}/skills`);
-    await addDoc(skillsColRef, {});
+    await addDoc(skillsColRef, { placeholder: true });
 
     const attendanceColRef = collection(db, `consultants/${docRef.id}/attendance`);
-    await addDoc(attendanceColRef, {});
+    await addDoc(attendanceColRef, { placeholder: true });
 
 
     const newConsultant = await getConsultantById(docRef.id);
