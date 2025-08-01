@@ -2,14 +2,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Briefcase, Download, Sparkles, Loader2, ThumbsUp, ThumbsDown, History } from 'lucide-react';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import type { ProjectAllocationOutput } from '@/ai/flows/project-allocation-agent';
 import jsPDF from 'jspdf';
 import { ScrollArea } from './ui/scroll-area';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Badge } from './ui/badge';
 import { getProjectAllocations } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -179,46 +178,45 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
 
                     {allocationResult && (
                         <>
-                        <ScrollArea className="h-96 w-full rounded-md border">
-                            <Accordion type="multiple" className="p-2">
+                        <ScrollArea className="h-96 w-full rounded-md border p-4">
+                            <div className="space-y-4">
                                 {allocationResult.allocatedProjects.map(proj => (
-                                    <AccordionItem value={proj.projectName} key={proj.projectName}>
-                                        <AccordionTrigger className='flex-1'>
-                                            <div className="flex items-center gap-4 text-left w-full">
-                                                <span className="flex-1">{proj.projectName}</span>
+                                    <Card key={proj.projectName}>
+                                        <CardHeader>
+                                            <CardTitle className='flex items-center justify-between'>
+                                                <span>{proj.projectName}</span>
                                                 <Badge variant={getStatusVariant(opportunityStatuses[proj.projectName])} className="flex items-center gap-1">
                                                     {getStatusIcon(opportunityStatuses[proj.projectName])}
                                                     {opportunityStatuses[proj.projectName]}
                                                 </Badge>
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="pl-4 pr-4 pb-4">
-                                            <div className="space-y-4 text-sm">
-                                                <div className="flex items-center gap-4">
+                                            </CardTitle>
+                                             <CardDescription>
+                                                 <Badge variant="secondary">{proj.domain}</Badge>
+                                             </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4 text-sm">
+                                            <div className="flex items-center gap-4">
                                                     <span className="font-semibold">Fit Rating:</span>
                                                     <Progress value={proj.fitRating * 10} className="w-32" />
                                                     <span>{proj.fitRating}/10</span>
-                                                </div>
-                                                <p><span className="font-semibold">Domain:</span> <Badge variant="secondary">{proj.domain}</Badge></p>
-                                                <p><span className="font-semibold">Required Skills:</span> {proj.requiredSkills.join(', ')}</p>
-                                                <p className="text-muted-foreground"><span className="font-semibold text-foreground">Justification:</span> {proj.justification}</p>
-
-                                                <div className="flex gap-2 justify-end pt-2">
-                                                    <Button size="sm" variant="outline" onClick={() => setStatus(proj.projectName, 'Waitlisted')}>
-                                                        <History className="mr-1 h-4 w-4" /> Waitlist
-                                                    </Button>
-                                                    <Button size="sm" variant="destructive" onClick={() => setStatus(proj.projectName, 'Declined')}>
-                                                        <ThumbsDown className="mr-1 h-4 w-4" /> Decline
-                                                    </Button>
-                                                    <Button size="sm" onClick={() => setStatus(proj.projectName, 'Accepted')}>
-                                                         <ThumbsUp className="mr-1 h-4 w-4" /> Accept
-                                                    </Button>
-                                                </div>
                                             </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
+                                            <p><span className="font-semibold">Required Skills:</span> {proj.requiredSkills.join(', ')}</p>
+                                            <p className="text-muted-foreground"><span className="font-semibold text-foreground">Justification:</span> {proj.justification}</p>
+                                        </CardContent>
+                                        <CardFooter className="flex gap-2 justify-end pt-2">
+                                                <Button size="sm" variant="outline" onClick={() => setStatus(proj.projectName, 'Waitlisted')}>
+                                                    <History className="mr-1 h-4 w-4" /> Waitlist
+                                                </Button>
+                                                <Button size="sm" variant="destructive" onClick={() => setStatus(proj.projectName, 'Declined')}>
+                                                    <ThumbsDown className="mr-1 h-4 w-4" /> Decline
+                                                </Button>
+                                                <Button size="sm" onClick={() => setStatus(proj.projectName, 'Accepted')}>
+                                                     <ThumbsUp className="mr-1 h-4 w-4" /> Accept
+                                                </Button>
+                                        </CardFooter>
+                                    </Card>
                                 ))}
-                            </Accordion>
+                            </div>
                         </ScrollArea>
                         
                         <Alert>
@@ -245,4 +243,3 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
         </Card>
     );
 }
-
