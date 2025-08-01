@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
@@ -11,7 +11,7 @@ import jsPDF from 'jspdf';
 import { ScrollArea } from './ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Badge } from './ui/badge';
-import { getOpportunityFeedback } from '@/app/actions';
+import { getOpportunityFeedback, updateSelectedOpportunities } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { format } from 'date-fns';
@@ -22,23 +22,28 @@ type OpportunityCenterProps = {
 }
 
 export default function OpportunityCenter({ consultant, opportunities: jobOpportunities }: OpportunityCenterProps) {
-    const [selectedOpportunities, setSelectedOpportunities] = useState<string[]>([]);
+    const [selectedOpportunities, setSelectedOpportunities] = useState<string[]>(consultant.selectedOpportunities || []);
     const [loading, setLoading] = useState(false);
     const [feedback, setFeedback] = useState<string | null>(null);
     const { toast } = useToast();
 
-    const handleCheckboxChange = (opportunityId: string) => {
-        setSelectedOpportunities(prev =>
-            prev.includes(opportunityId)
-                ? prev.filter(item => item !== opportunityId)
-                : [...prev, opportunityId]
-        );
+    useEffect(() => {
+        setSelectedOpportunities(consultant.selectedOpportunities || []);
+    }, [consultant.selectedOpportunities]);
+
+    const handleCheckboxChange = async (opportunityId: string) => {
+        const newSelection = selectedOpportunities.includes(opportunityId)
+                ? selectedOpportunities.filter(item => item !== opportunityId)
+                : [...selectedOpportunities, opportunityId];
+        
+        setSelectedOpportunities(newSelection);
+        await updateSelectedOpportunities(consultant.id, newSelection);
     };
 
     const consultantSkills = useMemo(() => {
         if (Array.isArray(consultant.skills) && consultant.skills.length > 0) {
             return (consultant.skills as SkillAnalysis[])
-                .filter(s => s && s.skill) // Filter out any placeholder/empty objects
+                .filter(s => s && s.skill)
                 .map(s => s.skill.toLowerCase());
         }
         return [];

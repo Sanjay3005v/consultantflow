@@ -17,6 +17,8 @@ const mapDocToConsultant = (doc: any): Consultant => {
         resumeStatus: data.resumeStatus,
         opportunities: data.opportunities,
         training: data.training,
+        totalWorkingDays: data.totalWorkingDays || 22,
+        selectedOpportunities: data.selectedOpportunities || [],
         // Subcollections for skills and attendance are handled separately
         skills: data.skills || [],
         attendance: data.attendance || [],
@@ -45,7 +47,7 @@ export const getConsultantById = async (id: string): Promise<Consultant | undefi
          // Filter out placeholder document
          consultant.skills = skillsSnapshot.docs
             .map(d => d.data() as SkillAnalysis)
-            .filter(d => !d.hasOwnProperty('placeholder'));
+            .filter(d => d && d.skill);
     }
 
     const attendanceQuery = query(collection(db, `consultants/${id}/attendance`));
@@ -54,7 +56,7 @@ export const getConsultantById = async (id: string): Promise<Consultant | undefi
          // Filter out placeholder document
         consultant.attendance = attendanceSnapshot.docs
             .map(d => d.data() as AttendanceRecord)
-            .filter(d => !d.hasOwnProperty('placeholder'));
+            .filter(d => d && d.date);
     }
     
     return consultant;
@@ -153,6 +155,8 @@ export const createConsultant = async (data: { name: string; email: string; pass
         resumeStatus: 'Pending' as const,
         opportunities: 0,
         training: 'Not Started' as const,
+        totalWorkingDays: 22,
+        selectedOpportunities: [],
         workflow: {
             resumeUpdated: false,
             attendanceReported: false,
@@ -193,4 +197,13 @@ export const getJobOpportunities = async (): Promise<JobOpportunity[]> => {
         }
     });
     return opportunities;
+};
+
+
+export const updateConsultantOpportunitiesInDb = async (consultantId: string, opportunityIds: string[]): Promise<Consultant | undefined> => {
+    const consultantDocRef = doc(db, 'consultants', consultantId);
+    await updateDoc(consultantDocRef, {
+        selectedOpportunities: opportunityIds,
+    });
+    return getConsultantById(consultantId);
 };

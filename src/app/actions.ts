@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { updateConsultantSkillsInDb, createConsultant, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb } from '@/lib/data';
+import { updateConsultantSkillsInDb, createConsultant, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb, updateConsultantOpportunitiesInDb } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -135,4 +135,13 @@ export async function getFreshConsultants(): Promise<Consultant[]> {
 
 export async function markAttendance(consultantId: string, date: string, status: 'Present' | 'Absent'): Promise<Consultant | undefined> {
     return updateConsultantAttendanceInDb(consultantId, date, status);
+}
+
+export async function updateSelectedOpportunities(consultantId: string, opportunityIds: string[]): Promise<Consultant | undefined> {
+    try {
+        return await updateConsultantOpportunitiesInDb(consultantId, opportunityIds);
+    } catch (error) {
+        console.error('Error updating selected opportunities:', error);
+        throw new Error('Failed to update selected opportunities in the database.');
+    }
 }

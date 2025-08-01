@@ -28,6 +28,8 @@ export type Consultant = {
     opportunitiesDocumented: boolean;
     trainingCompleted: boolean;
   };
+  totalWorkingDays: number;
+  selectedOpportunities: string[];
 };
 
 export type JobOpportunity = {
