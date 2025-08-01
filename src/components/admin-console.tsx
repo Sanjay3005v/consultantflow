@@ -93,9 +93,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         consultant.name.toLowerCase().includes(lowerCaseSearchTerm) ||
         consultant.email.toLowerCase().includes(lowerCaseSearchTerm) ||
         (Array.isArray(consultant.skills) && consultant.skills.some((skill: any) =>
-          typeof skill === 'string' 
-            ? skill.toLowerCase().includes(lowerCaseSearchTerm)
-            : skill.skill.toLowerCase().includes(lowerCaseSearchTerm)
+          skill && typeof skill.skill === 'string' 
+            ? skill.skill.toLowerCase().includes(lowerCaseSearchTerm)
+            : false
         ));
       const matchesDept = departmentFilter === 'all' || consultant.department === departmentFilter;
       const matchesStatus = statusFilter === 'all' || consultant.status === statusFilter;
@@ -176,7 +176,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
-    await createNewConsultant(values);
+    await createNewConsultant({ ...values, password: 'defaultpassword' }); // Assign a default or generated password
     await refreshConsultants();
     toast({
         title: 'Consultant Created',
@@ -197,7 +197,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
   
   const hasSkillAnalysis = (consultant: Consultant) => {
-    return Array.isArray(consultant.skills) && consultant.skills.length > 0 && typeof consultant.skills[0] !== 'string';
+    return Array.isArray(consultant.skills) && consultant.skills.length > 0 && typeof consultant.skills[0] !== 'string' && consultant.skills.some(s => s && (s as SkillAnalysis).skill);
   };
 
   const handleRowToggle = (consultantId: string) => {
@@ -424,69 +424,71 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               <TableBody>
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
-                    <Collapsible asChild key={consultant.id} open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
-                      <>
+                    <React.Fragment key={consultant.id}>
+                      <Collapsible asChild open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
                         <TableRow>
-                          <TableCell>
-                             <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
-                                    <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
-                                    <span className="sr-only">Toggle details</span>
-                                </Button>
-                             </CollapsibleTrigger>
-                          </TableCell>
-                          <TableCell className="font-medium">{consultant.name}</TableCell>
-                          <TableCell>{consultant.department}</TableCell>
-                          <TableCell>
-                            <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
-                              {consultant.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {getAttendanceSummary(consultant.attendance)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                                className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
-                                variant="outline"
-                              >
-                              {consultant.resumeStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className='text-right'>
-                             <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAnalyzeDialog(consultant)}}>
-                               <Brain className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAttendanceDialog(consultant)}}>
-                              <CalendarPlus className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); downloadAttendanceReport(consultant)}}>
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <TableCell>
+                              <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
+                                      <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
+                                      <span className="sr-only">Toggle details</span>
+                                  </Button>
+                              </CollapsibleTrigger>
+                            </TableCell>
+                            <TableCell className="font-medium">{consultant.name}</TableCell>
+                            <TableCell>{consultant.department}</TableCell>
+                            <TableCell>
+                              <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
+                                {consultant.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {getAttendanceSummary(consultant.attendance)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                  className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
+                                  variant="outline"
+                                >
+                                {consultant.resumeStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className='text-right'>
+                              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAnalyzeDialog(consultant)}}>
+                                <Brain className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAttendanceDialog(consultant)}}>
+                                <CalendarPlus className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); downloadAttendanceReport(consultant)}}>
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                        </TableRow>
+                      </Collapsible>
+                      {hasSkillAnalysis(consultant) && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="p-0 border-none">
+                            <CollapsibleContent asChild>
+                                <div className='p-0'>
+                                  <div className="p-4 bg-muted/50 rounded-md m-1 border">
+                                      <h4 className="font-bold mb-2">Skill Proficiency</h4>
+                                      <div className="h-64">
+                                          <ResponsiveContainer width="100%" height="100%">
+                                              <RechartsBarChart data={consultant.skills.filter(s => s && (s as SkillAnalysis).skill) as SkillAnalysis[]}>
+                                                  <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
+                                                  <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                              </RechartsBarChart>
+                                          </ResponsiveContainer>
+                                      </div>
+                                  </div>
+                                </div>
+                            </CollapsibleContent>
                           </TableCell>
                         </TableRow>
-                        {hasSkillAnalysis(consultant) && (
-                           <TableRow>
-                            <TableCell colSpan={7} className="p-0">
-                                <CollapsibleContent>
-                                    <div className="p-4 bg-muted/50 rounded-md m-1 border">
-                                        <h4 className="font-bold mb-2">Skill Proficiency</h4>
-                                        <div className="h-64">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <RechartsBarChart data={consultant.skills as SkillAnalysis[]}>
-                                                    <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                                                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
-                                                    <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                                </RechartsBarChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                </CollapsibleContent>
-                             </TableCell>
-                           </TableRow>
-                        )}
-                      </>
-                    </Collapsible>
+                      )}
+                    </React.Fragment>
                   ))
                 ) : (
                   <TableRow>
