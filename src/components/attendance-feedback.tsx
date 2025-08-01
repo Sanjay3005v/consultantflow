@@ -22,9 +22,7 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
 
   const attendanceSummary = useMemo(() => {
     const presentDays = consultant.attendance.filter(a => a.status === 'Present').length;
-    // Assuming a total of 22 working days in a month for this calculation.
-    // In a real app, this might come from a more sophisticated calendar system.
-    const totalDays = 22; 
+    const totalDays = consultant.attendance.length;
     const paidLeavesTaken = 0; // Assuming no data for this yet.
     const paidLeavesRemaining = 2; // Assuming a default value.
     
@@ -77,7 +75,7 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
         <div className="text-center p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground">Current Attendance</p>
             <p className="text-3xl font-bold">{attendanceSummary.presentDays} / {attendanceSummary.totalDays}</p>
-            <p className="text-xs text-muted-foreground">(Present / Total Working Days)</p>
+            <p className="text-xs text-muted-foreground">(Present / Total Logged Days)</p>
         </div>
 
         <Button onClick={handleGetFeedback} disabled={loading} className="w-full">
