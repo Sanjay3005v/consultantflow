@@ -21,7 +21,7 @@ export type Consultant = {
   attendance: AttendanceRecord[];
   opportunities: number;
   training: 'Not Started' | 'In Progress' | 'Completed';
-  skills: string[] | SkillAnalysis[];
+  skills: (string | SkillAnalysis)[];
   workflow: {
     resumeUpdated: boolean;
     attendanceReported: boolean;
@@ -29,3 +29,11 @@ export type Consultant = {
     trainingCompleted: boolean;
   };
 };
+
+export type JobOpportunity = {
+    id: string;
+    title: string;
+    neededSkills: string[];
+    neededYOE: number;
+    responsibilities: string;
+}

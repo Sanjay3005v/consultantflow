@@ -29,13 +29,6 @@ const mapDocToConsultant = (doc: any): Consultant => {
     };
 };
 
-export const getAdminCredentials = () => {
-    return {
-        email: 'admin@company.com',
-        password: 'adminpassword',
-    };
-};
-
 export const getConsultantById = async (id: string): Promise<Consultant | undefined> => {
     const consultantDocRef = doc(db, 'consultants', id);
     const consultantDocSnap = await getDoc(consultantDocRef);
@@ -49,13 +42,19 @@ export const getConsultantById = async (id: string): Promise<Consultant | undefi
     const skillsQuery = query(collection(db, `consultants/${id}/skills`));
     const skillsSnapshot = await getDocs(skillsQuery);
     if (!skillsSnapshot.empty) {
-         consultant.skills = skillsSnapshot.docs.map(d => d.data() as SkillAnalysis);
+         // Filter out placeholder document
+         consultant.skills = skillsSnapshot.docs
+            .map(d => d.data() as SkillAnalysis)
+            .filter(d => !d.hasOwnProperty('placeholder'));
     }
 
     const attendanceQuery = query(collection(db, `consultants/${id}/attendance`));
     const attendanceSnapshot = await getDocs(attendanceQuery);
     if(!attendanceSnapshot.empty) {
-        consultant.attendance = attendanceSnapshot.docs.map(d => d.data() as AttendanceRecord);
+         // Filter out placeholder document
+        consultant.attendance = attendanceSnapshot.docs
+            .map(d => d.data() as AttendanceRecord)
+            .filter(d => !d.hasOwnProperty('placeholder'));
     }
     
     return consultant;
@@ -65,8 +64,8 @@ export const getAllConsultants = async (): Promise<Consultant[]> => {
     const consultantsCol = collection(db, 'consultants');
     const consultantSnapshot = await getDocs(consultantsCol);
     const consultants: Consultant[] = [];
-    for (const doc of consultantSnapshot.docs) {
-        const consultant = await getConsultantById(doc.id);
+    for (const docSnap of consultantSnapshot.docs) {
+        const consultant = await getConsultantById(docSnap.id);
         if (consultant) {
             consultants.push(consultant);
         }
@@ -108,7 +107,10 @@ export const updateConsultantSkillsInDb = async (consultantId: string, newSkills
     const existingSkillsSnapshot = await getDocs(skillsColRef);
     const batch = writeBatch(db);
     existingSkillsSnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
+        // Keep placeholder document if it exists, delete others
+        if (!doc.data().hasOwnProperty('placeholder')) {
+            batch.delete(doc.ref);
+        }
     });
     
     newSkills.forEach(skill => {

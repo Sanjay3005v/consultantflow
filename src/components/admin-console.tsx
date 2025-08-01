@@ -40,8 +40,6 @@ const createConsultantSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('A valid email is required'),
     department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
-    status: z.enum(['On Bench', 'On Project']),
-    training: z.enum(['Not Started', 'In Progress', 'Completed']),
 });
 
 
@@ -73,8 +71,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         name: '',
         email: '',
         department: 'Technology',
-        status: 'On Bench',
-        training: 'Not Started',
     },
   });
 
@@ -197,7 +193,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
   
   const hasSkillAnalysis = (consultant: Consultant) => {
-    return Array.isArray(consultant.skills) && consultant.skills.length > 0 && typeof consultant.skills[0] !== 'string' && consultant.skills.some(s => s && (s as SkillAnalysis).skill);
+    return Array.isArray(consultant.skills) && consultant.skills.length > 0 && consultant.skills.some(s => s && (s as SkillAnalysis).skill);
   };
 
   const handleRowToggle = (consultantId: string) => {
@@ -300,49 +296,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                           <SelectItem value="Healthcare">Healthcare</SelectItem>
                                           <SelectItem value="Finance">Finance</SelectItem>
                                           <SelectItem value="Retail">Retail</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name="status"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Status</FormLabel>
-                                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select a status" />
-                                          </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                          <SelectItem value="On Bench">On Bench</SelectItem>
-                                          <SelectItem value="On Project">On Project</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                               <FormField
-                                  control={form.control}
-                                  name="training"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Training</FormLabel>
-                                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select training status" />
-                                          </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                          <SelectItem value="Not Started">Not Started</SelectItem>
-                                          <SelectItem value="In Progress">In Progress</SelectItem>
-                                           <SelectItem value="Completed">Completed</SelectItem>
                                         </SelectContent>
                                       </Select>
                                       <FormMessage />

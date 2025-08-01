@@ -9,13 +9,14 @@ import SkillsDisplay from '@/components/skills-display';
 import StatusCard from '@/components/status-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import WorkflowTracker from '@/components/workflow-tracker';
-import type { Consultant } from '@/lib/types';
+import type { Consultant, JobOpportunity } from '@/lib/types';
 import type { AnalyzeCertificateResult, AnalyzeResumeResult } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 import TrainingUploader from './training-uploader';
 import OpportunityCenter from './opportunity-center';
+import { getJobOpportunities } from '@/lib/opportunities';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -23,9 +24,15 @@ export default function ConsultantDashboard({
   initialConsultant: Consultant;
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
+  const [jobOpportunities, setJobOpportunities] = useState<JobOpportunity[]>([]);
 
   useEffect(() => {
     setConsultant(initialConsultant);
+    const fetchOpportunities = async () => {
+        const opportunities = await getJobOpportunities();
+        setJobOpportunities(opportunities);
+    }
+    fetchOpportunities();
   }, [initialConsultant]);
 
   if (!consultant) {
@@ -143,7 +150,7 @@ export default function ConsultantDashboard({
                 </div>
            </div>
            <SkillsDisplay skills={consultant.skills} />
-           <OpportunityCenter consultant={consultant} />
+           <OpportunityCenter consultant={consultant} opportunities={jobOpportunities} />
         </div>
 
         <div className="space-y-8">
