@@ -60,6 +60,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
+  const [totalWorkingDays, setTotalWorkingDays] = useState(22);
   const { toast } = useToast();
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -81,6 +82,17 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   useEffect(() => {
     setConsultants(initialConsultants);
   }, [initialConsultants]);
+
+  useEffect(() => {
+    const savedTotalDays = localStorage.getItem('totalWorkingDays');
+    if (savedTotalDays) {
+      setTotalWorkingDays(JSON.parse(savedTotalDays));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('totalWorkingDays', JSON.stringify(totalWorkingDays));
+  }, [totalWorkingDays]);
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter((consultant) => {
@@ -167,7 +179,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const getAttendanceSummary = (consultant: Consultant) => {
     const present = consultant.attendance.filter(a => a.status === 'Present').length;
-    return `${present}/${consultant.totalWorkingDays}`;
+    return `${present}/${totalWorkingDays}`;
   };
 
   const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
@@ -338,6 +350,16 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-grow"
             />
+            <div className="flex items-center gap-2">
+                <Label htmlFor='total-days' className="whitespace-nowrap">Total Days:</Label>
+                <Input
+                    id="total-days"
+                    type="number"
+                    value={totalWorkingDays}
+                    onChange={(e) => setTotalWorkingDays(Number(e.target.value))}
+                    className="w-24"
+                />
+            </div>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Department" />
@@ -515,5 +537,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
-    
