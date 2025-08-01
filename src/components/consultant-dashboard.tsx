@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Award, CalendarCheck, FileText, Target, User, Download, MessageSquare } from 'lucide-react';
+import { Award, CalendarCheck, FileText, Target, User, Download } from 'lucide-react';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import SkillsDisplay from '@/components/skills-display';
 import StatusCard from '@/components/status-card';
@@ -15,8 +15,6 @@ import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
 import TrainingUploader from './training-uploader';
 import OpportunityCenter from './opportunity-center';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import ConsultantChatbot from './consultant-chatbot';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -27,7 +25,6 @@ export default function ConsultantDashboard({
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
   const [jobOpportunities, setJobOpportunities] = useState<JobOpportunity[]>(initialOpportunities);
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     setConsultant(initialConsultant);
@@ -164,22 +161,6 @@ export default function ConsultantDashboard({
         </div>
       </div>
     </div>
-    <Dialog open={isChatbotOpen} onOpenChange={setIsChatbotOpen}>
-        <DialogTrigger asChild>
-            <Button
-                className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg"
-                size="icon"
-            >
-                <MessageSquare className="w-8 h-8" />
-            </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[625px] h-[80vh] flex flex-col p-0">
-             <DialogHeader className="p-6 pb-0">
-                <DialogTitle>Consultant Assistant</DialogTitle>
-             </DialogHeader>
-            <ConsultantChatbot consultantId={consultant.id} />
-        </DialogContent>
-    </Dialog>
     </>
   );
 }

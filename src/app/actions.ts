@@ -22,7 +22,6 @@ import {
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
 import { candidateCollectorFlow } from '@/ai/flows/chatbot-flow';
-import { consultantChatbotFlow } from '@/ai/flows/consultant-chatbot-flow';
 import { 
     updateConsultantSkillsInDb, 
     createConsultant, 
@@ -178,19 +177,6 @@ export async function callChatbot(message: string, history: any[]): Promise<stri
     console.error("Error in chatbot flow action:", error);
     throw new Error("Failed to get response from chatbot.");
   }
-}
-
-export async function callConsultantChatbot(consultantId: string, history: any[]): Promise<string> {
-    try {
-        const response = await consultantChatbotFlow({
-            history,
-            consultantId,
-        });
-        return response;
-    } catch (error) {
-        console.error('Error in consultant chatbot flow action:', error);
-        throw new Error('Failed to get response from chatbot.');
-    }
 }
 
 export async function updateTotalWorkingDays(consultantId: string, totalDays: number): Promise<Consultant | undefined> {
