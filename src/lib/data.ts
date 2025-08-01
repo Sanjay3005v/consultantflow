@@ -1,6 +1,6 @@
 
 import { db } from './firebase';
-import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch, serverTimestamp, runTransaction } from 'firebase/firestore';
 import type { Consultant, SkillAnalysis, AttendanceRecord, JobOpportunity, Candidate } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +18,7 @@ const mapDocToConsultant = (doc: any): Consultant => {
         opportunities: data.opportunities,
         training: data.training,
         totalWorkingDays: data.totalWorkingDays || 22,
+        presentDays: data.presentDays || 0,
         selectedOpportunities: data.selectedOpportunities || [],
         // Subcollections for skills and attendance are handled separately
         skills: data.skills || [],
@@ -88,17 +89,42 @@ export const findConsultantByEmail = async (email: string): Promise<Consultant |
 };
 
 export const updateConsultantAttendanceInDb = async (id: string, date: string, status: 'Present' | 'Absent'): Promise<Consultant | undefined> => {
+    const consultantDocRef = doc(db, 'consultants', id);
     const attendanceCol = collection(db, `consultants/${id}/attendance`);
     const q = query(attendanceCol, where("date", "==", date));
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-        const docRef = querySnapshot.docs[0].ref;
-        await updateDoc(docRef, { status });
-    } else {
-        await addDoc(attendanceCol, { date, status });
-    }
     
+    await runTransaction(db, async (transaction) => {
+        const querySnapshot = await getDocs(q);
+        const consultantDoc = await transaction.get(consultantDocRef);
+
+        if (!consultantDoc.exists()) {
+            throw "Consultant document does not exist!";
+        }
+
+        let currentPresentDays = consultantDoc.data().presentDays || 0;
+        let recordExists = !querySnapshot.empty;
+        let oldStatus: 'Present' | 'Absent' | undefined = recordExists ? querySnapshot.docs[0].data().status : undefined;
+        
+        if (recordExists) {
+            const docRef = querySnapshot.docs[0].ref;
+            transaction.update(docRef, { status });
+        } else {
+            const newDocRef = doc(attendanceCol);
+            transaction.set(newDocRef, { date, status });
+        }
+
+        // Adjust present days count
+        if (oldStatus !== status) {
+            if (status === 'Present') {
+                currentPresentDays++;
+            } else if (oldStatus === 'Present') {
+                currentPresentDays--;
+            }
+        }
+        
+        transaction.update(consultantDocRef, { presentDays: currentPresentDays });
+    });
+
     return getConsultantById(id);
 };
 
@@ -156,6 +182,7 @@ export const createConsultant = async (data: { name: string; email: string; pass
         opportunities: 0,
         training: 'Not Started' as const,
         totalWorkingDays: 22,
+        presentDays: 0,
         selectedOpportunities: [],
         workflow: {
             resumeUpdated: false,
@@ -207,6 +234,14 @@ export const updateConsultantOpportunitiesInDb = async (consultantId: string, op
     });
     return getConsultantById(consultantId);
 };
+
+export const updateConsultantTotalDaysInDb = async (consultantId: string, totalDays: number): Promise<Consultant | undefined> => {
+    const consultantDocRef = doc(db, 'consultants', consultantId);
+    await updateDoc(consultantDocRef, {
+        totalWorkingDays: totalDays,
+    });
+    return getConsultantById(consultantId);
+}
 
 export const saveCandidate = async (candidateData: Omit<Candidate, 'id' | 'submittedAt'>): Promise<string> => {
     const candidatesColRef = collection(db, 'candidates');

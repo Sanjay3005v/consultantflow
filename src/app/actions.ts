@@ -22,7 +22,17 @@ import {
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
 import { candidateCollectorFlow } from '@/ai/flows/chatbot-flow';
-import { updateConsultantSkillsInDb, createConsultant, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb, updateConsultantOpportunitiesInDb } from '@/lib/data';
+import { consultantChatbotFlow } from '@/ai/flows/consultant-chatbot-flow';
+import { 
+    updateConsultantSkillsInDb, 
+    createConsultant, 
+    findConsultantByEmail, 
+    addSkillToConsultantInDb, 
+    getAllConsultants as getAllConsultantsFromDb, 
+    updateConsultantAttendanceInDb, 
+    updateConsultantOpportunitiesInDb,
+    updateConsultantTotalDaysInDb,
+} from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -148,15 +158,18 @@ export async function updateSelectedOpportunities(consultantId: string, opportun
 }
 
 export async function callChatbot(message: string, history: any[]): Promise<string> {
-  const file = history.find(m => m.parts?.find((p: any) => p.file))?.parts.find((p: any) => p.file)?.file;
-  let text = message;
-  
-  // A bit of a hack to handle file uploads, since the chatbot expects a data URI in the prompt
-  if (file) {
-     text += ` (Resume Attached: ${file.name})`;
+  const filePart = history.find(m => m.content.some((p: any) => p.media))?.content.find((p: any) => p.media)?.media;
+
+  const content: any[] = [{text: message}];
+
+  if(filePart?.url) {
+      content.push({media: {url: filePart.url, contentType: filePart.contentType}});
   }
 
-  const updatedHistory = [...history, { role: 'user', content: text }];
+  const updatedHistory = [
+      ...history.filter(m => !m.content.some((p: any) => p.media)),
+      { role: 'user', content },
+  ];
   
   try {
     const response = await candidateCollectorFlow({ history: updatedHistory });
@@ -165,4 +178,26 @@ export async function callChatbot(message: string, history: any[]): Promise<stri
     console.error("Error in chatbot flow action:", error);
     throw new Error("Failed to get response from chatbot.");
   }
+}
+
+export async function callConsultantChatbot(consultantId: string, history: any[]): Promise<string> {
+    try {
+        const response = await consultantChatbotFlow({
+            history,
+            consultantId,
+        });
+        return response;
+    } catch (error) {
+        console.error('Error in consultant chatbot flow action:', error);
+        throw new Error('Failed to get response from chatbot.');
+    }
+}
+
+export async function updateTotalWorkingDays(consultantId: string, totalDays: number): Promise<Consultant | undefined> {
+    try {
+        return await updateConsultantTotalDaysInDb(consultantId, totalDays);
+    } catch (error) {
+        console.error('Error updating total working days:', error);
+        throw new Error('Failed to update total working days in the database.');
+    }
 }

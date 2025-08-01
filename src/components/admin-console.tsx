@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { createNewConsultant, getFreshConsultants, markAttendance } from '@/app/actions';
+import { createNewConsultant, getFreshConsultants, markAttendance, updateTotalWorkingDays } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,11 +56,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
-  
+  const [isEditDaysDialogOpen, setIsEditDaysDialogOpen] = useState(false);
+
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
-  const [totalWorkingDays, setTotalWorkingDays] = useState(22);
+  const [editableTotalDays, setEditableTotalDays] = useState(22);
   const { toast } = useToast();
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -82,17 +83,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   useEffect(() => {
     setConsultants(initialConsultants);
   }, [initialConsultants]);
-
-  useEffect(() => {
-    const savedTotalDays = localStorage.getItem('totalWorkingDays');
-    if (savedTotalDays) {
-      setTotalWorkingDays(JSON.parse(savedTotalDays));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('totalWorkingDays', JSON.stringify(totalWorkingDays));
-  }, [totalWorkingDays]);
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter((consultant) => {
@@ -156,6 +146,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const downloadAttendanceReport = (consultant: Consultant) => {
     let reportContent = `Attendance Report for ${consultant.name}\n`;
+    reportContent += `Present: ${consultant.presentDays} / ${consultant.totalWorkingDays} days\n`;
     reportContent += '=====================================\n';
     reportContent += 'Date\t\tStatus\n';
     reportContent += '-------------------------------------\n';
@@ -178,8 +169,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const getAttendanceSummary = (consultant: Consultant) => {
-    const present = consultant.attendance.filter(a => a.status === 'Present').length;
-    return `${present}/${totalWorkingDays}`;
+    return `${consultant.presentDays}/${consultant.totalWorkingDays}`;
   };
 
   const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
@@ -198,6 +188,25 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     setIsAnalyzeDialogOpen(true);
   };
 
+  const handleOpenEditDaysDialog = (consultant: Consultant) => {
+    setSelectedConsultant(consultant);
+    setEditableTotalDays(consultant.totalWorkingDays);
+    setIsEditDaysDialogOpen(true);
+  };
+
+  const handleSaveTotalDays = async () => {
+    if (selectedConsultant) {
+        await updateTotalWorkingDays(selectedConsultant.id, editableTotalDays);
+        await refreshConsultants();
+        toast({
+            title: 'Total Days Updated',
+            description: `Total working days for ${selectedConsultant.name} set to ${editableTotalDays}.`,
+        });
+        setIsEditDaysDialogOpen(false);
+        setSelectedConsultant(null);
+    }
+  };
+
   const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
     refreshConsultants();
     setIsAnalyzeDialogOpen(false);
@@ -208,7 +217,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const handleRowToggle = (consultantId: string) => {
-    setExpandedRow(prev => (prev === consultantId ? null : consultantId));
+    if (hasSkillAnalysis(filteredConsultants.find(c => c.id === consultantId)!)) {
+      setExpandedRow(prev => (prev === consultantId ? null : consultantId));
+    }
   };
 
 
@@ -350,16 +361,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-grow"
             />
-            <div className="flex items-center gap-2">
-                <Label htmlFor='total-days' className="whitespace-nowrap">Total Days:</Label>
-                <Input
-                    id="total-days"
-                    type="number"
-                    value={totalWorkingDays}
-                    onChange={(e) => setTotalWorkingDays(Number(e.target.value))}
-                    className="w-24"
-                />
-            </div>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Department" />
@@ -400,18 +401,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                   filteredConsultants.map((consultant) => (
                     <React.Fragment key={consultant.id}>
                       <TableRow
-                        className={cn(hasSkillAnalysis(consultant) && 'cursor-pointer border-b-0')}
-                        onClick={() => hasSkillAnalysis(consultant) && handleRowToggle(consultant.id)}
+                        className={cn(hasSkillAnalysis(consultant) && 'cursor-pointer')}
+                        onClick={() => handleRowToggle(consultant.id)}
                       >
                         <TableCell>
                           <Button
                             variant="ghost"
                             size="icon"
                             disabled={!hasSkillAnalysis(consultant)}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRowToggle(consultant.id)
-                            }}
                           >
                             <ChevronDown
                               className={cn(
@@ -429,7 +426,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             {consultant.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>{getAttendanceSummary(consultant)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>{getAttendanceSummary(consultant)}</span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleOpenEditDaysDialog(consultant)}}>
+                                <Edit className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge
                             className={
@@ -476,33 +480,33 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                         </TableCell>
                       </TableRow>
                       {expandedRow === consultant.id && hasSkillAnalysis(consultant) && (
-                        <TableRow>
-                          <TableCell colSpan={7} className="p-0">
-                            <div className="p-4 bg-muted/50">
-                              <h4 className="font-bold mb-2">Skill Proficiency</h4>
-                              <div className="h-64">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <RechartsBarChart data={(consultant.skills as SkillAnalysis[]).filter(s => s && s.skill)}>
-                                    <XAxis
-                                      dataKey="skill"
-                                      stroke="#888888"
-                                      fontSize={12}
-                                      tickLine={false}
-                                      axisLine={false}
-                                    />
-                                    <YAxis
-                                      stroke="#888888"
-                                      fontSize={12}
-                                      tickLine={false}
-                                      axisLine={false}
-                                      domain={[0, 10]}
-                                    />
-                                    <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                  </RechartsBarChart>
-                                </ResponsiveContainer>
-                              </div>
-                            </div>
-                          </TableCell>
+                         <TableRow>
+                            <TableCell colSpan={7} className="p-0">
+                                <div className="p-4 bg-muted/50">
+                                <h4 className="font-bold mb-2">Skill Proficiency</h4>
+                                <div className="h-64">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsBarChart data={(consultant.skills as SkillAnalysis[]).filter(s => s && s.skill)}>
+                                        <XAxis
+                                        dataKey="skill"
+                                        stroke="#888888"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        />
+                                        <YAxis
+                                        stroke="#888888"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        domain={[0, 10]}
+                                        />
+                                        <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                    </RechartsBarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                </div>
+                            </TableCell>
                         </TableRow>
                       )}
                     </React.Fragment>
@@ -575,6 +579,29 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
             {selectedConsultant && (
                  <ResumeAnalyzer consultant={selectedConsultant} onAnalysisComplete={handleAnalysisComplete} />
             )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDaysDialogOpen} onOpenChange={setIsEditDaysDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Edit Total Working Days for {selectedConsultant?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+                <Label htmlFor="total-days-edit">Total Working Days</Label>
+                <Input 
+                    id="total-days-edit"
+                    type="number"
+                    value={editableTotalDays}
+                    onChange={(e) => setEditableTotalDays(Number(e.target.value))}
+                />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleSaveTotalDays}>Save</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

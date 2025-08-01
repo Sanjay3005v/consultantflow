@@ -29,6 +29,7 @@ export type Consultant = {
     trainingCompleted: boolean;
   };
   totalWorkingDays: number;
+  presentDays: number;
   selectedOpportunities: string[];
 };
 

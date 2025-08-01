@@ -21,8 +21,8 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
   const { toast } = useToast();
 
   const attendanceSummary = useMemo(() => {
-    const presentDays = consultant.attendance.filter(a => a.status === 'Present').length;
-    const totalDays = consultant.attendance.length;
+    const presentDays = consultant.presentDays;
+    const totalDays = consultant.totalWorkingDays;
     const paidLeavesTaken = 0; // Assuming no data for this yet.
     const paidLeavesRemaining = 2; // Assuming a default value.
     
@@ -32,7 +32,7 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
       paidLeavesTaken,
       paidLeavesRemaining,
     };
-  }, [consultant.attendance]);
+  }, [consultant.presentDays, consultant.totalWorkingDays]);
 
   async function handleGetFeedback() {
     setLoading(true);

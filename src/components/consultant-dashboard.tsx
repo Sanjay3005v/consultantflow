@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Award, CalendarCheck, FileText, Target, User, Download } from 'lucide-react';
+import { Award, CalendarCheck, FileText, Target, User, Download, MessageSquare } from 'lucide-react';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import SkillsDisplay from '@/components/skills-display';
 import StatusCard from '@/components/status-card';
@@ -13,9 +13,10 @@ import type { Consultant, JobOpportunity } from '@/lib/types';
 import type { AnalyzeCertificateResult, AnalyzeResumeResult } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
-import { format } from 'date-fns';
 import TrainingUploader from './training-uploader';
 import OpportunityCenter from './opportunity-center';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import ConsultantChatbot from './consultant-chatbot';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -26,6 +27,7 @@ export default function ConsultantDashboard({
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
   const [jobOpportunities, setJobOpportunities] = useState<JobOpportunity[]>(initialOpportunities);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     setConsultant(initialConsultant);
@@ -46,6 +48,7 @@ export default function ConsultantDashboard({
 
   const downloadAttendanceReport = () => {
     let reportContent = `Attendance Report for ${consultant.name}\n`;
+    reportContent += `Present: ${consultant.presentDays} / ${consultant.totalWorkingDays} days\n`;
     reportContent += '=====================================\n';
     reportContent += 'Date\t\tStatus\n';
     reportContent += '-------------------------------------\n';
@@ -68,19 +71,18 @@ export default function ConsultantDashboard({
   };
 
   const attendanceSummary = useMemo(() => {
-    const present = consultant.attendance.filter(
-      (a) => a.status === 'Present'
-    ).length;
-    const total = consultant.attendance.length;
+    const present = consultant.presentDays;
+    const total = consultant.totalWorkingDays;
     const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
     return {
       present,
       total,
       percentage,
     };
-  }, [consultant.attendance]);
+  }, [consultant.presentDays, consultant.totalWorkingDays]);
 
   return (
+    <>
     <div className="container mx-auto p-4 md:p-8">
       <div className="mb-8 flex items-center space-x-4">
         <User className="h-12 w-12 text-primary" />
@@ -162,5 +164,22 @@ export default function ConsultantDashboard({
         </div>
       </div>
     </div>
+    <Dialog open={isChatbotOpen} onOpenChange={setIsChatbotOpen}>
+        <DialogTrigger asChild>
+            <Button
+                className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg"
+                size="icon"
+            >
+                <MessageSquare className="w-8 h-8" />
+            </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[625px] h-[80vh] flex flex-col p-0">
+             <DialogHeader className="p-6 pb-0">
+                <DialogTitle>Consultant Assistant</DialogTitle>
+             </DialogHeader>
+            <ConsultantChatbot consultantId={consultant.id} />
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
