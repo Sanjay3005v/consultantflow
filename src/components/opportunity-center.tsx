@@ -144,7 +144,9 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
 
     const consultantSkills = useMemo(() => {
         if (Array.isArray(consultant.skills) && consultant.skills.length > 0 && typeof consultant.skills[0] !== 'string') {
-            return (consultant.skills as SkillAnalysis[]).map(s => s.skill.toLowerCase());
+            return (consultant.skills as SkillAnalysis[])
+                .filter(s => s && s.skill)
+                .map(s => s.skill.toLowerCase());
         }
         return [];
     }, [consultant.skills]);
