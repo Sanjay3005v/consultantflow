@@ -88,12 +88,8 @@ export async function createNewConsultant(data: { name: string; email: string; p
     if (existingConsultant) {
         throw new Error('A consultant with this email already exists.');
     }
-    const newConsultant = await createConsultantData({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        department: data.department
-    });
+    // Pass the whole data object, including the password
+    const newConsultant = await createConsultantData(data);
     return newConsultant;
 }
 

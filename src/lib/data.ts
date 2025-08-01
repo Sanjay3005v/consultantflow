@@ -145,7 +145,7 @@ export const createConsultant = async (data: { name: string; email: string; pass
     const newConsultantData = {
         name: data.name,
         email: data.email.toLowerCase(),
-        password: data.password,
+        password: data.password, // Ensure password is saved
         department: data.department,
         status: 'On Bench' as const,
         resumeStatus: 'Pending' as const,
@@ -161,13 +161,9 @@ export const createConsultant = async (data: { name: string; email: string; pass
 
     const docRef = await addDoc(collection(db, 'consultants'), newConsultantData);
 
+    // Initialize subcollections
     const skillsColRef = collection(db, `consultants/${docRef.id}/skills`);
-    await addDoc(skillsColRef, {
-        id: uuidv4(),
-        skill: 'Initial Skill',
-        rating: 0,
-        reasoning: 'Initial empty skill record.'
-    });
+    await addDoc(skillsColRef, {});
 
     const attendanceColRef = collection(db, `consultants/${docRef.id}/attendance`);
     await addDoc(attendanceColRef, {});
