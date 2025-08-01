@@ -54,6 +54,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [totalWorkingDays, setTotalWorkingDays] = useState(22);
 
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -171,8 +172,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const getAttendanceSummary = (attendance: AttendanceRecord[]) => {
     const present = attendance.filter(a => a.status === 'Present').length;
-    const total = attendance.length;
-    return `${present}/${total}`;
+    return `${present}/${totalWorkingDays}`;
   };
 
   const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
@@ -386,6 +386,17 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-grow"
             />
+            <div className='flex items-center gap-2'>
+                <Label htmlFor="total-days" className="whitespace-nowrap">Total Days</Label>
+                <Input
+                    id="total-days"
+                    type="number"
+                    value={totalWorkingDays}
+                    onChange={(e) => setTotalWorkingDays(Number(e.target.value))}
+                    className="w-20"
+                    min="1"
+                />
+            </div>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Department" />
@@ -425,69 +436,67 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                 {filteredConsultants.length > 0 ? (
                   filteredConsultants.map((consultant) => (
                     <React.Fragment key={consultant.id}>
-                      <Collapsible asChild open={expandedRow === consultant.id} onOpenChange={() => handleRowToggle(consultant.id)}>
-                        <TableRow>
-                            <TableCell>
-                              <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" size="icon" disabled={!hasSkillAnalysis(consultant)}>
-                                      <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
-                                      <span className="sr-only">Toggle details</span>
-                                  </Button>
-                              </CollapsibleTrigger>
-                            </TableCell>
-                            <TableCell className="font-medium">{consultant.name}</TableCell>
-                            <TableCell>{consultant.department}</TableCell>
-                            <TableCell>
-                              <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
-                                {consultant.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {getAttendanceSummary(consultant.attendance)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                  className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
-                                  variant="outline"
-                                >
-                                {consultant.resumeStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className='text-right'>
-                              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAnalyzeDialog(consultant)}}>
-                                <Brain className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAttendanceDialog(consultant)}}>
-                                <CalendarPlus className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); downloadAttendanceReport(consultant)}}>
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                        </TableRow>
-                      </Collapsible>
-                      {hasSkillAnalysis(consultant) && (
-                        <TableRow>
-                          <TableCell colSpan={7} className="p-0 border-none">
-                            <CollapsibleContent asChild>
-                                <div className='p-0'>
-                                  <div className="p-4 bg-muted/50 rounded-md m-1 border">
-                                      <h4 className="font-bold mb-2">Skill Proficiency</h4>
-                                      <div className="h-64">
-                                          <ResponsiveContainer width="100%" height="100%">
-                                              <RechartsBarChart data={consultant.skills.filter(s => s && (s as SkillAnalysis).skill) as SkillAnalysis[]}>
-                                                  <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                                                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
-                                                  <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                              </RechartsBarChart>
-                                          </ResponsiveContainer>
-                                      </div>
+                      <Collapsible asChild>
+                        <>
+                          <TableRow onClick={() => hasSkillAnalysis(consultant) && handleRowToggle(consultant.id)} className={cn(hasSkillAnalysis(consultant) && 'cursor-pointer')}>
+                              <TableCell>
+                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); if (hasSkillAnalysis(consultant)) handleRowToggle(consultant.id); }} disabled={!hasSkillAnalysis(consultant)}>
+                                    <ChevronDown className={cn("h-4 w-4 transition-transform", expandedRow === consultant.id && "rotate-180")} />
+                                    <span className="sr-only">Toggle details</span>
+                                </Button>
+                              </TableCell>
+                              <TableCell className="font-medium">{consultant.name}</TableCell>
+                              <TableCell>{consultant.department}</TableCell>
+                              <TableCell>
+                                <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
+                                  {consultant.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {getAttendanceSummary(consultant.attendance)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                    className={consultant.resumeStatus === 'Updated' ? 'text-green-400 border-green-400' : 'text-yellow-400 border-yellow-400'}
+                                    variant="outline"
+                                  >
+                                  {consultant.resumeStatus}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className='text-right'>
+                                <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAnalyzeDialog(consultant)}}>
+                                  <Brain className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); handleOpenAttendanceDialog(consultant)}}>
+                                  <CalendarPlus className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); downloadAttendanceReport(consultant)}}>
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                          </TableRow>
+                          {hasSkillAnalysis(consultant) && expandedRow === consultant.id && (
+                            <TableRow>
+                              <TableCell colSpan={7} className="p-0 border-none">
+                                  <div className='p-0'>
+                                    <div className="p-4 bg-muted/50 rounded-md m-1 border">
+                                        <h4 className="font-bold mb-2">Skill Proficiency</h4>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RechartsBarChart data={consultant.skills.filter(s => s && (s as SkillAnalysis).skill) as SkillAnalysis[]}>
+                                                    <XAxis dataKey="skill" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
+                                                    <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                                </RechartsBarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
                                   </div>
-                                </div>
-                            </CollapsibleContent>
-                          </TableCell>
-                        </TableRow>
-                      )}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      </Collapsible>
                     </React.Fragment>
                   ))
                 ) : (
@@ -563,5 +572,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
-    
