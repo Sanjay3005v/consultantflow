@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { updateConsultantSkillsInDb, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb, getAdminCredentials } from '@/lib/data';
+import { updateConsultantSkillsInDb, createConsultant as createConsultantData, findConsultantByEmail, addSkillToConsultantInDb, getAllConsultants as getAllConsultantsFromDb, updateConsultantAttendanceInDb } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
 
@@ -102,8 +102,7 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
 }
 
 export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ success: boolean } | { error: string }> {
-    const admin = getAdminCredentials();
-    if (admin.email === credentials.email && admin.password === credentials.password) {
+    if (credentials.email.endsWith('@hexaware.com') && credentials.password === 'admin123') {
         return { success: true };
     }
     return { error: 'Invalid admin credentials' };

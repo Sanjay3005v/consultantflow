@@ -22,7 +22,9 @@ import { verifyAdminCredentials } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }),
+  email: z.string().email({ message: 'Please enter a valid email.' }).refine(email => email.endsWith('@hexaware.com'), {
+    message: 'Email must be a valid @hexaware.com address.',
+  }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
@@ -82,7 +84,7 @@ export default function AdminLoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                    <FormControl>
-                        <Input type="email" placeholder="admin@company.com" {...field} />
+                        <Input type="email" placeholder="admin@hexaware.com" {...field} />
                    </FormControl>
                   <FormMessage />
                 </FormItem>
