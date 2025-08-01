@@ -83,12 +83,11 @@ export async function analyzeCertificate(
     }
 }
 
-export async function createNewConsultant(data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {
+export async function createNewConsultant(data: { name: string; email: string; password: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail'; }): Promise<Consultant> {
     const existingConsultant = await findConsultantByEmail(data.email);
     if (existingConsultant) {
         throw new Error('A consultant with this email already exists.');
     }
-    // Ensure the password is passed correctly
     const newConsultant = await createConsultantData({
         name: data.name,
         email: data.email,

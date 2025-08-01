@@ -141,11 +141,11 @@ export const addSkillToConsultantInDb = async (consultantId: string, newSkill: S
 };
 
 
-export const createConsultant = async (data: { name: string; email: string; password?: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail' }): Promise<Consultant> => {
+export const createConsultant = async (data: { name: string; email: string; password: string; department: 'Technology' | 'Healthcare' | 'Finance' | 'Retail' }): Promise<Consultant> => {
     const newConsultantData = {
         name: data.name,
         email: data.email.toLowerCase(),
-        password: data.password, // Ensure password is included
+        password: data.password,
         department: data.department,
         status: 'On Bench' as const,
         resumeStatus: 'Pending' as const,
@@ -180,4 +180,3 @@ export const createConsultant = async (data: { name: string; email: string; pass
     
     return newConsultant;
 };
-
