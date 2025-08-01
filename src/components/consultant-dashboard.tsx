@@ -16,24 +16,21 @@ import { Button } from './ui/button';
 import { format } from 'date-fns';
 import TrainingUploader from './training-uploader';
 import OpportunityCenter from './opportunity-center';
-import { getJobOpportunities } from '@/lib/opportunities';
 
 export default function ConsultantDashboard({
   initialConsultant,
+  initialOpportunities,
 }: {
   initialConsultant: Consultant;
+  initialOpportunities: JobOpportunity[];
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  const [jobOpportunities, setJobOpportunities] = useState<JobOpportunity[]>([]);
+  const [jobOpportunities, setJobOpportunities] = useState<JobOpportunity[]>(initialOpportunities);
 
   useEffect(() => {
     setConsultant(initialConsultant);
-    const fetchOpportunities = async () => {
-        const opportunities = await getJobOpportunities();
-        setJobOpportunities(opportunities);
-    }
-    fetchOpportunities();
-  }, [initialConsultant]);
+    setJobOpportunities(initialOpportunities);
+  }, [initialConsultant, initialOpportunities]);
 
   if (!consultant) {
     notFound();

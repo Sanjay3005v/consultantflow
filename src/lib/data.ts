@@ -1,7 +1,7 @@
 
 import { db } from './firebase';
 import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch } from 'firebase/firestore';
-import type { Consultant, SkillAnalysis, AttendanceRecord } from './types';
+import type { Consultant, SkillAnalysis, AttendanceRecord, JobOpportunity } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Helper to map Firestore doc to the Consultant type
@@ -177,4 +177,20 @@ export const createConsultant = async (data: { name: string; email: string; pass
     }
     
     return newConsultant;
+};
+
+export const getJobOpportunities = async (): Promise<JobOpportunity[]> => {
+    const opportunitiesCol = collection(db, 'opportunities');
+    const opportunitySnapshot = await getDocs(opportunitiesCol);
+    const opportunities: JobOpportunity[] = opportunitySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            title: data.title,
+            neededSkills: data.neededSkills,
+            neededYOE: data.neededYOE,
+            responsibilities: data.responsibilities,
+        }
+    });
+    return opportunities;
 };
