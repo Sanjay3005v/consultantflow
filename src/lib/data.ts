@@ -122,7 +122,10 @@ export const updateConsultantAttendanceInDb = async (id: string, date: string, s
             }
         }
         
-        transaction.update(consultantDocRef, { presentDays: currentPresentDays });
+        transaction.update(consultantDocRef, { 
+            presentDays: currentPresentDays,
+            'workflow.attendanceReported': true 
+        });
     });
 
     return getConsultantById(id);
