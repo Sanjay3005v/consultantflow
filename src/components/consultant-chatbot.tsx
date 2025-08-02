@@ -30,7 +30,7 @@ export default function ConsultantChatbot({ consultantId }: ConsultantChatbotPro
     useEffect(() => {
         // Start with a greeting from the bot
         setMessages([
-            { role: 'bot', content: "Hello! I'm your personal assistant. How can I help you today?" }
+            { role: 'bot', content: "Hello! I'm your personal assistant. How can I help you with your progress, skills, or attendance today?" }
         ]);
     }, []);
 
