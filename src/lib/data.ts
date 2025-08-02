@@ -251,3 +251,11 @@ export const saveCandidate = async (candidateData: Omit<Candidate, 'id' | 'submi
     });
     return docRef.id;
 };
+
+export const updateConsultantStatusInDb = async (consultantId: string, status: 'On Bench' | 'On Project'): Promise<Consultant | undefined> => {
+    const consultantDocRef = doc(db, 'consultants', consultantId);
+    await updateDoc(consultantDocRef, {
+        status: status,
+    });
+    return getConsultantById(consultantId);
+};

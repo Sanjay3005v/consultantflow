@@ -24,7 +24,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { createNewConsultant, getFreshConsultants, markAttendance, updateTotalWorkingDays } from '@/app/actions';
+import { createNewConsultant, getFreshConsultants, markAttendance, updateTotalWorkingDays, updateConsultantStatus } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -220,6 +220,15 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     if (hasSkillAnalysis(filteredConsultants.find(c => c.id === consultantId)!)) {
       setExpandedRow(prev => (prev === consultantId ? null : consultantId));
     }
+  };
+
+  const handleStatusChange = async (consultantId: string, status: 'On Bench' | 'On Project') => {
+    await updateConsultantStatus(consultantId, status);
+    await refreshConsultants();
+    toast({
+        title: 'Status Updated',
+        description: `Consultant status has been updated to ${status}.`
+    });
   };
 
 
@@ -422,9 +431,20 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                         <TableCell className="font-medium">{consultant.name}</TableCell>
                         <TableCell>{consultant.department}</TableCell>
                         <TableCell>
-                          <Badge variant={consultant.status === 'On Project' ? 'default' : 'secondary'}>
-                            {consultant.status}
-                          </Badge>
+                          <Select
+                            value={consultant.status}
+                            onValueChange={(value: 'On Bench' | 'On Project') => {
+                              handleStatusChange(consultant.id, value);
+                            }}
+                          >
+                            <SelectTrigger className={cn("w-28", consultant.status === 'On Project' ? "bg-green-100 dark:bg-green-900" : "bg-yellow-100 dark:bg-yellow-900")}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="On Bench">On Bench</SelectItem>
+                                <SelectItem value="On Project">On Project</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">

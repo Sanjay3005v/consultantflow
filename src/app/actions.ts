@@ -36,6 +36,7 @@ import {
     updateConsultantAttendanceInDb, 
     updateConsultantOpportunitiesInDb,
     updateConsultantTotalDaysInDb,
+    updateConsultantStatusInDb,
 } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 
@@ -201,5 +202,14 @@ export async function updateTotalWorkingDays(consultantId: string, totalDays: nu
     } catch (error) {
         console.error('Error updating total working days:', error);
         throw new Error('Failed to update total working days in the database.');
+    }
+}
+
+export async function updateConsultantStatus(consultantId: string, status: 'On Bench' | 'On Project'): Promise<Consultant | undefined> {
+    try {
+        return await updateConsultantStatusInDb(consultantId, status);
+    } catch (error) {
+        console.error('Error updating consultant status:', error);
+        throw new Error('Failed to update consultant status in the database.');
     }
 }
