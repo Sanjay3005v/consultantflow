@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { callConsultantChatbot } from '@/app/actions';
 
 type Message = {
-    role: 'user' | 'bot';
+    role: 'user' | 'bot' | 'system';
     content: string;
 };
 
@@ -50,20 +50,18 @@ export default function ConsultantChatbot({ consultantId }: ConsultantChatbotPro
 
         const userMessage: Message = { role: 'user', content: input };
         setMessages(prev => [...prev, userMessage]);
+        const currentInput = input;
         setInput('');
         setLoading(true);
 
         try {
-            // The history needs to be in the format Genkit expects, where content is an array of parts.
+            // The history for the API needs to be in the format Genkit expects.
             const historyForApi = messages.map(m => ({ 
                 role: m.role, 
                 content: [{ text: m.content }] 
             }));
 
-            // Also include the new user message in the history for the API call
-            historyForApi.push({ role: 'user', content: [{ text: input }] });
-
-            const botResponse = await callConsultantChatbot(consultantId, historyForApi);
+            const botResponse = await callConsultantChatbot(consultantId, historyForApi, currentInput);
             setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
 
         } catch (error) {

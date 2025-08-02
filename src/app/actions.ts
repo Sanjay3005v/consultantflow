@@ -185,9 +185,9 @@ export async function callChatbot(history: ChatMessage[], message: string, pathn
   }
 }
 
-export async function callConsultantChatbot(consultantId: string, history: any[]): Promise<string> {
+export async function callConsultantChatbot(consultantId: string, history: any[], message: string): Promise<string> {
   try {
-    const response = await consultantChatbotFlow({ history, consultantId });
+    const response = await consultantChatbotFlow({ history, consultantId, query: message });
     return response;
   } catch (error) {
     console.error('Error in consultant chatbot flow action:', error);

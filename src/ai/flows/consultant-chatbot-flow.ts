@@ -1,100 +1,60 @@
-
 'use server';
 
 /**
- * @fileOverview A helpful assistant chatbot for the Pool Consultant Management System.
+ * @fileOverview A conversational chatbot for consultants in the ConsultantFlow application.
  *
- * - consultantChatbotFlow - A function that handles the conversation with the consultant.
- * - GetConsultantDetailsInput - The input type for the getConsultantDetailsTool.
+ * - consultantChatbotFlow - A function that takes a user query and conversation history to generate a helpful response for a consultant.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getConsultantById } from '@/lib/data';
-import type { Consultant } from '@/lib/types';
-
-
-const GetConsultantDetailsInputSchema = z.object({
-    consultantId: z.string().describe("The ID of the consultant to fetch details for."),
-});
-export type GetConsultantDetailsInput = z.infer<typeof GetConsultantDetailsInputSchema>;
-
-const getConsultantDetailsTool = ai.defineTool(
-    {
-        name: 'getConsultantDetails',
-        description: 'Fetches all details for a given consultant from the database, including their skills, attendance, and project status.',
-        inputSchema: GetConsultantDetailsInputSchema,
-        outputSchema: z.any(), // Use z.any() as a workaround for complex object schemas in tools
-    },
-    async ({ consultantId }) => {
-        console.log(`Fetching details for consultant: ${consultantId}`);
-        const consultant = await getConsultantById(consultantId);
-        if (!consultant) {
-            throw new Error('Consultant not found');
-        }
-        // Return a serializable subset of the consultant data.
-        return {
-            name: consultant.name,
-            status: consultant.status,
-            skills: consultant.skills,
-            presentDays: consultant.presentDays,
-            totalWorkingDays: consultant.totalWorkingDays,
-            paidLeavesTaken: 0, // Placeholder
-            paidLeavesRemaining: 5, // Placeholder
-        };
-    }
-);
-
-
-const prompt = ai.definePrompt({
-    name: 'consultantChatbotPrompt',
-    tools: [getConsultantDetailsTool],
-    system: `You are a helpful and friendly AI assistant for the "ConsultantFlow" application. Your role is to assist consultants by answering their questions about their personal status, skills, and progress.
-
-When a consultant asks a question that requires their personal data (e.g., "What skills am I lacking?", "How is my attendance?", "How many paid leaves do I have?", "What is my project status?"), you MUST use the \`getConsultantDetails\` tool to fetch their information from the database. The consultant's ID will be provided in a hidden message.
-
-Based on the data you retrieve, provide a clear, concise, and helpful answer.
-
-- If asked about lacking skills, analyze their skill ratings and identify areas with lower scores.
-- If asked about attendance, summarize their record and mention their present days versus total days.
-- If asked about paid leaves, provide the number of leaves remaining and taken.
-
-Always maintain a supportive and professional tone.
-`,
-});
 
 export const consultantChatbotFlow = ai.defineFlow(
     {
         name: 'consultantChatbotFlow',
         inputSchema: z.object({
             history: z.array(z.any()),
-            consultantId: z.string(),
+            query: z.string(),
+            consultantId: z.string(), // Kept for potential future use, not used by system prompt.
         }),
         outputSchema: z.string(),
     },
-    async ({ history, consultantId }) => {
-        // Add a hidden user message with the consultant ID so the model knows which user to talk about.
-        const augmentedHistory = [
-            ...history.slice(0, -1), // All messages except the last user one
-            {
-                role: 'user',
-                content: [{ text: `(My consultant ID is ${consultantId})` }],
-            },
-            ...history.slice(-1), // The last user message
-        ];
+    async ({ history, query }) => {
+        const systemPrompt = `You are a friendly and helpful AI assistant for the "ConsultantFlow" application. Your role is to assist consultants by answering their questions about their personal dashboard and how to use the application's features.
+
+You should be an expert on the following features available to consultants on their dashboard page (/consultant/[id]):
+
+- **Main Dashboard**: This is the central page for a consultant.
+  - **Status Cards**: At the top, a consultant can see a quick summary of their "Project Status", "Resume Status", "Attendance", "Opportunities" provided, and "Training" status.
+  - **Workflow Progress**: This card shows a progress bar and a checklist for key tasks: "Resume Updated", "Attendance Reported", "Opportunities Documented", and "Training Completed".
+  - **Attendance Feedback**: A component where consultants can get AI-powered feedback on their attendance record. It shows their present days vs. total logged days.
+  - **Download Attendance Report**: A button to download a text file summary of their attendance.
+
+- **Skills & Opportunities**:
+  - **Current Skills**: A table that displays the skills extracted from the consultant's resume, including a proficiency rating (1-10) and the AI's reasoning for that score. If a resume hasn't been analyzed, this will be empty.
+  - **Project Allocation Agent**: A powerful feature where the AI suggests 3-5 realistic (but dummy) project opportunities based on the consultant's skills. It provides a "Fit Rating" and a detailed justification for each project. Consultants can accept, decline, or waitlist these opportunities and download the list as a PDF.
+
+- **AI Agents & Uploaders**:
+  - **AI Resume Analyzer**: A card where a consultant can upload their resume (PDF, DOC, DOCX). The AI analyzes it, extracts skills, rates them, and provides actionable feedback. This populates the "Current Skills" table.
+  - **Training Agent**: A card where a consultant can upload a training certificate (Image or PDF). The AI verifies it, identifies the skill learned, and adds it to their profile.
+
+- **Yourself (The Chatbot)**: You are available via a floating chat button. You can answer questions about any of the features listed above.
+
+**How to Respond:**
+- When a consultant asks a question (e.g., "How can I update my skills?", "Where do I see project suggestions?", "What does the fit rating mean?"), use the information above to provide a clear, concise, and helpful answer.
+- Be friendly and professional.
+- Do not invent features. If you don't know the answer, politely say that you can only answer questions about the ConsultantFlow application features.
+- Example: If a user asks "How do I check my performance?", you could say: "You can see your performance in several places on your dashboard! Your attendance percentage is shown in a status card at the top, and you can get detailed AI feedback in the 'Attendance Feedback' section. For skills, the 'Current Skills' table shows how your resume was rated by our AI."
+
+Now, answer the user's question based on the conversation history.`;
+
+        const response = await ai.generate({
+            model: 'googleai/gemini-2.0-flash',
+            prompt: query,
+            system: systemPrompt,
+            history: history,
+        });
         
-        const result = await prompt({history: augmentedHistory});
-        
-        if (!result.toolRequests.length) {
-            return result.text;
-        }
-
-        // Execute the tool call requested by the model.
-        const toolResponse = await result.runTool();
-
-        // After executing the tool, continue the conversation with the tool's output.
-        const finalResult = await result.continue(toolResponse);
-
-        return finalResult.text;
+        return response.text;
     }
 );
