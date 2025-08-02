@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Award, CalendarCheck, FileText, Target, User, Download, ClipboardCheck } from 'lucide-react';
+import { Award, CalendarCheck, FileText, Target, User, Download, ClipboardCheck, MessageSquare } from 'lucide-react';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import SkillsDisplay from '@/components/skills-display';
 import StatusCard from '@/components/status-card';
@@ -15,6 +15,8 @@ import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
 import TrainingUploader from './training-uploader';
 import OpportunityCenter from './opportunity-center';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import ConsultantChatbot from './consultant-chatbot';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -22,6 +24,7 @@ export default function ConsultantDashboard({
   initialConsultant: Consultant;
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     setConsultant(initialConsultant);
@@ -163,6 +166,25 @@ export default function ConsultantDashboard({
         </div>
       </div>
     </div>
+    <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogTrigger asChild>
+            <Button
+            variant="default"
+            className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg"
+            >
+            <MessageSquare className="w-8 h-8" />
+            <span className="sr-only">Open Chat</span>
+            </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
+            <DialogHeader className="p-4 border-b">
+                <DialogTitle>Consultant Assistant</DialogTitle>
+            </DialogHeader>
+            <div className="flex-grow overflow-hidden">
+                 <ConsultantChatbot consultantId={consultant.id} />
+            </div>
+        </DialogContent>
+    </Dialog>
     </>
   );
 }
