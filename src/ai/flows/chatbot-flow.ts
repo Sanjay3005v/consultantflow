@@ -9,14 +9,17 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { saveCandidate } from '@/lib/data';
 
 const CandidateDetailsSchema = z.object({
     name: z.string().describe('The full name of the candidate.'),
     experience: z.number().describe('The years of professional experience the candidate has.'),
     role: z.string().describe('The role the candidate is applying for.'),
-    resume: z.string().describe("The candidate's resume content, provided as a data URI."),
+    resume: z.string().describe("The candidate's resume content, provided as a data URI.").refine(
+        (s) => s.startsWith('data:') && s.includes(';base64,'),
+        "Resume must be a valid data URI with base64 encoding."
+    ),
 });
 export type CandidateDetails = z.infer<typeof CandidateDetailsSchema>;
 
@@ -67,11 +70,17 @@ export const candidateCollectorFlow = ai.defineFlow(
         outputSchema: z.string(),
     },
     async ({ history }) => {
-        const { output } = await prompt(history);
+        const result = await prompt(history);
+        const output = result.output();
+
+        if (!output) {
+            return "I'm sorry, I couldn't process that. Could you try again?";
+        }
         
         if (output.toolRequests.length > 0) {
             const toolRequest = output.toolRequests[0];
-            await toolRequest.run();
+            await result.runTool(toolRequest);
+            
             // After saving, provide a concluding message
             return "Thank you for providing your details. We have received your application and will be in touch shortly.";
         }
