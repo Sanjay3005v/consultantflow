@@ -71,7 +71,7 @@ export const candidateCollectorFlow = ai.defineFlow(
         
         if (output.toolRequests.length > 0) {
             const toolRequest = output.toolRequests[0];
-            const toolResponse = await toolRequest.run();
+            await toolRequest.run();
             // After saving, provide a concluding message
             return "Thank you for providing your details. We have received your application and will be in touch shortly.";
         }
