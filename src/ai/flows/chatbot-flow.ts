@@ -1,90 +1,57 @@
-
 'use server';
 
 /**
- * @fileOverview A chatbot flow to collect candidate details.
+ * @fileOverview A conversational chatbot for the Pool Consultant Management System.
  *
- * - candidateCollectorFlow - A function that handles the conversation and data collection.
- * - CandidateDetails - The type for the candidate's information.
+ * - chat - A function that takes a user query and conversation history to generate a helpful response.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { saveCandidate } from '@/lib/data';
+import { ChatMessage, ChatMessageSchema } from '@/lib/chatbot-schema';
 
-const CandidateDetailsSchema = z.object({
-    name: z.string().describe('The full name of the candidate.'),
-    experience: z.number().describe('The years of professional experience the candidate has.'),
-    role: z.string().describe('The role the candidate is applying for.'),
-    resume: z.string().describe("The candidate's resume content, provided as a data URI.").refine(
-        (s) => s.startsWith('data:') && s.includes(';base64,'),
-        "Resume must be a valid data URI with base64 encoding."
-    ),
-});
-export type CandidateDetails = z.infer<typeof CandidateDetailsSchema>;
+export async function chat(
+  history: ChatMessage[],
+  query: string,
+  pathname: string
+): Promise<string> {
+  const systemPrompt = `You are a helpful and professional AI assistant for the "ConsultantFlow" application, designed to assist consultants and administrators in managing resumes, attendance, training, and opportunities.
 
-const saveCandidateDetailsTool = ai.defineTool(
-    {
-        name: 'saveCandidateDetails',
-        description: 'Saves the collected candidate details to the database.',
-        inputSchema: CandidateDetailsSchema,
-        outputSchema: z.string(),
-    },
-    async (details) => {
-        try {
-            await saveCandidate(details);
-            return 'Successfully saved the candidate details.';
-        } catch (error) {
-            console.error('Error saving candidate details:', error);
-            return 'Failed to save the candidate details due to an internal error.';
-        }
-    }
-);
+Your role is to answer user questions about how to use different parts of the application. Be brief, accurate, and use the current page path (\`${pathname}\`) to tailor your response if possible.
 
-const prompt = ai.definePrompt({
-    name: 'candidateCollectorPrompt',
-    tools: [saveCandidateDetailsTool],
-    prompt: `You are an expert recruitment assistant. Your goal is to collect essential details from a candidate in a friendly, conversational manner.
+There are two main user roles and the following features:
 
-Follow this sequence:
-1. Greet the user and ask for their full name.
-2. Once you have the name, ask for their total years of professional experience.
-3. After getting their experience, ask what role they are applying for.
-4. Finally, ask them to upload their resume (as a file).
-5. Once all details (name, experience, role, and resume) are collected, you MUST call the \`saveCandidateDetails\` tool to save the information.
-6. After calling the tool, confirm to the user that their information has been received and thank them.
+**1. Administrator Features:**
+- **Admin Console** (/admin): The overview panel for managing consultants.
+  - Search and filter consultants by name, email, department, or status.
+  - Mark attendance for consultants.
+  - Analyze consultant resumes with AI.
+  - Generate reports.
+  - Update a consultant's project status ('On Bench' / 'On Project').
 
-- Do not ask for all the details at once. Ask for them one by one.
-- Be polite and maintain a professional tone throughout the conversation.
-- If the user provides a file, you will receive it as a data URI. Pass this directly to the \`resume\` field in the tool.
-- The conversation history is provided. Your response should be the next logical step in the conversation.
-`,
-});
+**2. Consultant Features:**
+- **Consultant Dashboard** (/consultant/[id]): Main page with activity summary.
+  - **Workflow Progress**: Track completion of resume updates, attendance, opportunities, and training.
+  - **Skills Display**: View AI-extracted skills and proficiency scores from your resume.
+  - **Resume Analyzer**: Upload a new resume for AI analysis.
+  - **Training Uploader**: Upload a training certificate for verification.
+  - **Project Allocation Agent**: Get AI-powered project suggestions based on your skills.
+  - **Attendance Feedback**: Get AI-generated feedback on your attendance record.
 
-export const candidateCollectorFlow = ai.defineFlow(
-    {
-        name: 'candidateCollectorFlow',
-        inputSchema: z.object({
-            history: z.array(z.any()),
-        }),
-        outputSchema: z.string(),
-    },
-    async ({ history }) => {
-        const result = await prompt(history);
-        const output = result.output();
+If a user asks a question:
+- Use the current path (\`${pathname}\`) to provide specific answers where relevant.
+- Mention exact page paths where users can find features.
+- Never invent features.
+- If unsure, suggest they contact their admin or check documentation.
 
-        if (!output) {
-            return "I'm sorry, I couldn't process that. Could you try again?";
-        }
-        
-        if (output.toolRequests.length > 0) {
-            const toolRequest = output.toolRequests[0];
-            await result.runTool(toolRequest);
-            
-            // After saving, provide a concluding message
-            return "Thank you for providing your details. We have received your application and will be in touch shortly.";
-        }
-        
-        return output.text;
-    }
-);
+Keep your tone helpful, concise, and application-specific at all times.`;
+
+  const response = await ai.generate({
+    model: 'googleai/gemini-2.0-flash',
+    prompt: query,
+    system: systemPrompt,
+    history: history.map(m => ({ ...m, content: [{ text: m.content }] })),
+  });
+
+  return response.text;
+}

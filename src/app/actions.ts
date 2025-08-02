@@ -21,7 +21,7 @@ import {
   type OpportunityEngagerInput,
   type OpportunityEngagerOutput,
 } from '@/ai/flows/opportunity-agent';
-import { candidateCollectorFlow } from '@/ai/flows/chatbot-flow';
+import { chat } from '@/ai/flows/chatbot-flow';
 import { consultantChatbotFlow } from '@/ai/flows/consultant-chatbot-flow';
 import {
   projectAllocationAgent,
@@ -40,6 +40,7 @@ import {
     updateConsultantStatusInDb,
 } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
+import { ChatMessage } from '@/lib/chatbot-schema';
 
 
 export type AnalyzeResumeResult = {
@@ -174,14 +175,9 @@ export async function updateSelectedOpportunities(consultantId: string, opportun
     }
 }
 
-export async function callChatbot(message: string, history: any[]): Promise<string> {
-    const updatedHistory = [
-      ...history,
-      { role: 'user', content: [{ text: message }] },
-  ];
-  
+export async function callChatbot(history: ChatMessage[], message: string, pathname: string): Promise<string> {
   try {
-    const response = await candidateCollectorFlow({ history: updatedHistory });
+    const response = await chat(history, message, pathname);
     return response;
   } catch (error) {
     console.error("Error in chatbot flow action:", error);

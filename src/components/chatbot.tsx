@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bot, Loader2, Send, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { callChatbot } from '@/app/actions';
+import { usePathname } from 'next/navigation';
 
 type Message = {
     role: 'user' | 'bot';
@@ -22,11 +23,12 @@ export default function Chatbot() {
     const [loading, setLoading] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
+    const pathname = usePathname();
 
     useEffect(() => {
         // Start with a greeting from the bot
         setMessages([
-            { role: 'bot', content: "Hello! I'm here to help you with your application. What is your full name?" }
+            { role: 'bot', content: "Hello! I'm the ConsultantFlow assistant. How can I help you today?" }
         ]);
     }, []);
 
@@ -50,20 +52,11 @@ export default function Chatbot() {
         setLoading(true);
 
         try {
-            // The history needs to be in the format Genkit expects
-            const historyForApi = messages.map(m => ({ 
-                role: m.role, 
-                content: [{ text: m.content }] 
-            }));
-            const botResponse = await callChatbot(input, historyForApi);
+            // The history for the API should not include the user's latest message yet.
+            const historyForApi = messages;
+            const botResponse = await callChatbot(historyForApi, input, pathname);
             setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
 
-            if (botResponse.toLowerCase().includes('thank you for providing your details')) {
-                 toast({
-                    title: 'Application Submitted!',
-                    description: 'Your details have been successfully saved.',
-                });
-            }
         } catch (error) {
             console.error('Error calling chatbot:', error);
             toast({
@@ -71,7 +64,6 @@ export default function Chatbot() {
                 description: 'There was an issue communicating with the chatbot. Please try again.',
                 variant: 'destructive',
             });
-            // Restore user message if bot fails
              setMessages(prev => [...prev, { role: 'bot', content: "I'm sorry, something went wrong. Could you please repeat that?" }]);
         } finally {
             setLoading(false);
@@ -81,8 +73,8 @@ export default function Chatbot() {
     return (
         <Card className="h-[70vh] flex flex-col">
             <CardHeader>
-                <CardTitle>AI Candidate Assistant</CardTitle>
-                <CardDescription>Please provide your details to apply for a role.</CardDescription>
+                <CardTitle>AI Assistant</CardTitle>
+                <CardDescription>Ask me questions about using the ConsultantFlow application.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col gap-4 overflow-hidden">
                 <ScrollArea className="flex-grow pr-4" ref={scrollAreaRef}>
