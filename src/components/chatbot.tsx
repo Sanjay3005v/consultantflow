@@ -50,8 +50,12 @@ export default function Chatbot() {
         setLoading(true);
 
         try {
-            const history = messages.map(m => ({ role: m.role, content: m.content }));
-            const botResponse = await callChatbot(input, history);
+            // The history needs to be in the format Genkit expects
+            const historyForApi = messages.map(m => ({ 
+                role: m.role, 
+                content: [{ text: m.content }] 
+            }));
+            const botResponse = await callChatbot(input, historyForApi);
             setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
 
             if (botResponse.toLowerCase().includes('thank you for providing your details')) {

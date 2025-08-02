@@ -175,17 +175,9 @@ export async function updateSelectedOpportunities(consultantId: string, opportun
 }
 
 export async function callChatbot(message: string, history: any[]): Promise<string> {
-  const filePart = history.find(m => m.content.some((p: any) => p.media))?.content.find((p: any) => p.media)?.media;
-
-  const content: any[] = [{text: message}];
-
-  if(filePart?.url) {
-      content.push({media: {url: filePart.url, contentType: filePart.contentType}});
-  }
-
-  const updatedHistory = [
-      ...history.filter(m => !m.content.some((p: any) => p.media)),
-      { role: 'user', content },
+    const updatedHistory = [
+      ...history,
+      { role: 'user', content: [{ text: message }] },
   ];
   
   try {
