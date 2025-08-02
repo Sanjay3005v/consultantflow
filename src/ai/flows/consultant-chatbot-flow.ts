@@ -90,17 +90,16 @@ export const consultantChatbotFlow = ai.defineFlow(
                 content: [{ text: `(My consultant ID is ${consultantId})` }],
             },
         ];
-
+        
         const result = await prompt(augmentedHistory);
-        const choice = result.choices[0];
 
-        if (choice.toolRequests.length > 0) {
-            const toolRequest = choice.toolRequests[0];
+        if (result.toolRequests.length > 0) {
+            const toolRequest = result.toolRequests[0];
             const toolResponse = await toolRequest.run();
             
             const toolResponseHistory = [
                 ...augmentedHistory,
-                choice.message, // Include the model's message that contains the tool request
+                result.message, // Include the model's message that contains the tool request
                 {
                     role: 'tool',
                     content: [ { toolResponse: { name: toolRequest.name, output: toolResponse } } ],
@@ -109,9 +108,9 @@ export const consultantChatbotFlow = ai.defineFlow(
 
             // After executing the tool, continue the conversation with the tool's output.
             const finalResult = await prompt(toolResponseHistory);
-            return finalResult.choices[0].text;
+            return finalResult.text;
         }
         
-        return choice.text;
+        return result.text;
     }
 );

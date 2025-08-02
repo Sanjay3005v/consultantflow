@@ -54,8 +54,16 @@ export default function ConsultantChatbot({ consultantId }: ConsultantChatbotPro
         setLoading(true);
 
         try {
-            const history = messages.map(m => ({ role: m.role, content: m.content }));
-            const botResponse = await callConsultantChatbot(consultantId, history);
+            // The history needs to be in the format Genkit expects, where content is an array of parts.
+            const historyForApi = messages.map(m => ({ 
+                role: m.role, 
+                content: [{ text: m.content }] 
+            }));
+
+            // Also include the new user message in the history for the API call
+            historyForApi.push({ role: 'user', content: [{ text: input }] });
+
+            const botResponse = await callConsultantChatbot(consultantId, historyForApi);
             setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
 
         } catch (error) {
@@ -65,7 +73,6 @@ export default function ConsultantChatbot({ consultantId }: ConsultantChatbotPro
                 description: 'There was an issue communicating with the chatbot. Please try again.',
                 variant: 'destructive',
             });
-            // Restore user message if bot fails
              setMessages(prev => [...prev, { role: 'bot', content: "I'm sorry, something went wrong. Could you please repeat that?" }]);
         } finally {
             setLoading(false);
