@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -40,7 +41,7 @@ const ProjectAllocationOutputSchema = z.object({
     .describe('A list of dummy project opportunities generated for the consultant.'),
   feedbackSummary: z
     .string()
-    .describe('A concise, personalized feedback summary for the consultant about the allocated projects.'),
+    .describe('A concise, personalized, and detailed feedback summary for the consultant about the allocated projects.'),
 });
 export type ProjectAllocationOutput = z.infer<typeof ProjectAllocationOutputSchema>;
 
@@ -62,8 +63,8 @@ Your tasks:
 2.  **For each project, define the key skills required.**
 3.  **Analyze the consultant's skills against the project's requirements.**
 4.  **Assign a "Fit Rating" from 1 (poor fit) to 10 (perfect fit).** Base this rating on the overlap of skills and the consultant's proficiency in those skills.
-5.  **Write a brief "Justification"** for each rating, explaining your reasoning.
-6.  **Provide a "Feedback Summary"** for the consultant. This should be a friendly, encouraging message that highlights the best-fit project and gives a quick overview of their options.
+5.  **Write a brief "Justification"** for each rating, explaining your reasoning in detail.
+6.  **Provide a "Feedback Summary"** for the consultant. This should be a friendly, encouraging, and detailed message. It must highlight the best-fit project, explain why it's a great match, and give a quick, positive overview of the other options available. Make it sound like a helpful career advisor.
 
 Example of a consultant's skills input:
 - Consultant Name: Priya Sharma
@@ -91,7 +92,7 @@ Example of your output:
       "justification": "Priya's strong Java skills are valuable for test script creation. However, the project requires Selenium and CI/CD experience, which is not listed in her skills."
     }
   ],
-  "feedbackSummary": "Hi Priya, I've found a few opportunities for you. The 'E-commerce Platform Revamp' looks like an excellent match for your backend skills! I've also added a testing project for you to consider. Take a look at the details and let us know your preferences."
+  "feedbackSummary": "Hi Priya, I've analyzed your skill profile and found some exciting opportunities for you. The 'E-commerce Platform Revamp' stands out as an excellent match, with a fit rating of 8/10! Your strong Java and Spring Boot skills make you a prime candidate for their backend development. I've also found a QA role where your Java expertise would be highly valuable. Take a look at the details for each project. I'm confident we can find the perfect fit to advance your career!"
 }
 ---
 
@@ -119,3 +120,4 @@ const projectAllocationFlow = ai.defineFlow(
     return output!;
   }
 );
+

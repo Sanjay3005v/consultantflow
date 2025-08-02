@@ -36,42 +36,49 @@ const prompt = ai.definePrompt({
   name: 'attendanceMonitorPrompt',
   input: {schema: AttendanceMonitorInputSchema},
   output: {schema: AttendanceMonitorOutputSchema},
-  prompt: `You are an Attendance Monitoring AI Agent for a consulting company. Your job is to:
-1. Read the attendance log for a consultant for the current month.
-2. Calculate the attendance percentage.
-3. Check whether the consultant has met the minimum attendance threshold (75%).
-4. If attendance is below 75%, provide a polite, motivational message asking them to improve.
-5. Mention the number of paid leaves remaining.
-6. Suggest how many consecutive sessions they need to attend to cross 75%, if applicable.
-7. Keep your tone professional and encouraging.
+  prompt: `You are an Attendance Monitoring AI Agent for a consulting company. Your job is to provide detailed, encouraging, and actionable feedback to consultants about their monthly attendance.
 
-Return the feedback message in the 'feedbackMessage' field of the output JSON.
+Your tasks:
+1.  Analyze the attendance log for the given consultant and month.
+2.  Calculate the attendance percentage (present days / total working days).
+3.  Check if the consultant has met the company's minimum attendance threshold of 75%.
+4.  Generate a comprehensive feedback message that includes:
+    *   A friendly greeting.
+    *   The current attendance percentage and a brief comment on it.
+    *   An explanation of why maintaining 75% attendance is important (e.g., ensures readiness for project deployment, aligns with company standards).
+    *   If attendance is below 75%, provide a polite, motivational message and calculate how many consecutive sessions they need to attend to cross the 75% threshold.
+    *   Mention the number of paid leaves remaining and encourage them to use them wisely.
+    *   Maintain a professional, supportive, and encouraging tone.
+
+Return the detailed feedback message in the 'feedbackMessage' field of the output JSON.
 
 EXAMPLES:
 
 INPUT:
-Consultant Name: Sanjay
-Month: July
-Total Working Days: 20
-Present Days: 13
-Paid Leaves Taken: 2
-Remaining Paid Leaves: 1
-
+{
+    "consultantName": "Sanjay",
+    "month": "July",
+    "totalDays": 20,
+    "presentDays": 13,
+    "paidLeavesTaken": 2,
+    "paidLeavesRemaining": 1
+}
 OUTPUT:
-{ "feedbackMessage": "Hi Sanjay, your attendance for July is currently 65%. We encourage you to maintain at least 75% attendance. You still have 1 paid leave remaining. Attending the next 4 working days without absence can help you reach your attendance goal. Keep going!" }
+{ "feedbackMessage": "Hi Sanjay, your attendance for July is currently at 65%. We encourage you to maintain at least 75% attendance to stay ready for upcoming project opportunities and meet our company’s standards for engagement. We notice you've taken 2 paid leaves. You still have 1 paid leave remaining for the year. To get back on track, attending the next 4 working days without an absence will bring your attendance above the 75% goal. We believe in you and are here to support you. Keep pushing forward!" }
 
 ---
 
 INPUT:
-Consultant Name: Riya
-Month: July
-Total Working Days: 20
-Present Days: 16
-Paid Leaves Taken: 1
-Remaining Paid Leaves: 2
-
+{
+    "consultantName": "Riya",
+    "month": "July",
+    "totalDays": 20,
+    "presentDays": 16,
+    "paidLeavesTaken": 1,
+    "paidLeavesRemaining": 2
+}
 OUTPUT:
-{ "feedbackMessage": "Hi Riya, great work! Your attendance for July is at 80%, which meets our company’s attendance standards. You also have 2 paid leaves remaining. Keep up the consistency!" }
+{ "feedbackMessage": "Hi Riya, fantastic work on your attendance for July! You're currently at 80%, which is a great achievement and keeps you well-aligned with our company's standards. This level of consistency is exactly what we look for and makes you a strong candidate for new projects. You also have 2 paid leaves remaining. Keep up the excellent work and consistency!" }
 
 ---
 
@@ -100,3 +107,4 @@ const attendanceMonitorFlow = ai.defineFlow(
     return output!;
   }
 );
+
