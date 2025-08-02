@@ -24,7 +24,7 @@ const getConsultantDetailsTool = ai.defineTool(
         name: 'getConsultantDetails',
         description: 'Fetches all details for a given consultant from the database.',
         inputSchema: GetConsultantDetailsInputSchema,
-        outputSchema: z.custom<Consultant>(),
+        outputSchema: z.any(), // Use z.any() as a workaround for complex object schemas in tools
     },
     async ({ consultantId }) => {
         console.log(`Fetching details for consultant: ${consultantId}`);
@@ -32,6 +32,7 @@ const getConsultantDetailsTool = ai.defineTool(
         if (!consultant) {
             throw new Error('Consultant not found');
         }
+        // Return a simplified/serializable object if needed, but for now, the whole object is fine
         return consultant;
     }
 );
@@ -96,13 +97,18 @@ export const consultantChatbotFlow = ai.defineFlow(
         if (choice.toolRequests.length > 0) {
             const toolRequest = choice.toolRequests[0];
             const toolResponse = await toolRequest.run();
-            const toolResponsePart = {
-                role: 'tool',
-                content: [ { toolResponse: { name: toolRequest.name, output: toolResponse } } ],
-            }
+            
+            const toolResponseHistory = [
+                ...augmentedHistory,
+                choice.message, // Include the model's message that contains the tool request
+                {
+                    role: 'tool',
+                    content: [ { toolResponse: { name: toolRequest.name, output: toolResponse } } ],
+                }
+            ];
 
             // After executing the tool, continue the conversation with the tool's output.
-            const finalResult = await result.continue([toolResponsePart]);
+            const finalResult = await prompt(toolResponseHistory);
             return finalResult.choices[0].text;
         }
         
