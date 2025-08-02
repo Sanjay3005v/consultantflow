@@ -3,13 +3,13 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Award, CalendarCheck, FileText, Target, User, Download } from 'lucide-react';
+import { Award, CalendarCheck, FileText, Target, User, Download, ClipboardCheck } from 'lucide-react';
 import ResumeAnalyzer from '@/components/resume-analyzer';
 import SkillsDisplay from '@/components/skills-display';
 import StatusCard from '@/components/status-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import WorkflowTracker from '@/components/workflow-tracker';
-import type { Consultant, JobOpportunity } from '@/lib/types';
+import type { Consultant } from '@/lib/types';
 import type { AnalyzeCertificateResult, AnalyzeResumeResult } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
@@ -18,18 +18,14 @@ import OpportunityCenter from './opportunity-center';
 
 export default function ConsultantDashboard({
   initialConsultant,
-  initialOpportunities,
 }: {
   initialConsultant: Consultant;
-  initialOpportunities: JobOpportunity[];
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
-  const [jobOpportunities, setJobOpportunities] = useState<JobOpportunity[]>(initialOpportunities);
 
   useEffect(() => {
     setConsultant(initialConsultant);
-    setJobOpportunities(initialOpportunities);
-  }, [initialConsultant, initialOpportunities]);
+  }, [initialConsultant]);
 
   if (!consultant) {
     notFound();
@@ -91,7 +87,13 @@ export default function ConsultantDashboard({
         </div>
       </div>
 
-      <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        <StatusCard
+          title="Project Status"
+          value={consultant.status}
+          icon={ClipboardCheck}
+          variant={consultant.status === 'On Project' ? 'success' : 'info'}
+        />
         <StatusCard
           title="Resume Status"
           value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
@@ -146,7 +148,7 @@ export default function ConsultantDashboard({
                 </div>
            </div>
            <SkillsDisplay skills={consultant.skills} />
-           <OpportunityCenter consultant={consultant} opportunities={jobOpportunities} />
+           <OpportunityCenter consultant={consultant} />
         </div>
 
         <div className="space-y-8">
