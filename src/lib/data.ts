@@ -1,4 +1,3 @@
-
 import { db } from './firebase';
 import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch, serverTimestamp, runTransaction } from 'firebase/firestore';
 import type { Consultant, SkillAnalysis, AttendanceRecord, JobOpportunity, Candidate } from './types';
