@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Consultant, AttendanceRecord, SkillAnalysis } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -204,10 +204,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     }
   };
 
-  const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
+  const handleAnalysisComplete = useCallback(() => {
     router.refresh();
     setIsAnalyzeDialogOpen(false);
-  };
+  }, [router]);
   
   const hasSkillAnalysis = (consultant: Consultant) => {
     return Array.isArray(consultant.skills) && consultant.skills.length > 0 && consultant.skills.some(s => s && (s as SkillAnalysis).skill);
