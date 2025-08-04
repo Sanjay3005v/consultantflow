@@ -24,7 +24,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { createNewConsultant, getFreshConsultants, markAttendance, updateTotalWorkingDays, updateConsultantStatus } from '@/app/actions';
+import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,6 +34,7 @@ import { Bar, ResponsiveContainer, XAxis, YAxis, BarChart as RechartsBarChart } 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ResumeAnalyzer from './resume-analyzer';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 
 const createConsultantSchema = z.object({
@@ -63,6 +64,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const [editableTotalDays, setEditableTotalDays] = useState(22);
   const { toast } = useToast();
+  const router = useRouter();
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
@@ -74,11 +76,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         department: 'Technology',
     },
   });
-
-  const refreshConsultants = async () => {
-    const updatedConsultants = await getFreshConsultants();
-    setConsultants(updatedConsultants);
-  };
 
   useEffect(() => {
     setConsultants(initialConsultants);
@@ -127,7 +124,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         await markAttendance(selectedConsultant.id, format(date, 'yyyy-MM-dd'), attendanceStatus);
       }
 
-      await refreshConsultants();
+      router.refresh();
       
       toast({
         title: 'Attendance Marked',
@@ -174,7 +171,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
     await createNewConsultant({ ...values, password: 'defaultpassword' }); // Assign a default or generated password
-    await refreshConsultants();
+    router.refresh();
     toast({
         title: 'Consultant Created',
         description: `Successfully created ${values.name}.`,
@@ -197,7 +194,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const handleSaveTotalDays = async () => {
     if (selectedConsultant) {
         await updateTotalWorkingDays(selectedConsultant.id, editableTotalDays);
-        await refreshConsultants();
+        router.refresh();
         toast({
             title: 'Total Days Updated',
             description: `Total working days for ${selectedConsultant.name} set to ${editableTotalDays}.`,
@@ -208,7 +205,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const handleAnalysisComplete = (skills: SkillAnalysis[]) => {
-    refreshConsultants();
+    router.refresh();
     setIsAnalyzeDialogOpen(false);
   };
   
@@ -224,7 +221,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const handleStatusChange = async (consultantId: string, status: 'On Bench' | 'On Project') => {
     await updateConsultantStatus(consultantId, status);
-    await refreshConsultants();
+    router.refresh();
     toast({
         title: 'Status Updated',
         description: `Consultant status has been updated to ${status}.`
@@ -606,7 +603,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Edit Total Working Days for {selectedConsultant?.name}</DialogTitle>
-            </DialogHeader>
+            </Header>
             <div className="py-4">
                 <Label htmlFor="total-days-edit">Total Working Days</Label>
                 <Input 

@@ -33,7 +33,6 @@ import {
     createConsultant, 
     findConsultantByEmail, 
     addSkillToConsultantInDb, 
-    getAllConsultants as getAllConsultantsFromDb, 
     updateConsultantAttendanceInDb, 
     updateConsultantOpportunitiesInDb,
     updateConsultantTotalDaysInDb,
@@ -123,7 +122,7 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
 
 export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ success: boolean } | { error: string }> {
     if (credentials.email.endsWith('@hexaware.com') && credentials.password === 'admin123') {
-        cookies().set('admin-session', 'true', { httpOnly: true, path: '/admin', maxAge: 60 * 60 * 24 }); // Expires in 1 day
+        cookies().set('admin-session', 'true', { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 }); // Expires in 1 day
         return { success: true };
     }
     return { error: 'Invalid admin credentials' };
@@ -162,11 +161,6 @@ export async function getProjectAllocations(input: ProjectAllocationInput): Prom
         console.error('Error getting project allocations:', error);
         throw new Error('Failed to get AI-powered project allocations.');
     }
-}
-
-
-export async function getFreshConsultants(): Promise<Consultant[]> {
-    return getAllConsultantsFromDb();
 }
 
 export async function markAttendance(consultantId: string, date: string, status: 'Present' | 'Absent'): Promise<Consultant | undefined> {
