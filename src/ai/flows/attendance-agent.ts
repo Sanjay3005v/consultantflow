@@ -34,6 +34,7 @@ export async function attendanceMonitor(input: AttendanceMonitorInput): Promise<
 
 const prompt = ai.definePrompt({
   name: 'attendanceMonitorPrompt',
+  model: 'googleai/gemini-2.0-flash',
   input: {schema: AttendanceMonitorInputSchema},
   output: {schema: AttendanceMonitorOutputSchema},
   prompt: `You are an Attendance Monitoring AI Agent for a consulting company. Your job is to provide detailed, encouraging, and actionable feedback to consultants about their monthly attendance.
@@ -107,4 +108,3 @@ const attendanceMonitorFlow = ai.defineFlow(
     return output!;
   }
 );
-
