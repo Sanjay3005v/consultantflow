@@ -38,8 +38,9 @@ import {
     updateConsultantTotalDaysInDb,
     updateConsultantStatusInDb,
     updateConsultantOpportunities as updateConsultantOpportunitiesAction,
+    createJobOpportunity,
 } from '@/lib/data';
-import type { Consultant, SkillAnalysis } from '@/lib/types';
+import type { Consultant, SkillAnalysis, JobOpportunity } from '@/lib/types';
 import { ChatMessage } from '@/lib/chatbot-schema';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -124,14 +125,15 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
 export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>) {
     if (credentials.email.endsWith('@hexaware.com') && credentials.password === 'admin123') {
         cookies().set('admin-session', 'true', { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 }); // Expires in 1 day
+        redirect('/admin');
     } else {
         throw new Error('Invalid admin credentials');
     }
-    redirect('/admin');
 }
 
 export async function logoutAdmin() {
     cookies().delete('admin-session');
+    redirect('/');
 }
 
 
@@ -222,5 +224,28 @@ export async function updateConsultantStatus(consultantId: string, status: 'On B
     } catch (error) {
         console.error('Error updating consultant status:', error);
         throw new Error('Failed to update consultant status in the database.');
+    }
+}
+
+export async function createOpportunity(data: {
+  title: string;
+  neededYOE: number;
+  neededSkills: string;
+  responsibilities: string;
+}): Promise<void> {
+    try {
+        const skillsArray = data.neededSkills.split(',').map(skill => skill.trim());
+        
+        const opportunityData: Omit<JobOpportunity, 'id'> = {
+            title: data.title,
+            neededYOE: data.neededYOE,
+            neededSkills: skillsArray,
+            responsibilities: data.responsibilities,
+        };
+
+        await createJobOpportunity(opportunityData);
+    } catch (error) {
+        console.error('Error creating opportunity:', error);
+        throw new Error('Failed to create new opportunity in the database.');
     }
 }

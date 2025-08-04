@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Consultant, AttendanceRecord, SkillAnalysis } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus } from '@/app/actions';
+import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus, createOpportunity } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +35,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import ResumeAnalyzer from './resume-analyzer';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { Textarea } from './ui/textarea';
 
 
 const createConsultantSchema = z.object({
@@ -42,6 +43,13 @@ const createConsultantSchema = z.object({
     email: z.string().email('A valid email is required'),
     password: z.string().min(4, 'Password must be at least 4 characters'),
     department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
+});
+
+const createOpportunitySchema = z.object({
+    title: z.string().min(1, 'Title is required'),
+    neededYOE: z.coerce.number().min(0, 'Years of experience must be a positive number'),
+    neededSkills: z.string().min(1, 'At least one skill is required'),
+    responsibilities: z.string().min(1, 'Responsibilities are required'),
 });
 
 
@@ -56,7 +64,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [statusFilter, setStatusFilter] = useState('all');
   
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateConsultantDialogOpen, setIsCreateConsultantDialogOpen] = useState(false);
+  const [isCreateOpportunityDialogOpen, setIsCreateOpportunityDialogOpen] = useState(false);
   const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
   const [isEditDaysDialogOpen, setIsEditDaysDialogOpen] = useState(false);
 
@@ -69,13 +78,23 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  const form = useForm<z.infer<typeof createConsultantSchema>>({
+  const consultantForm = useForm<z.infer<typeof createConsultantSchema>>({
     resolver: zodResolver(createConsultantSchema),
     defaultValues: {
         name: '',
         email: '',
         password: '',
         department: 'Technology',
+    },
+  });
+  
+  const opportunityForm = useForm<z.infer<typeof createOpportunitySchema>>({
+    resolver: zodResolver(createOpportunitySchema),
+    defaultValues: {
+      title: '',
+      neededYOE: 0,
+      neededSkills: '',
+      responsibilities: '',
     },
   });
 
@@ -171,15 +190,33 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     return `${consultant.presentDays}/${consultant.totalWorkingDays}`;
   };
 
-  const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
+  const onConsultantCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
     await createNewConsultant(values);
     router.refresh();
     toast({
         title: 'Consultant Created',
         description: `Successfully created ${values.name}.`,
     });
-    setIsCreateDialogOpen(false);
-    form.reset();
+    setIsCreateConsultantDialogOpen(false);
+    consultantForm.reset();
+  };
+  
+  const onOpportunityCreateSubmit = async (values: z.infer<typeof createOpportunitySchema>) => {
+    try {
+        await createOpportunity(values);
+        toast({
+            title: 'Opportunity Created',
+            description: `Successfully created the "${values.title}" role.`
+        });
+        setIsCreateOpportunityDialogOpen(false);
+        opportunityForm.reset();
+    } catch (error) {
+        toast({
+            title: 'Creation Failed',
+            description: 'Could not create the new opportunity.',
+            variant: 'destructive',
+        })
+    }
   };
 
   const handleOpenAnalyzeDialog = (consultant: Consultant) => {
@@ -270,7 +307,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <CardTitle>Consultant Directory</CardTitle>
             <div className='flex gap-2'>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <Dialog open={isCreateConsultantDialogOpen} onOpenChange={setIsCreateConsultantDialogOpen}>
                   <DialogTrigger asChild>
                        <Button>
                           <UserPlus className="mr-2 h-4 w-4" />
@@ -281,10 +318,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       <DialogHeader>
                           <DialogTitle>Create New Consultant</DialogTitle>
                       </DialogHeader>
-                      <Form {...form}>
-                          <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
+                      <Form {...consultantForm}>
+                          <form onSubmit={consultantForm.handleSubmit(onConsultantCreateSubmit)} className="space-y-4">
                               <FormField
-                                  control={form.control}
+                                  control={consultantForm.control}
                                   name="name"
                                   render={({ field }) => (
                                       <FormItem>
@@ -297,7 +334,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                   )}
                               />
                               <FormField
-                                  control={form.control}
+                                  control={consultantForm.control}
                                   name="email"
                                   render={({ field }) => (
                                       <FormItem>
@@ -310,7 +347,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                   )}
                               />
                               <FormField
-                                  control={form.control}
+                                  control={consultantForm.control}
                                   name="password"
                                   render={({ field }) => (
                                       <FormItem>
@@ -323,7 +360,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                   )}
                               />
                                <FormField
-                                  control={form.control}
+                                  control={consultantForm.control}
                                   name="department"
                                   render={({ field }) => (
                                     <FormItem>
@@ -350,6 +387,83 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                       <Button variant="outline">Cancel</Button>
                                   </DialogClose>
                                   <Button type="submit">Create</Button>
+                              </DialogFooter>
+                          </form>
+                      </Form>
+                  </DialogContent>
+              </Dialog>
+               <Dialog open={isCreateOpportunityDialogOpen} onOpenChange={setIsCreateOpportunityDialogOpen}>
+                  <DialogTrigger asChild>
+                       <Button variant="secondary">
+                          <Briefcase className="mr-2 h-4 w-4" />
+                          Create Opportunity
+                       </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                      <DialogHeader>
+                          <DialogTitle>Create New Opportunity</DialogTitle>
+                          <DialogDescription>Fill in the details for the new job role.</DialogDescription>
+                      </DialogHeader>
+                      <Form {...opportunityForm}>
+                          <form onSubmit={opportunityForm.handleSubmit(onOpportunityCreateSubmit)} className="space-y-4">
+                              <FormField
+                                  control={opportunityForm.control}
+                                  name="title"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Job Title</FormLabel>
+                                          <FormControl>
+                                              <Input placeholder="e.g., Senior React Developer" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                              <FormField
+                                  control={opportunityForm.control}
+                                  name="neededYOE"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Years of Experience</FormLabel>
+                                          <FormControl>
+                                              <Input type="number" placeholder="e.g., 5" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                              <FormField
+                                  control={opportunityForm.control}
+                                  name="neededSkills"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Required Skills</FormLabel>
+                                          <FormControl>
+                                              <Input placeholder="e.g., React, TypeScript, Next.js" {...field} />
+                                          </FormControl>
+                                           <p className="text-xs text-muted-foreground">Enter skills separated by commas.</p>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                               <FormField
+                                  control={opportunityForm.control}
+                                  name="responsibilities"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Responsibilities</FormLabel>
+                                      <FormControl>
+                                        <Textarea placeholder="Describe the job responsibilities..." {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              <DialogFooter>
+                                  <DialogClose asChild>
+                                      <Button variant="outline">Cancel</Button>
+                                  </DialogClose>
+                                  <Button type="submit">Create Opportunity</Button>
                               </DialogFooter>
                           </form>
                       </Form>

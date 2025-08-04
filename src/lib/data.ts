@@ -271,3 +271,9 @@ export const updateConsultantStatusInDb = async (consultantId: string, status: '
     });
     return getConsultantById(consultantId);
 };
+
+export const createJobOpportunity = async (opportunityData: Omit<JobOpportunity, 'id'>): Promise<string> => {
+    const opportunitiesColRef = collection(db, 'opportunities');
+    const docRef = await addDoc(opportunitiesColRef, opportunityData);
+    return docRef.id;
+};
