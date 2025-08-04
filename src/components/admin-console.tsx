@@ -204,10 +204,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     }
   };
 
-  const handleAnalysisComplete = useCallback(() => {
+  const handleAnalysisComplete = () => {
     router.refresh();
     setIsAnalyzeDialogOpen(false);
-  }, [router]);
+  };
   
   const hasSkillAnalysis = (consultant: Consultant) => {
     return Array.isArray(consultant.skills) && consultant.skills.length > 0 && consultant.skills.some(s => s && (s as SkillAnalysis).skill);
