@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -17,7 +18,7 @@ export default function Header() {
   const handleLogout = async () => {
     if (isAdminPage) {
       await logoutAdmin();
-      router.push('/admin/login');
+      router.refresh();
     } else {
       router.push('/');
     }
