@@ -238,6 +238,15 @@ export const updateConsultantOpportunitiesInDb = async (consultantId: string, op
     return getConsultantById(consultantId);
 };
 
+export const updateConsultantOpportunities = async (consultantId: string, opportunityCount: number): Promise<Consultant | undefined> => {
+    const consultantDocRef = doc(db, 'consultants', consultantId);
+    await updateDoc(consultantDocRef, {
+        opportunities: opportunityCount,
+        'workflow.opportunitiesDocumented': true,
+    });
+    return getConsultantById(consultantId);
+};
+
 export const updateConsultantTotalDaysInDb = async (consultantId: string, totalDays: number): Promise<Consultant | undefined> => {
     const consultantDocRef = doc(db, 'consultants', consultantId);
     await updateDoc(consultantDocRef, {

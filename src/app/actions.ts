@@ -38,6 +38,7 @@ import {
     updateConsultantOpportunitiesInDb,
     updateConsultantTotalDaysInDb,
     updateConsultantStatusInDb,
+    updateConsultantOpportunities as updateConsultantOpportunitiesAction,
 } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { ChatMessage } from '@/lib/chatbot-schema';
@@ -129,8 +130,8 @@ export async function verifyAdminCredentials(credentials: Pick<Consultant, 'emai
 
 export async function getAttendanceFeedback(input: AttendanceMonitorInput): Promise<AttendanceMonitorOutput> {
     try {
-        const result = await attendanceMonitor(input);
-        return result;
+        const {output} = await attendanceMonitor(input);
+        return output!;
     } catch (error) {
         console.error('Error getting attendance feedback:', error);
         throw new Error('Failed to get AI-powered attendance feedback.');
@@ -172,6 +173,15 @@ export async function updateSelectedOpportunities(consultantId: string, opportun
     } catch (error) {
         console.error('Error updating selected opportunities:', error);
         throw new Error('Failed to update selected opportunities in the database.');
+    }
+}
+
+export async function updateConsultantOpportunities(consultantId: string, opportunityCount: number): Promise<Consultant | undefined> {
+    try {
+        return await updateConsultantOpportunitiesAction(consultantId, opportunityCount);
+    } catch (error) {
+        console.error('Error updating consultant opportunities:', error);
+        throw new Error('Failed to update consultant opportunities in the database.');
     }
 }
 

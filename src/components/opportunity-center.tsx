@@ -17,12 +17,13 @@ import { Progress } from './ui/progress';
 
 type OpportunityCenterProps = {
     consultant: Consultant;
+    onAllocationComplete: (opportunityCount: number) => void;
 }
 
 type AllocatedProject = ProjectAllocationOutput['allocatedProjects'][0];
 type OpportunityStatus = 'Accepted' | 'Declined' | 'Waitlisted' | 'Pending';
 
-export default function OpportunityCenter({ consultant }: OpportunityCenterProps) {
+export default function OpportunityCenter({ consultant, onAllocationComplete }: OpportunityCenterProps) {
     const [loading, setLoading] = useState(false);
     const [allocationResult, setAllocationResult] = useState<ProjectAllocationOutput | null>(null);
     const [opportunityStatuses, setOpportunityStatuses] = useState<Record<string, OpportunityStatus>>({});
@@ -54,6 +55,8 @@ export default function OpportunityCenter({ consultant }: OpportunityCenterProps
                 consultantSkills: consultantSkills,
             });
             setAllocationResult(result);
+            onAllocationComplete(result.allocatedProjects.length);
+            
             // Initialize all projects as 'Pending'
             const initialStatuses: Record<string, OpportunityStatus> = {};
             result.allocatedProjects.forEach(p => {

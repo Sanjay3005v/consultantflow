@@ -11,12 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import type { Consultant } from '@/lib/types';
 import type { AnalyzeCertificateResult, AnalyzeResumeResult } from '@/app/actions';
+import { updateConsultantOpportunities } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
 import TrainingUploader from './training-uploader';
 import OpportunityCenter from './opportunity-center';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import ConsultantChatbot from './consultant-chatbot';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -25,6 +27,7 @@ export default function ConsultantDashboard({
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setConsultant(initialConsultant);
@@ -41,6 +44,26 @@ export default function ConsultantDashboard({
   const handleCertificateAnalysisComplete = (result: AnalyzeCertificateResult) => {
     setConsultant(result.consultant);
   }
+
+  const handleAllocationComplete = async (opportunityCount: number) => {
+    try {
+        const updatedConsultant = await updateConsultantOpportunities(consultant.id, opportunityCount);
+        if (updatedConsultant) {
+            setConsultant(updatedConsultant);
+            toast({
+                title: "Opportunities Updated!",
+                description: `${opportunityCount} new project opportunities have been documented.`,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to update opportunities:", error);
+        toast({
+            title: "Update Failed",
+            description: "Could not update the opportunities count.",
+            variant: "destructive",
+        });
+    }
+  };
 
   const downloadAttendanceReport = () => {
     let reportContent = `Attendance Report for ${consultant.name}\n`;
@@ -151,7 +174,7 @@ export default function ConsultantDashboard({
                 </div>
            </div>
            <SkillsDisplay skills={consultant.skills} />
-           <OpportunityCenter consultant={consultant} />
+           <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
         </div>
 
         <div className="space-y-8">
