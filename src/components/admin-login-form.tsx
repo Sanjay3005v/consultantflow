@@ -49,7 +49,7 @@ export default function AdminLoginForm() {
         toast({
           title: 'Admin Login Successful!',
         });
-        router.refresh();
+        router.push('/admin');
       } else {
         toast({
           title: 'Login Failed',

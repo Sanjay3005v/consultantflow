@@ -618,7 +618,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Edit Total Working Days for {selectedConsultant?.name}</DialogTitle>
-            </Header>
+            </DialogHeader>
             <div className="py-4">
                 <Label htmlFor="total-days-edit">Total Working Days</Label>
                 <Input 
