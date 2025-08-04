@@ -40,6 +40,7 @@ import { useRouter } from 'next/navigation';
 const createConsultantSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('A valid email is required'),
+    password: z.string().min(4, 'Password must be at least 4 characters'),
     department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
 });
 
@@ -73,6 +74,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     defaultValues: {
         name: '',
         email: '',
+        password: '',
         department: 'Technology',
     },
   });
@@ -170,7 +172,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const onCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
-    await createNewConsultant({ ...values, password: 'defaultpassword' }); // Assign a default or generated password
+    await createNewConsultant(values);
     router.refresh();
     toast({
         title: 'Consultant Created',
@@ -302,6 +304,19 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                           <FormLabel>Email</FormLabel>
                                           <FormControl>
                                               <Input placeholder="john.doe@example.com" type="email" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                              <FormField
+                                  control={form.control}
+                                  name="password"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Password</FormLabel>
+                                          <FormControl>
+                                              <Input placeholder="********" type="password" {...field} />
                                           </FormControl>
                                           <FormMessage />
                                       </FormItem>
