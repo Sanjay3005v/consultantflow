@@ -42,6 +42,7 @@ import {
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { ChatMessage } from '@/lib/chatbot-schema';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 
 export type AnalyzeResumeResult = {
@@ -120,12 +121,13 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
     return { error: 'Invalid credentials' };
 }
 
-export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ success: boolean } | { error: string }> {
+export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>) {
     if (credentials.email.endsWith('@hexaware.com') && credentials.password === 'admin123') {
         cookies().set('admin-session', 'true', { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 }); // Expires in 1 day
-        return { success: true };
+    } else {
+        throw new Error('Invalid admin credentials');
     }
-    return { error: 'Invalid admin credentials' };
+    redirect('/admin');
 }
 
 export async function logoutAdmin() {

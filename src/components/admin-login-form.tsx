@@ -30,7 +30,6 @@ const formSchema = z.object({
 
 export default function AdminLoginForm() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -44,23 +43,17 @@ export default function AdminLoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      const result = await verifyAdminCredentials(values);
-      if (result.success) {
-        toast({
-          title: 'Admin Login Successful!',
-        });
-        router.push('/admin');
-      } else {
-        toast({
-          title: 'Login Failed',
-          description: result.error,
-          variant: 'destructive',
-        });
-      }
+      await verifyAdminCredentials(values);
+      // The redirect is handled by the server action. 
+      // If it's successful, the user will be redirected.
+      // If it fails, it will throw an error caught below.
+      toast({
+        title: 'Admin Login Successful!',
+      });
     } catch (error: any) {
        toast({
           title: 'Login Failed',
-          description: 'An unexpected error occurred.',
+          description: error.message || 'Invalid admin credentials.',
           variant: 'destructive',
         });
     } finally {
