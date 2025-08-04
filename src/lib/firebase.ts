@@ -7,7 +7,7 @@ const firebaseConfig = {
   "projectId": "consultantflow-tvcnw",
   "appId": "1:115709835790:web:769dc814bff7502811da5f",
   "storageBucket": "consultantflow-tvcnw.firebasestorage.app",
-  "apiKey": "AIzaSyBdhSdd1Y0rs5DE7yU_cycmAz6cedAb-Ow",
+  "apiKey": process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   "authDomain": "consultantflow-tvcnw.firebaseapp.com",
   "measurementId": "",
   "messagingSenderId": "115709835790"
