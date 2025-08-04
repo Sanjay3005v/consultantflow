@@ -36,6 +36,7 @@ export async function opportunityEngager(input: OpportunityEngagerInput): Promis
 
 const prompt = ai.definePrompt({
   name: 'opportunityEngagerPrompt',
+  model: 'googleai/gemini-2.0-flash',
   input: {schema: OpportunityEngagerInputSchema},
   output: {schema: OpportunityEngagerOutputSchema},
   prompt: `You are an Opportunity Engagement AI Agent responsible for evaluating how well consultants are utilizing the opportunities provided to them during their bench period.
