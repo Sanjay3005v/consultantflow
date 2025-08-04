@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 
 // IMPORTANT: Replace this with your actual Firebase project configuration
 const firebaseConfig = {
-  "projectId": "consultantflow-tvcnw",
-  "appId": "1:115709835790:web:769dc814bff7502811da5f",
-  "storageBucket": "consultantflow-tvcnw.firebasestorage.app",
-  "apiKey": process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  "authDomain": "consultantflow-tvcnw.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "115709835790"
+  "projectId": process.env.FIREBASE_PROJECTID,
+  "appId": process.env.FIREBASE_APPID,
+  "storageBucket":process.env.FIREBASE_STORAGEBUCKET,
+  "apiKey": process.env.FIREBASE_API_KEY,
+  "authDomain": process.env.FIREBASE_AUTHDOMAIN,
+  "measurementId": process.env.FIREBASE_MEASUREMENTID,
+  "messagingSenderId": process.env.FIREBASE_MESSAGINGSENDERID
 };
 
 // Initialize Firebase
