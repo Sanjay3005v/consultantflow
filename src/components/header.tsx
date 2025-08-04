@@ -4,15 +4,23 @@ import Link from 'next/link';
 import { Briefcase, LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from './ui/button';
+import { logoutAdmin } from '@/app/actions';
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const showLogout = pathname.startsWith('/consultant/') || pathname.startsWith('/admin');
+  const isAdminPage = pathname.startsWith('/admin');
+  const isConsultantPage = pathname.startsWith('/consultant/');
+  const showLogout = isAdminPage || isConsultantPage;
 
-  const handleLogout = () => {
-    router.push('/');
+  const handleLogout = async () => {
+    if (isAdminPage) {
+      await logoutAdmin();
+      router.push('/admin/login');
+    } else {
+      router.push('/');
+    }
   };
 
   return (

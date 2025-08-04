@@ -42,6 +42,7 @@ import {
 } from '@/lib/data';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { ChatMessage } from '@/lib/chatbot-schema';
+import { cookies } from 'next/headers';
 
 
 export type AnalyzeResumeResult = {
@@ -122,16 +123,21 @@ export async function verifyConsultantCredentials(credentials: Pick<Consultant, 
 
 export async function verifyAdminCredentials(credentials: Pick<Consultant, 'email' | 'password'>): Promise<{ success: boolean } | { error: string }> {
     if (credentials.email.endsWith('@hexaware.com') && credentials.password === 'admin123') {
+        cookies().set('admin-session', 'true', { httpOnly: true, path: '/admin', maxAge: 60 * 60 * 24 }); // Expires in 1 day
         return { success: true };
     }
     return { error: 'Invalid admin credentials' };
 }
 
+export async function logoutAdmin() {
+    cookies().delete('admin-session');
+}
+
 
 export async function getAttendanceFeedback(input: AttendanceMonitorInput): Promise<AttendanceMonitorOutput> {
     try {
-        const {output} = await attendanceMonitor(input);
-        return output!;
+        const result = await attendanceMonitor(input);
+        return result;
     } catch (error) {
         console.error('Error getting attendance feedback:', error);
         throw new Error('Failed to get AI-powered attendance feedback.');
