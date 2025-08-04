@@ -49,7 +49,6 @@ export default function AdminLoginForm() {
         toast({
           title: 'Admin Login Successful!',
         });
-        router.push(`/admin`);
         router.refresh();
       } else {
         toast({
