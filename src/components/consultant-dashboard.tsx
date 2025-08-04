@@ -137,6 +137,7 @@ export default function ConsultantDashboard({
           value={consultant.opportunities.toString()}
           description="Provided during bench"
           icon={Target}
+          variant={consultant.opportunities > 0 ? 'success' : 'default'}
         />
         <StatusCard
           title="Training"
