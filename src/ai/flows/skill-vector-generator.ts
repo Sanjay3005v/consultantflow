@@ -50,6 +50,7 @@ export async function generateSkillVectors(input: GenerateSkillVectorsInput): Pr
 
 const prompt = ai.definePrompt({
   name: 'skillVectorPrompt',
+  model: 'googleai/gemini-2.0-flash',
   input: {schema: GenerateSkillVectorsInputSchema},
   output: {schema: GenerateSkillVectorsOutputSchema},
   prompt: `You are an expert in resume analysis, skill extraction, and talent development.
