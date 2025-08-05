@@ -139,10 +139,17 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     setIsAttendanceDialogOpen(true);
   };
   
-  const handleSaveAttendance = async () => {
+ const handleSaveAttendance = async () => {
     if (selectedConsultant && selectedDates && selectedDates.length > 0) {
+      let updatedConsultant: Consultant | undefined;
       for (const date of selectedDates) {
-        await markAttendance(selectedConsultant.id, format(date, 'yyyy-MM-dd'), attendanceStatus);
+        updatedConsultant = await markAttendance(selectedConsultant.id, format(date, 'yyyy-MM-dd'), attendanceStatus);
+      }
+      
+      if (updatedConsultant) {
+        setConsultants(prev => 
+            prev.map(c => c.id === updatedConsultant!.id ? updatedConsultant! : c)
+        );
       }
 
       router.refresh();
@@ -191,14 +198,23 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const onConsultantCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
-    await createNewConsultant(values);
-    router.refresh();
-    toast({
-        title: 'Consultant Created',
-        description: `Successfully created ${values.name}.`,
-    });
-    setIsCreateConsultantDialogOpen(false);
-    consultantForm.reset();
+    try {
+        const newConsultant = await createNewConsultant(values);
+        setConsultants(prev => [...prev, newConsultant]);
+        router.refresh();
+        toast({
+            title: 'Consultant Created',
+            description: `Successfully created ${values.name}.`,
+        });
+        setIsCreateConsultantDialogOpen(false);
+        consultantForm.reset();
+    } catch (error) {
+         toast({
+            title: 'Creation Failed',
+            description: 'Could not create the new consultant.',
+            variant: 'destructive',
+        })
+    }
   };
   
   const onOpportunityCreateSubmit = async (values: z.infer<typeof createOpportunitySchema>) => {
@@ -232,7 +248,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const handleSaveTotalDays = async () => {
     if (selectedConsultant) {
-        await updateTotalWorkingDays(selectedConsultant.id, editableTotalDays);
+        const updatedConsultant = await updateTotalWorkingDays(selectedConsultant.id, editableTotalDays);
+        if (updatedConsultant) {
+            setConsultants(prev => 
+                prev.map(c => c.id === updatedConsultant!.id ? updatedConsultant! : c)
+            );
+        }
         router.refresh();
         toast({
             title: 'Total Days Updated',
@@ -243,7 +264,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     }
   };
 
-  const handleAnalysisComplete = () => {
+  const handleAnalysisComplete = (updatedConsultant: Consultant) => {
+    setConsultants(prev => prev.map(c => c.id === updatedConsultant.id ? updatedConsultant : c));
     router.refresh();
     setIsAnalyzeDialogOpen(false);
   };
@@ -259,7 +281,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const handleStatusChange = async (consultantId: string, status: 'On Bench' | 'On Project') => {
-    await updateConsultantStatus(consultantId, status);
+    const updatedConsultant = await updateConsultantStatus(consultantId, status);
+    if (updatedConsultant) {
+        setConsultants(prev => 
+            prev.map(c => c.id === updatedConsultant!.id ? updatedConsultant! : c)
+        );
+    }
     router.refresh();
     toast({
         title: 'Status Updated',
@@ -723,7 +750,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                 <DialogTitle>Analyze Resume for {selectedConsultant?.name}</DialogTitle>
             </DialogHeader>
             {selectedConsultant && (
-                 <ResumeAnalyzer consultant={selectedConsultant} onAnalysisComplete={handleAnalysisComplete} />
+                 <ResumeAnalyzer 
+                    consultant={selectedConsultant} 
+                    onAnalysisComplete={(result) => handleAnalysisComplete(result.consultant)} 
+                 />
             )}
         </DialogContent>
       </Dialog>
