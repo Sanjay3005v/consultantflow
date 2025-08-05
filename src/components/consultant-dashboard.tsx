@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import ConsultantChatbot from './consultant-chatbot';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
+import { format, getDaysInMonth, startOfMonth } from 'date-fns';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -68,14 +69,21 @@ export default function ConsultantDashboard({
 
   const downloadAttendanceReport = () => {
     const doc = new jsPDF();
+    const today = new Date();
+    const monthStart = startOfMonth(today);
+    const totalDaysInMonth = getDaysInMonth(today);
+    const currentDayOfMonth = today.getDate();
+
     doc.setFontSize(18);
     doc.text(`Attendance Report for ${consultant.name}`, 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Month: ${format(today, 'MMMM yyyy')}`, 14, 30)
 
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text(`Summary: ${consultant.presentDays} Present / ${consultant.totalWorkingDays} Total Days`, 14, 30);
+    doc.text(`Summary: ${consultant.presentDays} Present / ${consultant.totalWorkingDays} Total Logged Days`, 14, 38);
     
-    let yPos = 40;
+    let yPos = 50;
     
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
@@ -87,19 +95,42 @@ export default function ConsultantDashboard({
 
     doc.setFont(undefined, 'normal');
 
-    const sortedAttendance = [...consultant.attendance]
-        .filter(record => record && record.date)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const presentDates = new Set(
+        consultant.attendance
+            .filter(record => record.status === 'Present')
+            .map(record => record.date)
+    );
 
-    sortedAttendance.forEach(record => {
-      if (yPos > 280) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.text(record.date, 14, yPos);
-      doc.text(record.status, 50, yPos);
-      yPos += 7;
-    });
+    for (let day = 1; day <= currentDayOfMonth; day++) {
+        const loopDate = new Date(today.getFullYear(), today.getMonth(), day);
+        const dayOfWeek = loopDate.getDay();
+
+        // Skip weekends (Saturday=6, Sunday=0)
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            continue;
+        }
+
+        const dateString = format(loopDate, 'yyyy-MM-dd');
+        const status = presentDates.has(dateString) ? 'Present' : 'Absent';
+        
+        if (yPos > 280) {
+            doc.addPage();
+            yPos = 20;
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('Date', 14, yPos);
+            doc.text('Status', 50, yPos);
+            yPos += 2;
+            doc.line(14, yPos, 196, yPos);
+            yPos += 8;
+            doc.setFont(undefined, 'normal');
+        }
+
+        doc.text(dateString, 14, yPos);
+        doc.text(status, 50, yPos);
+        yPos += 7;
+    }
+
 
     doc.save(`attendance_report_${consultant.name.replace(/\s+/g, '_')}.pdf`);
   };
