@@ -20,7 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import ConsultantChatbot from './consultant-chatbot';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
-import { format, getDaysInMonth, startOfMonth } from 'date-fns';
+import { format } from 'date-fns';
+import RecommendedTraining from './recommended-training';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -213,6 +214,7 @@ export default function ConsultantDashboard({
                 consultant={consultant}
                 onAnalysisComplete={handleCertificateAnalysisComplete}
               />
+            <RecommendedTraining skills={consultant.skills} />
         </div>
       </div>
     </div>
