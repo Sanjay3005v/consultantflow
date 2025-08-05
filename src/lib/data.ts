@@ -100,47 +100,40 @@ export const updateConsultantAttendanceInDb = async (id: string, date: string, s
 
     try {
         await runTransaction(db, async (transaction) => {
-            const querySnapshot = await getDocs(dateQuery);
             const consultantDoc = await transaction.get(consultantDocRef);
-
             if (!consultantDoc.exists()) {
-                throw "Consultant document does not exist!";
+                throw new Error("Consultant document does not exist!");
             }
 
-            let currentPresentDays = consultantDoc.data().presentDays || 0;
-            let existingStatus: 'Present' | 'Absent' | null = null;
-            let docRefToUpdate;
-
+            const querySnapshot = await getDocs(dateQuery);
+            
             if (!querySnapshot.empty) {
-                // Document for this date exists, update it
-                const docToUpdate = querySnapshot.docs[0];
-                docRefToUpdate = docToUpdate.ref;
-                existingStatus = docToUpdate.data().status;
-                transaction.update(docRefToUpdate, { status: status });
+                // Record for this date exists, update it
+                const docToUpdateRef = querySnapshot.docs[0].ref;
+                transaction.update(docToUpdateRef, { status: status });
             } else {
-                // No document for this date, create a new one
-                docRefToUpdate = doc(attendanceColRef); // Auto-generate ID
-                transaction.set(docRefToUpdate, { date, status });
+                // No record for this date, create a new one
+                const newAttendanceDocRef = doc(attendanceColRef); // Auto-generate ID
+                transaction.set(newAttendanceDocRef, { date, status });
             }
-            
-            // Adjust presentDays count based on the change
-            if (existingStatus !== status) {
-                if (status === 'Present') {
-                    currentPresentDays++;
-                } else if (status === 'Absent' && existingStatus === 'Present') {
-                    currentPresentDays--;
-                }
-            }
-            
-            // Update the main consultant document with the new count.
-            transaction.update(consultantDocRef, {
-                presentDays: currentPresentDays,
-                'workflow.attendanceReported': true,
-            });
+
+            // After updating/creating, we need to get the new count of present days.
+            // A transaction must read before it writes, so we must do a fresh query outside the transaction
+            // or accept that this calculation might be slightly delayed. For atomicity, we recalculate here.
+            // However, a simple recalculation after the transaction is safer.
+        });
+        
+        // Recalculate and update the count *after* the transaction to ensure consistency.
+        const allAttendanceSnapshot = await getDocs(query(attendanceColRef, where('status', '==', 'Present')));
+        const presentCount = allAttendanceSnapshot.docs.filter(doc => doc.data().date).length; // Filter placeholder
+
+        await updateDoc(consultantDocRef, {
+            presentDays: presentCount,
+            'workflow.attendanceReported': true,
         });
 
     } catch (e) {
-        console.error("Transaction failed: ", e);
+        console.error("Transaction or update failed: ", e);
         throw new Error("Failed to update attendance.");
     }
 
