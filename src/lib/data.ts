@@ -108,13 +108,18 @@ export const updateConsultantAttendanceInDb = async (id: string, date: string, s
                 const newDocRef = doc(attendanceColRef); // Auto-generate ID
                 transaction.set(newDocRef, { date, status });
             }
+            
+            // After updating/creating the record, we need to get a fresh snapshot of all attendance records within the transaction
+            // to ensure we have the latest state before calculating the total.
+            const allAttendanceSnapshot = await getDocs(query(attendanceColRef));
+            
+            // Recalculate the total present days from the full, accurate list of records.
+            const presentDaysCount = allAttendanceSnapshot.docs
+                .map(doc => doc.data() as AttendanceRecord)
+                .filter(record => record && record.date && record.status === 'Present')
+                .length;
 
-            // After updating the specific date, recalculate the total present days
-            const presentQuery = query(attendanceColRef, where("status", "==", "Present"));
-            const presentSnapshot = await getDocs(presentQuery);
-            const presentDaysCount = presentSnapshot.docs.filter(doc => doc.data().date).length; // Filter out placeholder
-
-            // Update the main consultant document
+            // Update the main consultant document with the guaranteed-accurate count.
             transaction.update(consultantDocRef, {
                 presentDays: presentDaysCount,
                 'workflow.attendanceReported': true,
