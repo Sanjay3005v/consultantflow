@@ -1,4 +1,6 @@
 
+'use server';
+
 import { db } from './firebase';
 import { collection, doc, addDoc, getDoc, getDocs, query, where, updateDoc, writeBatch, serverTimestamp, runTransaction } from 'firebase/firestore';
 import type { Consultant, SkillAnalysis, AttendanceRecord, JobOpportunity, Candidate } from './types';
@@ -90,47 +92,42 @@ export const findConsultantByEmail = async (email: string): Promise<Consultant |
 
 export const updateConsultantAttendanceInDb = async (id: string, date: string, status: 'Present' | 'Absent'): Promise<Consultant | undefined> => {
     const consultantDocRef = doc(db, 'consultants', id);
-    const attendanceCol = collection(db, `consultants/${id}/attendance`);
-    const q = query(attendanceCol, where("date", "==", date));
-    
-    await runTransaction(db, async (transaction) => {
-        const querySnapshot = await getDocs(q);
-        const consultantDoc = await transaction.get(consultantDocRef);
+    const attendanceColRef = collection(db, `consultants/${id}/attendance`);
+    const dateQuery = query(attendanceColRef, where("date", "==", date));
 
-        if (!consultantDoc.exists()) {
-            throw "Consultant document does not exist!";
-        }
+    try {
+        await runTransaction(db, async (transaction) => {
+            const querySnapshot = await getDocs(dateQuery);
 
-        let currentPresentDays = consultantDoc.data().presentDays || 0;
-        let recordExists = !querySnapshot.empty;
-        let oldStatus: 'Present' | 'Absent' | undefined = recordExists ? querySnapshot.docs[0].data().status : undefined;
-        
-        if (recordExists) {
-            const docRef = querySnapshot.docs[0].ref;
-            transaction.update(docRef, { status });
-        } else {
-            const newDocRef = doc(attendanceCol);
-            transaction.set(newDocRef, { date, status });
-        }
-
-        // Adjust present days count
-        if (oldStatus !== status) {
-            if (status === 'Present') {
-                currentPresentDays++;
-            } else if (oldStatus === 'Present') {
-                currentPresentDays--;
+            if (!querySnapshot.empty) {
+                // Document for this date exists, update it
+                const docRef = querySnapshot.docs[0].ref;
+                transaction.update(docRef, { status: status });
+            } else {
+                // No document for this date, create a new one
+                const newDocRef = doc(attendanceColRef); // Auto-generate ID
+                transaction.set(newDocRef, { date, status });
             }
-        }
-        
-        transaction.update(consultantDocRef, { 
-            presentDays: currentPresentDays,
-            'workflow.attendanceReported': true 
+
+            // After updating the specific date, recalculate the total present days
+            const presentQuery = query(attendanceColRef, where("status", "==", "Present"));
+            const presentSnapshot = await getDocs(presentQuery);
+            const presentDaysCount = presentSnapshot.docs.filter(doc => doc.data().date).length; // Filter out placeholder
+
+            // Update the main consultant document
+            transaction.update(consultantDocRef, {
+                presentDays: presentDaysCount,
+                'workflow.attendanceReported': true,
+            });
         });
-    });
+
+    } catch (e) {
+        console.error("Transaction failed: ", e);
+        throw new Error("Failed to update attendance.");
+    }
 
     return getConsultantById(id);
 };
-
 
 export const updateConsultantSkillsInDb = async (consultantId: string, newSkills: SkillAnalysis[]): Promise<Consultant | undefined> => {
     const skillsColRef = collection(db, `consultants/${consultantId}/skills`);
