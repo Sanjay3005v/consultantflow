@@ -19,6 +19,7 @@ import OpportunityCenter from './opportunity-center';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import ConsultantChatbot from './consultant-chatbot';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -66,27 +67,41 @@ export default function ConsultantDashboard({
   };
 
   const downloadAttendanceReport = () => {
-    let reportContent = `Attendance Report for ${consultant.name}\n`;
-    reportContent += `Present: ${consultant.presentDays} / ${consultant.totalWorkingDays} days\n`;
-    reportContent += '=====================================\n';
-    reportContent += 'Date\t\tStatus\n';
-    reportContent += '-------------------------------------\n';
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Attendance Report for ${consultant.name}`, 14, 22);
+
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Summary: ${consultant.presentDays} Present / ${consultant.totalWorkingDays} Total Days`, 14, 30);
     
-    const sortedAttendance = [...consultant.attendance].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    let yPos = 40;
+    
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Date', 14, yPos);
+    doc.text('Status', 50, yPos);
+    yPos += 2;
+    doc.line(14, yPos, 196, yPos); // Horizontal line
+    yPos += 8;
+
+    doc.setFont(undefined, 'normal');
+
+    const sortedAttendance = [...consultant.attendance]
+        .filter(record => record && record.date)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     sortedAttendance.forEach(record => {
-      reportContent += `${record.date}\t${record.status}\n`;
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(record.date, 14, yPos);
+      doc.text(record.status, 50, yPos);
+      yPos += 7;
     });
 
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance_report_${consultant.name.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.save(`attendance_report_${consultant.name.replace(/\s+/g, '_')}.pdf`);
   };
 
   const attendanceSummary = useMemo(() => {
