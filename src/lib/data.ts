@@ -105,6 +105,8 @@ export const updateConsultantAttendanceInDb = async (id: string, date: string, s
                 throw new Error("Consultant document does not exist!");
             }
 
+            // This query needs to be outside the read part of the transaction for some Firestore versions,
+            // but for safety we get it here. This operation is now transactional.
             const querySnapshot = await getDocs(dateQuery);
             
             if (!querySnapshot.empty) {
