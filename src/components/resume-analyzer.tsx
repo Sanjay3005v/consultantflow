@@ -84,7 +84,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
   }
 
   return (
-    <Card>
+    <Card className="bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <CardTitle>AI Resume Analyzer</CardTitle>
         <CardDescription>Upload a resume to extract, rate, and get feedback on skills.</CardDescription>
@@ -101,6 +101,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
                   <FormControl>
                     <Input
                       type="file"
+                      className="bg-transparent"
                       accept=".pdf,.doc,.docx"
                       onChange={(e) => field.onChange(e.target.files)}
                     />
@@ -127,7 +128,7 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
         {result && (
            <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-6 space-y-4">
             <CollapsibleContent>
-                <Alert>
+                <Alert className="bg-background/80">
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Analysis Successful!</AlertTitle>
                 <AlertDescription>
@@ -137,14 +138,14 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
                         <BrainCircuit className="w-4 h-4" />
                         Training Feedback
                         </h4>
-                        <Card className="mt-2 p-3">
+                        <Card className="mt-2 p-3 bg-muted/50">
                         <p className="text-sm whitespace-pre-wrap">{result.feedback}</p>
                         </Card>
                     </div>
                     
                     <div>
                         <h4 className="font-semibold pt-2">History Log:</h4>
-                        <ScrollArea className="h-24 w-full rounded-md border p-2">
+                        <ScrollArea className="h-24 w-full rounded-md border p-2 bg-muted/50">
                         <p className="text-sm">{result.historyLog}</p>
                         </ScrollArea>
                     </div>

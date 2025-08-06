@@ -61,7 +61,7 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
   }
 
   return (
-    <Card>
+    <Card className="bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <MessageSquareQuote className="w-6 h-6 text-primary" />
@@ -72,7 +72,7 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-center p-4 bg-muted rounded-lg">
+        <div className="text-center p-4 bg-muted/60 rounded-lg">
             <p className="text-sm text-muted-foreground">Current Attendance</p>
             <p className="text-3xl font-bold">{attendanceSummary.presentDays} / {attendanceSummary.totalDays}</p>
             <p className="text-xs text-muted-foreground">(Present / Total Logged Days)</p>
@@ -93,7 +93,7 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
         </Button>
 
         {feedback && (
-          <Alert>
+          <Alert className="bg-background/80">
             <Sparkles className="h-4 w-4" />
             <AlertTitle>AI Generated Feedback</AlertTitle>
             <AlertDescription className="mt-2 whitespace-pre-wrap">

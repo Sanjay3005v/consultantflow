@@ -88,7 +88,7 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
   }
 
   return (
-    <Card>
+    <Card className="bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Award className="w-6 h-6 text-primary" />
@@ -108,6 +108,7 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
                   <FormControl>
                     <Input
                       type="file"
+                      className="bg-transparent"
                       accept="image/*,.pdf"
                       onChange={(e) => field.onChange(e.target.files)}
                     />
@@ -132,12 +133,12 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
           </form>
         </Form>
         {result && (
-            <Alert className="mt-6">
+            <Alert className="mt-6 bg-background/80">
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Verification Successful!</AlertTitle>
                 <AlertDescription className="mt-2 space-y-4">
                    <p className="text-sm whitespace-pre-wrap">{result.report}</p>
-                   <Button variant="outline" size="sm" onClick={() => downloadReport(result.report)} className="w-full">
+                   <Button variant="outline" size="sm" onClick={() => downloadReport(result.report)} className="w-full bg-transparent">
                         <Download className="mr-2 h-4 w-4" />
                         Download PDF Report
                    </Button>

@@ -128,115 +128,121 @@ export default function ConsultantDashboard({
   }, [consultant.presentDays, consultant.totalWorkingDays]);
 
   return (
-    <>
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="mb-8 flex items-center space-x-4">
-        <User className="h-12 w-12 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">{consultant.name}</h1>
-          <p className="text-muted-foreground">
-            {consultant.department} Department
-          </p>
+    <div className="relative min-h-[calc(100vh-57px)] overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 left-0 h-full w-full bg-background" />
+            <div className="absolute bottom-0 left-[-20%] right-0 top-[-10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,122,255,.15),rgba(255,255,255,0))]" />
+            <div className="absolute bottom-[-20%] right-0 top-[-10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,122,255,.15),rgba(255,255,255,0))]" />
         </div>
-      </div>
-
-      <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-        <StatusCard
-          title="Project Status"
-          value={consultant.status}
-          icon={ClipboardCheck}
-          variant={consultant.status === 'On Project' ? 'success' : 'info'}
-        />
-        <StatusCard
-          title="Resume Status"
-          value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
-          icon={FileText}
-          variant={consultant.workflow?.resumeUpdated ? 'success' : 'warning'}
-        />
-        <StatusCard
-          title="Attendance"
-          value={`${attendanceSummary.percentage}%`}
-          description={`${attendanceSummary.present} / ${attendanceSummary.total} Days Present`}
-          icon={CalendarCheck}
-        />
-        <StatusCard
-          title="Opportunities"
-          value={consultant.opportunities.toString()}
-          description="Provided during bench"
-          icon={Target}
-          variant={consultant.opportunities > 0 ? 'success' : 'default'}
-        />
-        <StatusCard
-          title="Training"
-          value={consultant.training}
-          icon={Award}
-          variant={
-            consultant.training === 'Completed'
-              ? 'success'
-              : consultant.training === 'In Progress'
-              ? 'info'
-              : 'default'
-          }
-        />
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-           <div className="grid gap-8 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                    <CardTitle>Workflow Progress</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    {consultant.workflow && (
-                        <WorkflowTracker workflow={consultant.workflow} />
-                    )}
-                    </CardContent>
-                </Card>
-                <div className='space-y-4'>
-                    <AttendanceFeedback consultant={consultant} />
-                    <Button onClick={downloadAttendanceReport} variant="outline" className='w-full'>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Attendance Report
-                    </Button>
+        <div className="relative z-10 container mx-auto p-4 md:p-8">
+            <div className="mb-8 flex items-center space-x-4">
+                <User className="h-12 w-12 text-primary" />
+                <div>
+                <h1 className="text-3xl font-bold">{consultant.name}</h1>
+                <p className="text-muted-foreground">
+                    {consultant.department} Department
+                </p>
                 </div>
-           </div>
-           <SkillsDisplay skills={consultant.skills} />
-           <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
-        </div>
-
-        <div className="space-y-8">
-             <ResumeAnalyzer
-                consultant={consultant}
-                onAnalysisComplete={handleResumeAnalysisComplete}
-                />
-             <TrainingUploader
-                consultant={consultant}
-                onAnalysisComplete={handleCertificateAnalysisComplete}
-              />
-            <RecommendedTraining skills={consultant.skills} />
-        </div>
-      </div>
-    </div>
-    <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogTrigger asChild>
-            <Button
-            variant="default"
-            className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg"
-            >
-            <MessageSquare className="w-8 h-8" />
-            <span className="sr-only">Open Chat</span>
-            </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
-            <DialogHeader className="p-4 border-b">
-                <DialogTitle>Consultant Assistant</DialogTitle>
-            </DialogHeader>
-            <div className="flex-grow overflow-hidden">
-                 <ConsultantChatbot consultantId={consultant.id} />
             </div>
-        </DialogContent>
-    </Dialog>
-    </>
+
+            <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+                <StatusCard
+                title="Project Status"
+                value={consultant.status}
+                icon={ClipboardCheck}
+                variant={consultant.status === 'On Project' ? 'success' : 'info'}
+                />
+                <StatusCard
+                title="Resume Status"
+                value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
+                icon={FileText}
+                variant={consultant.workflow?.resumeUpdated ? 'success' : 'warning'}
+                />
+                <StatusCard
+                title="Attendance"
+                value={`${attendanceSummary.percentage}%`}
+                description={`${attendanceSummary.present} / ${attendanceSummary.total} Days Present`}
+                icon={CalendarCheck}
+                />
+                <StatusCard
+                title="Opportunities"
+                value={consultant.opportunities.toString()}
+                description="Provided during bench"
+                icon={Target}
+                variant={consultant.opportunities > 0 ? 'success' : 'default'}
+                />
+                <StatusCard
+                title="Training"
+                value={consultant.training}
+                icon={Award}
+                variant={
+                    consultant.training === 'Completed'
+                    ? 'success'
+                    : consultant.training === 'In Progress'
+                    ? 'info'
+                    : 'default'
+                }
+                />
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-3">
+                <div className="space-y-8 lg:col-span-2">
+                <div className="grid gap-8 md:grid-cols-2">
+                        <Card className="bg-card/60 backdrop-blur-xl">
+                            <CardHeader>
+                            <CardTitle>Workflow Progress</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                            {consultant.workflow && (
+                                <WorkflowTracker workflow={consultant.workflow} />
+                            )}
+                            </CardContent>
+                        </Card>
+                        <div className='space-y-4'>
+                            <AttendanceFeedback consultant={consultant} />
+                            <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download Attendance Report
+                            </Button>
+                        </div>
+                </div>
+                <SkillsDisplay skills={consultant.skills} />
+                <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
+                </div>
+
+                <div className="space-y-8">
+                    <ResumeAnalyzer
+                        consultant={consultant}
+                        onAnalysisComplete={handleResumeAnalysisComplete}
+                        />
+                    <TrainingUploader
+                        consultant={consultant}
+                        onAnalysisComplete={handleCertificateAnalysisComplete}
+                    />
+                    <RecommendedTraining skills={consultant.skills} />
+                </div>
+            </div>
+        </div>
+        <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+            <DialogTrigger asChild>
+                <Button
+                variant="default"
+                className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg"
+                >
+                <MessageSquare className="w-8 h-8" />
+                <span className="sr-only">Open Chat</span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 bg-card/80 backdrop-blur-xl">
+                <DialogHeader className="p-4 border-b">
+                    <DialogTitle>Consultant Assistant</DialogTitle>
+                </DialogHeader>
+                <div className="flex-grow overflow-hidden">
+                    <ConsultantChatbot consultantId={consultant.id} />
+                </div>
+            </DialogContent>
+        </Dialog>
+    </div>
   );
 }

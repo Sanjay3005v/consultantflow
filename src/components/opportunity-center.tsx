@@ -149,7 +149,7 @@ export default function OpportunityCenter({ consultant, onAllocationComplete }: 
     };
 
     return (
-        <Card>
+        <Card className="bg-card/60 backdrop-blur-xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Briefcase className="w-6 h-6 text-primary" />
@@ -181,10 +181,10 @@ export default function OpportunityCenter({ consultant, onAllocationComplete }: 
 
                     {allocationResult && (
                         <>
-                        <ScrollArea className="h-96 w-full rounded-md border p-4">
+                        <ScrollArea className="h-96 w-full rounded-md border border-border/50 p-4">
                             <div className="space-y-4">
                                 {allocationResult.allocatedProjects.map(proj => (
-                                    <Card key={proj.projectName}>
+                                    <Card key={proj.projectName} className="bg-card/80">
                                         <CardHeader>
                                             <CardTitle className='flex items-center justify-between'>
                                                 <span>{proj.projectName}</span>
@@ -222,7 +222,7 @@ export default function OpportunityCenter({ consultant, onAllocationComplete }: 
                             </div>
                         </ScrollArea>
                         
-                        <Alert>
+                        <Alert className="bg-background/80">
                             <Sparkles className="h-4 w-4" />
                             <AlertTitle>AI Feedback</AlertTitle>
                             <AlertDescription className="mt-2 whitespace-pre-wrap">
@@ -234,7 +234,7 @@ export default function OpportunityCenter({ consultant, onAllocationComplete }: 
                             onClick={generatePdf} 
                             disabled={!allocationResult}
                             variant="outline"
-                            className="w-full"
+                            className="w-full bg-transparent"
                         >
                             <Download className="mr-2 h-4 w-4" />
                             Download Projects as PDF

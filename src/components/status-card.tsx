@@ -19,7 +19,7 @@ export default function StatusCard({ title, value, description, icon: Icon, vari
   };
 
   return (
-    <Card>
+    <Card className="bg-card/60 backdrop-blur-xl">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className={cn('h-4 w-4', variantClasses[variant])} />

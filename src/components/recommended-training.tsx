@@ -28,7 +28,7 @@ export default function RecommendedTraining({ skills }: RecommendedTrainingProps
   }
 
   return (
-    <Card>
+    <Card className="bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="w-6 h-6 text-primary" />
