@@ -44,13 +44,12 @@ export default function AdminLoginForm() {
     setLoading(true);
     try {
       await verifyAdminCredentials(values);
-      // If the action is successful, the redirect is handled by the server
-      // and this part of the code might not even be reached if the redirect is thrown.
+      // This part might not be reached if redirect is thrown, which is expected.
       toast({
         title: 'Admin Login Successful!',
       });
     } catch (error: any) {
-        // Next.js's redirect throws an error, so we need to check for it
+        // Next.js's redirect throws an error, so we need to check for it and re-throw it.
         if (error.digest?.includes('NEXT_REDIRECT')) {
             throw error;
         }
