@@ -64,9 +64,9 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Admin Login</CardTitle>
+    <Card className="bg-card/40 backdrop-blur-xl border-border/30 shadow-2xl">
+      <CardHeader className="text-center">
+        <CardTitle className="text-3xl font-bold">Admin Access</CardTitle>
         <CardDescription>Enter your credentials to access the admin console.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -79,7 +79,7 @@ export default function AdminLoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                    <FormControl>
-                        <Input type="email" placeholder="admin@hexaware.com" {...field} />
+                        <Input className="bg-transparent" type="email" placeholder="admin@hexaware.com" {...field} />
                    </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -92,14 +92,14 @@ export default function AdminLoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                    <FormControl>
-                        <Input type="password" placeholder="********" {...field} />
+                        <Input className="bg-transparent" type="password" placeholder="********" {...field} />
                    </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full mt-6">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
