@@ -68,9 +68,9 @@ export default function LoginForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Consultant Login</CardTitle>
+    <Card className="bg-card/60 backdrop-blur-lg border-border/20 shadow-2xl">
+      <CardHeader className="text-center">
+        <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
         <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -83,7 +83,7 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                    <FormControl>
-                        <Input type="email" placeholder="you@company.com" {...field} />
+                        <Input className="bg-transparent" type="email" placeholder="you@company.com" {...field} />
                    </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -96,14 +96,14 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                    <FormControl>
-                        <Input type="password" placeholder="********" {...field} />
+                        <Input className="bg-transparent" type="password" placeholder="********" {...field} />
                    </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full mt-6">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
