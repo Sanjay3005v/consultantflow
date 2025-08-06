@@ -10,7 +10,7 @@ import StatusCard from '@/components/status-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import WorkflowTracker from '@/components/workflow-tracker';
 import type { Consultant } from '@/lib/types';
-import type { AnalyzeCertificateResult, AnalyzeResumeResult } from '@/app/actions';
+import type { AnalyzeCertificateResult, AnalyzeResumeResult, TrackResumeEvolutionResult } from '@/app/actions';
 import { updateConsultantOpportunities } from '@/app/actions';
 import AttendanceFeedback from './attendance-feedback';
 import { Button } from './ui/button';
@@ -40,7 +40,7 @@ export default function ConsultantDashboard({
     notFound();
   }
 
-  const handleResumeAnalysisComplete = (result: AnalyzeResumeResult) => {
+  const handleAnalysisComplete = (result: AnalyzeResumeResult | TrackResumeEvolutionResult) => {
     setConsultant(result.consultant);
   };
   
@@ -214,7 +214,7 @@ export default function ConsultantDashboard({
                 <div className="space-y-8">
                     <ResumeAnalyzer
                         consultant={consultant}
-                        onAnalysisComplete={handleResumeAnalysisComplete}
+                        onAnalysisComplete={handleAnalysisComplete}
                         />
                     <TrainingUploader
                         consultant={consultant}

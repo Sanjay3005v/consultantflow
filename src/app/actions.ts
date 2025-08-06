@@ -28,6 +28,11 @@ import {
   type ProjectAllocationInput,
   type ProjectAllocationOutput,
 } from '@/ai/flows/project-allocation-agent';
+import {
+    trackResumeEvolution as trackResumeEvolutionFlow,
+    type TrackResumeEvolutionInput,
+    type TrackResumeEvolutionOutput,
+} from '@/ai/flows/resume-evolution-tracker';
 import { 
     updateConsultantSkillsInDb, 
     createConsultant, 
@@ -76,6 +81,36 @@ export async function analyzeResume(
     throw new Error('Failed to analyze resume.');
   }
 }
+
+export type TrackResumeEvolutionResult = {
+    consultant: Consultant;
+    evolutionData: TrackResumeEvolutionOutput;
+}
+
+export async function trackResumeEvolution(
+    consultantId: string,
+    input: TrackResumeEvolutionInput
+): Promise<TrackResumeEvolutionResult> {
+    try {
+        const result: TrackResumeEvolutionOutput = await trackResumeEvolutionFlow(input);
+        
+        // Update the database with the new skills from the analysis
+        const updatedConsultant = await updateConsultantSkillsInDb(consultantId, result.newSkillAnalysis);
+
+        if (!updatedConsultant) {
+            throw new Error('Failed to find and update consultant after tracking evolution.');
+        }
+
+        return {
+            consultant: updatedConsultant,
+            evolutionData: result,
+        };
+    } catch (error) {
+        console.error('Error in trackResumeEvolution server action:', error);
+        throw new Error('Failed to track resume evolution.');
+    }
+}
+
 
 export type AnalyzeCertificateResult = {
     consultant: Consultant;

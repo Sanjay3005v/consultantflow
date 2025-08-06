@@ -38,7 +38,18 @@ const TrackResumeEvolutionInputSchema = z.object({
 });
 export type TrackResumeEvolutionInput = z.infer<typeof TrackResumeEvolutionInputSchema>;
 
+const SkillAnalysisSchema = z.object({
+    skill: z.string().describe('The name of the skill.'),
+    rating: z
+        .number()
+        .describe(
+        "A rating from 1 to 10 on the consultant's proficiency in this skill, based on the resume."
+        ),
+    reasoning: z.string().describe('A brief explanation for the assigned rating.'),
+});
+
 const TrackResumeEvolutionOutputSchema = z.object({
+  newSkillAnalysis: z.array(SkillAnalysisSchema).describe("The full skill analysis from the new resume, which will be used to update the consultant's profile."),
   skillChanges: z.array(SkillChangeSchema).describe('A table detailing the changes in skills and ratings.'),
   summaryOfImprovements: z.string().describe('A paragraph summarizing the key improvements made to the resume.'),
   oldOverallScore: z.number().describe('The calculated average score of the previous resume version.'),
@@ -61,12 +72,12 @@ const prompt = ai.definePrompt({
 You will be given the previous skill analysis (list of skills with ratings) and the new resume document.
 
 Your tasks are to:
-1.  First, analyze the new resume to extract its key technical skills and assign a proficiency rating from 1 to 10 for each, along with your reasoning. This is a fresh analysis of the new document.
-2.  Compare the results of your new analysis with the provided "previousSkillAnalysis".
-3.  Generate a 'skillChanges' table identifying skills that were added, removed, or had their proficiency rating change.
-4.  Calculate the average score for both the old and new skill sets to determine the 'oldOverallScore' and 'newOverallScore'.
-5.  Write a 'summaryOfImprovements' in a single paragraph, highlighting the most significant positive changes (e.g., new high-rated skills, significant score improvements).
-6.  If the overall score difference is minimal (less than 0.5 points) and there are few changes, provide constructive 'suggestions' on how the consultant could better showcase their growth in the next update.
+1.  **First, analyze the new resume to extract its key technical skills and assign a proficiency rating from 1 to 10 for each, along with your reasoning.** This is a fresh analysis of the new document. Populate the 'newSkillAnalysis' field with this result.
+2.  **Compare the results of your new analysis with the provided "previousSkillAnalysis".**
+3.  **Generate a 'skillChanges' table identifying skills that were added, removed, or had their proficiency rating change.**
+4.  **Calculate the average score for both the old and new skill sets to determine the 'oldOverallScore' and 'newOverallScore'.**
+5.  **Write a 'summaryOfImprovements'** in a single paragraph, highlighting the most significant positive changes (e.g., new high-rated skills, significant score improvements).
+6.  **If the overall score difference is minimal (less than 0.5 points) and there are few changes, provide constructive 'suggestions'** on how the consultant could better showcase their growth in the next update.
 
 NEW RESUME:
 {{media url=newResumeDataUri}}
