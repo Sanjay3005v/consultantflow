@@ -1,98 +1,123 @@
 
-import Link from "next/link";
-import { ArrowRight, User, Shield, UserPlus, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, BrainCircuit, LayoutDashboard, Briefcase } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Home() {
   return (
-    <div className="container mx-auto px-4 py-16 sm:py-24 lg:py-32">
-      <div className="text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight text-primary sm:text-5xl md:text-6xl">
-          Welcome to ConsultantFlow
-        </h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground sm:text-xl">
-          Streamlining the management of consultants by automating the collection and reporting of essential data.
-        </p>
-      </div>
+    <div className="flex flex-col min-h-[calc(100vh-57px)]">
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1fr_650px]">
+              <div className="flex flex-col justify-center space-y-4">
+                <div className="space-y-4">
+                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-primary">
+                    Unlock Your Potential with ConsultantFlow
+                  </h1>
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                    The intelligent platform for managing, tracking, and deploying top-tier consulting talent. Powered by AI to streamline your workflow.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                  <Button asChild size="lg">
+                    <Link href="/login">
+                      Consultant Login
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary" size="lg">
+                    <Link href="/admin/login">
+                      Admin Access
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              <Image
+                src="https://placehold.co/600x400.png"
+                width="650"
+                height="400"
+                alt="Hero"
+                data-ai-hint="management dashboard"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
+              />
+            </div>
+          </div>
+        </section>
 
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <User className="w-8 h-8 text-accent" />
-              <CardTitle className="text-2xl">Consultant Login</CardTitle>
+        {/* Features Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why Choose ConsultantFlow?</h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Our platform provides the tools you need to excel. From AI-driven analysis to seamless opportunity matching, we've got you covered.
+                </p>
+              </div>
             </div>
-            <CardDescription className="pt-2">
-              Access your personal dashboard, update your resume, and track your progress.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/login">
-                Login to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-               <Shield className="w-8 h-8 text-accent" />
-               <CardTitle className="text-2xl">Admin Console</CardTitle>
+            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 mt-12">
+              <div className="grid gap-1 text-center">
+                 <div className="flex justify-center items-center mb-4">
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <BrainCircuit className="w-8 h-8 text-primary" />
+                    </div>
+                </div>
+                <h3 className="text-lg font-bold">AI-Powered Insights</h3>
+                <p className="text-sm text-muted-foreground">
+                    Automatically analyze resumes and certificates to extract skills, rate proficiency, and provide actionable feedback.
+                </p>
+              </div>
+              <div className="grid gap-1 text-center">
+                 <div className="flex justify-center items-center mb-4">
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <LayoutDashboard className="w-8 h-8 text-primary" />
+                    </div>
+                 </div>
+                <h3 className="text-lg font-bold">Unified Dashboards</h3>
+                <p className="text-sm text-muted-foreground">
+                  Centralized consoles for both consultants and administrators to track progress, manage data, and view reports.
+                </p>
+              </div>
+              <div className="grid gap-1 text-center">
+                 <div className="flex justify-center items-center mb-4">
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <Briefcase className="w-8 h-8 text-primary" />
+                    </div>
+                 </div>
+                <h3 className="text-lg font-bold">Intelligent Matching</h3>
+                <p className="text-sm text-muted-foreground">
+                  Our AI agent suggests the most relevant project opportunities based on a consultant's verified skill set.
+                </p>
+              </div>
             </div>
-            <CardDescription className="pt-2">
-              Manage consultants, search and filter profiles, and generate reports.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/login">
-                Go to Console <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-               <UserPlus className="w-8 h-8 text-accent" />
-               <CardTitle className="text-2xl">New Consultant?</CardTitle>
+        {/* CTA Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                Ready to Join the Flow?
+              </h2>
+              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Create your consultant profile today and let our AI-powered platform help you find your next opportunity.
+              </p>
             </div>
-            <CardDescription className="pt-2">
-              Create a new consultant profile to get started.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/signup">
-                Sign Up Now <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-               <MessageCircle className="w-8 h-8 text-accent" />
-               <CardTitle className="text-2xl">Apply Now</CardTitle>
+            <div className="mx-auto w-full max-w-sm space-y-2">
+               <Button asChild size="lg" className="w-full">
+                <Link href="/signup">
+                  Sign Up Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
             </div>
-            <CardDescription className="pt-2">
-              Use our AI chatbot to submit your application.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/chatbot">
-                Start Chat <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
