@@ -12,13 +12,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeResume, trackResumeEvolution, type AnalyzeResumeResult, type TrackResumeEvolutionResult } from '@/app/actions';
-import { Upload, Loader2, CheckCircle, BrainCircuit, TrendingUp, ArrowRight } from 'lucide-react';
+import { Upload, Loader2, CheckCircle, BrainCircuit, TrendingUp } from 'lucide-react';
 import type { Consultant, SkillAnalysis } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Badge } from './ui/badge';
-import { Progress } from './ui/progress';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 
 
 const formSchema = z.object({
@@ -33,8 +30,6 @@ type ResumeAnalyzerProps = {
 export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: ResumeAnalyzerProps) {
   const [loading, setLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{ feedback: string; historyLog: string } | null>(null);
-  const [evolutionResult, setEvolutionResult] = useState<TrackResumeEvolutionResult['evolutionData'] | null>(null);
-
   const [isResultOpen, setIsResultOpen] = useState(false);
   const { toast } = useToast();
 
@@ -48,7 +43,6 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     setAnalysisResult(null);
-    setEvolutionResult(null);
     setIsResultOpen(false);
 
     const file = values.resume[0];
@@ -59,19 +53,16 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
       const dataUri = reader.result as string;
       try {
         if (hasExistingSkills) {
-          // Track evolution if skills already exist
           const result = await trackResumeEvolution(consultant.id, { 
               newResumeDataUri: dataUri,
               previousSkillAnalysis: consultant.skills as SkillAnalysis[]
           });
-          setEvolutionResult(result.evolutionData);
           onAnalysisComplete(result);
            toast({
             title: 'Evolution Analysis Complete',
             description: 'Your resume changes have been successfully analyzed.',
           });
         } else {
-          // Perform initial analysis
           const result = await analyzeResume(consultant.id, { resumeDataUri: dataUri });
           setAnalysisResult({ feedback: result.feedback, historyLog: result.historyLog });
           onAnalysisComplete(result);
@@ -102,16 +93,6 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
       setLoading(false);
     };
   }
-
-  const getChangeBadge = (change: string) => {
-    switch (change) {
-      case 'Added': return <Badge variant="default" className="bg-green-600">Added</Badge>;
-      case 'Improved': return <Badge variant="default" className="bg-blue-600">Improved</Badge>;
-      case 'Decreased': return <Badge variant="destructive">Decreased</Badge>;
-      case 'Removed': return <Badge variant="destructive">Removed</Badge>;
-      default: return <Badge variant="secondary">Unchanged</Badge>;
-    }
-  };
 
   return (
     <Card className="bg-card/60 backdrop-blur-xl">
@@ -190,74 +171,6 @@ export default function ResumeAnalyzer({ consultant, onAnalysisComplete }: Resum
                           </ScrollArea>
                       </div>
                       </div>
-                  </AlertDescription>
-                </Alert>
-            )}
-
-            {evolutionResult && (
-                <Alert className="bg-background/80">
-                  <TrendingUp className="h-4 w-4" />
-                  <AlertTitle>Resume Evolution Report</AlertTitle>
-                  <AlertDescription className="mt-2 space-y-4">
-                     <div>
-                        <h4 className="font-semibold">Overall Score</h4>
-                         <div className="flex items-center gap-4 mt-2">
-                            <div className='text-center'>
-                                <p className='text-xs text-muted-foreground'>Old Score</p>
-                                <p className='text-2xl font-bold'>{evolutionResult.oldOverallScore.toFixed(1)}</p>
-                            </div>
-                            <ArrowRight className='h-5 w-5 text-muted-foreground' />
-                             <div className='text-center'>
-                                <p className='text-xs text-muted-foreground'>New Score</p>
-                                <p className='text-2xl font-bold text-primary'>{evolutionResult.newOverallScore.toFixed(1)}</p>
-                            </div>
-                         </div>
-                     </div>
-
-                     <div>
-                        <h4 className="font-semibold pt-2">Summary of Improvements</h4>
-                         <Card className="mt-2 p-3 bg-muted/50">
-                            <p className="text-sm whitespace-pre-wrap">{evolutionResult.summaryOfImprovements}</p>
-                         </Card>
-                     </div>
-                     
-                     {evolutionResult.suggestions && (
-                         <div>
-                            <h4 className="font-semibold pt-2">Suggestions for Next Time</h4>
-                             <Card className="mt-2 p-3 bg-muted/50">
-                                <p className="text-sm whitespace-pre-wrap">{evolutionResult.suggestions}</p>
-                             </Card>
-                         </div>
-                     )}
-
-                      <div>
-                          <h4 className="font-semibold pt-2">Skill Changes</h4>
-                           <Card className="mt-2 p-0 bg-muted/50">
-                               <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Skill</TableHead>
-                                            <TableHead>Change</TableHead>
-                                            <TableHead className="text-right">Rating</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {evolutionResult.skillChanges.map((change) => (
-                                            <TableRow key={change.skill}>
-                                                <TableCell>{change.skill}</TableCell>
-                                                <TableCell>{getChangeBadge(change.change)}</TableCell>
-                                                <TableCell className="text-right font-medium">
-                                                {change.oldRating !== null && change.newRating !== null && change.oldRating !== change.newRating
-                                                    ? `${change.oldRating} → ${change.newRating}`
-                                                    : change.newRating ?? change.oldRating}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                           </Card>
-                      </div>
-
                   </AlertDescription>
                 </Alert>
             )}

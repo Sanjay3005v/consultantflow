@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import RecommendedTraining from './recommended-training';
+import ResumeEvolutionReport from './resume-evolution-report';
 
 export default function ConsultantDashboard({
   initialConsultant,
@@ -30,6 +31,7 @@ export default function ConsultantDashboard({
 }) {
   const [consultant, setConsultant] = useState(initialConsultant);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [evolutionResult, setEvolutionResult] = useState<TrackResumeEvolutionResult['evolutionData'] | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,6 +44,12 @@ export default function ConsultantDashboard({
 
   const handleAnalysisComplete = (result: AnalyzeResumeResult | TrackResumeEvolutionResult) => {
     setConsultant(result.consultant);
+    // Check if the result is from the evolution tracker and has evolutionData
+    if ('evolutionData' in result) {
+      setEvolutionResult(result.evolutionData);
+    } else {
+      setEvolutionResult(null); // Reset if it's a standard analysis
+    }
   };
   
   const handleCertificateAnalysisComplete = (result: AnalyzeCertificateResult) => {
@@ -208,6 +216,7 @@ export default function ConsultantDashboard({
                         </div>
                 </div>
                 <SkillsDisplay skills={consultant.skills} />
+                {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
                 <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
                 </div>
 
