@@ -54,7 +54,7 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-card/40 backdrop-blur-xl border-t border-b border-border/30">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-card/60 backdrop-blur-xl border-t border-b border-border/30">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
