@@ -156,80 +156,78 @@ export default function ConsultantDashboard({
 
             <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-5">
                 <StatusCard
-                title="Project Status"
-                value={consultant.status}
-                icon={ClipboardCheck}
-                variant={consultant.status === 'On Project' ? 'success' : 'info'}
+                    title="Project Status"
+                    value={consultant.status}
+                    icon={ClipboardCheck}
+                    variant={consultant.status === 'On Project' ? 'success' : 'info'}
                 />
                 <StatusCard
-                title="Resume Status"
-                value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
-                icon={FileText}
-                variant={consultant.workflow?.resumeUpdated ? 'success' : 'warning'}
+                    title="Resume Status"
+                    value={consultant.workflow?.resumeUpdated ? 'Updated' : 'Pending'}
+                    icon={FileText}
+                    variant={consultant.workflow?.resumeUpdated ? 'success' : 'warning'}
                 />
                 <StatusCard
-                title="Attendance"
-                value={`${attendanceSummary.percentage}%`}
-                description={`${attendanceSummary.present} / ${attendanceSummary.total} Days Present`}
-                icon={CalendarCheck}
+                    title="Attendance"
+                    value={`${attendanceSummary.percentage}%`}
+                    description={`${attendanceSummary.present} / ${attendanceSummary.total} Days Present`}
+                    icon={CalendarCheck}
                 />
                 <StatusCard
-                title="Opportunities"
-                value={consultant.opportunities.toString()}
-                description="Provided during bench"
-                icon={Target}
-                variant={consultant.opportunities > 0 ? 'success' : 'default'}
+                    title="Opportunities"
+                    value={consultant.opportunities.toString()}
+                    description="Provided during bench"
+                    icon={Target}
+                    variant={consultant.opportunities > 0 ? 'success' : 'default'}
                 />
                 <StatusCard
-                title="Training"
-                value={consultant.training}
-                icon={Award}
-                variant={
-                    consultant.training === 'Completed'
-                    ? 'success'
-                    : consultant.training === 'In Progress'
-                    ? 'info'
-                    : 'default'
-                }
+                    title="Training"
+                    value={consultant.training}
+                    icon={Award}
+                    variant={
+                        consultant.training === 'Completed'
+                        ? 'success'
+                        : consultant.training === 'In Progress'
+                        ? 'info'
+                        : 'default'
+                    }
                 />
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-3">
-                <div className="space-y-8 lg:col-span-2">
-                <div className="grid gap-8 md:grid-cols-2">
-                        <Card className="bg-card/60 backdrop-blur-xl">
-                            <CardHeader>
-                            <CardTitle>Workflow Progress</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                            {consultant.workflow && (
-                                <WorkflowTracker workflow={consultant.workflow} />
-                            )}
-                            </CardContent>
-                        </Card>
-                        <div className='space-y-4'>
-                            <AttendanceFeedback consultant={consultant} />
-                            <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download Attendance Report
-                            </Button>
-                        </div>
-                </div>
-                <SkillsDisplay skills={consultant.skills} />
-                {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
-                <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
+            <div className="grid gap-8 lg:grid-cols-2">
+                {/* Left Column */}
+                <div className="space-y-8">
+                    <Card className="bg-card/60 backdrop-blur-xl">
+                        <CardHeader>
+                        <CardTitle>Workflow Progress</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                        {consultant.workflow && (
+                            <WorkflowTracker workflow={consultant.workflow} />
+                        )}
+                        </CardContent>
+                    </Card>
+                    <AttendanceFeedback consultant={consultant} />
+                    <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Attendance Report
+                    </Button>
+                    <RecommendedTraining skills={consultant.skills} />
                 </div>
 
+                {/* Right Column */}
                 <div className="space-y-8">
                     <ResumeAnalyzer
                         consultant={consultant}
                         onAnalysisComplete={handleAnalysisComplete}
-                        />
+                    />
                     <TrainingUploader
                         consultant={consultant}
                         onAnalysisComplete={handleCertificateAnalysisComplete}
                     />
-                    <RecommendedTraining skills={consultant.skills} />
+                    <SkillsDisplay skills={consultant.skills} />
+                    {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
+                    <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
                 </div>
             </div>
         </div>
