@@ -6,10 +6,16 @@ import Image from 'next/image';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-[calc(100vh-57px)]">
-      <main className="flex-1">
+    <div className="relative flex flex-col min-h-[calc(100vh-57px)] overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 left-0 h-full w-full bg-background" />
+            <div className="absolute bottom-0 left-[-20%] right-0 top-[-10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,122,255,.15),rgba(255,255,255,0))]" />
+            <div className="absolute bottom-[-20%] right-0 top-[-10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,122,255,.15),rgba(255,255,255,0))]" />
+        </div>
+      <main className="flex-1 z-10">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-transparent">
           <div className="container px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1fr_650px]">
               <div className="flex flex-col justify-center space-y-4">
@@ -48,7 +54,7 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-card/40 backdrop-blur-xl border-t border-b border-border/30">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
@@ -97,7 +103,7 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-transparent">
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
             <div className="space-y-3">
               <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
