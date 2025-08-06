@@ -64,7 +64,7 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <Card className="bg-card/40 backdrop-blur-xl border-border/30 shadow-2xl">
+    <Card className="bg-card/60 backdrop-blur-xl border-border/30 shadow-2xl">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Admin Access</CardTitle>
         <CardDescription>Enter your credentials to access the admin console.</CardDescription>
