@@ -68,7 +68,7 @@ export default function LoginForm() {
   }
 
   return (
-    <Card className="bg-card/60 backdrop-blur-lg border-border/20 shadow-2xl">
+    <Card className="bg-card/40 backdrop-blur-xl border-border/30 shadow-2xl">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
         <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
