@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -36,7 +37,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
-import { Bar, ResponsiveContainer, XAxis, YAxis, BarChart as RechartsBarChart, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { Bar, ResponsiveContainer, XAxis, YAxis, BarChart as RechartsBarChart, PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area } from 'recharts';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ResumeAnalyzer from './resume-analyzer';
 import { cn } from '@/lib/utils';
@@ -331,6 +332,18 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     const weightedScore = (skillScore * 10 * 0.5) + (attendanceScore * 0.3) + (opportunityScore * 0.2);
     
     return Math.round(Math.min(weightedScore, 100)); // Cap at 100
+  };
+
+  const generateEfficiencyData = (finalScore: number) => {
+      const data = [];
+      const points = 10;
+      for (let i = 0; i < points; i++) {
+          const randomFactor = (Math.random() - 0.4) * (finalScore / 10);
+          const value = (finalScore / points) * (i + 1) + randomFactor;
+          data.push({ name: `P${i}`, value: Math.max(0, Math.min(100, value)) });
+      }
+      data[points - 1].value = finalScore;
+      return data;
   };
 
   return (
@@ -802,13 +815,30 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="bg-gradient-to-br from-blue-900 via-slate-900 to-slate-900 p-4 rounded-lg">
-                                        <h4 className="font-bold mb-2 flex items-center gap-2 text-white">
+                                    <div className="relative bg-gradient-to-b from-blue-900/50 to-slate-900 p-4 rounded-lg overflow-hidden">
+                                        <h4 className="font-bold mb-2 flex items-center gap-2 text-white z-10 relative">
                                             <TrendingUp className="w-4 h-4" />
                                             Consultant Efficiency
                                         </h4>
-                                        <div className="text-center">
-                                            <p className="text-4xl font-bold text-cyan-300">{calculateEfficiency(consultant)}%</p>
+                                        <div className="absolute -bottom-8 -left-4 -right-4 h-40 z-0">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={generateEfficiencyData(calculateEfficiency(consultant))}>
+                                                    <defs>
+                                                        <linearGradient id="efficiencyGradient" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="hsl(180 100% 50%)" stopOpacity={0.4}/>
+                                                            <stop offset="95%" stopColor="hsl(180 100% 50%)" stopOpacity={0}/>
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <Tooltip 
+                                                        cursor={false}
+                                                        contentStyle={{ display: 'none' }}
+                                                    />
+                                                    <Area type="monotone" dataKey="value" stroke="hsl(180 100% 50%)" strokeWidth={2} fill="url(#efficiencyGradient)" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        <div className="text-center mt-8 relative z-10">
+                                            <p className="text-4xl font-bold text-cyan-300 drop-shadow-[0_2px_10px_rgba(0,255,255,0.5)]">{calculateEfficiency(consultant)}%</p>
                                             <p className="text-xs text-cyan-100/70">Overall Performance Score</p>
                                         </div>
                                     </div>
@@ -917,3 +947,4 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
