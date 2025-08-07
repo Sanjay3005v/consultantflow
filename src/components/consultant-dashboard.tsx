@@ -207,8 +207,8 @@ export default function ConsultantDashboard({
                         )}
                         </CardContent>
                     </Card>
-                    <RecommendedTraining skills={consultant.skills} />
                     <AttendanceFeedback consultant={consultant} />
+                    <RecommendedTraining skills={consultant.skills} />
                     <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
                 </div>
 
