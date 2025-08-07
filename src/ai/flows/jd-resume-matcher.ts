@@ -69,9 +69,9 @@ Here's your process:
 2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their profile against the job requirements.
 3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score MUST be a weighted average based on the following criteria:
     *   **Skill Alignment (60% weight)**: How many of the required skills does the consultant possess and how high are their ratings? A rating of 8-10 is senior, 5-7 is mid-level, and 1-4 is junior. The consultant's experience level should align with the JD's required seniority.
-    *   **Efficiency Score (30% weight)**: How does their overall efficiency score reflect their reliability and performance? A higher efficiency score should result in a higher match score.
+    *   **Proficiency Depth (30% weight)**: How high are their ratings in those key skills? More depth in required skills means a higher score.
     *   **Status (10% weight)**: Give a higher score to consultants who are 'On Bench' as they are immediately available.
-4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their efficiency and experience level.
+4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their experience level and suitability.
 5.  **Filter and Rank**: Return a ranked list of the top 3 consultants.
     
 IMPORTANT: You MUST ONLY return consultants with a 'matchScore' of 60 or higher. If no consultants meet this threshold, return an empty list.
