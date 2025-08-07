@@ -65,12 +65,12 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert JD-to-Resume Matching Engine for a technology consulting firm. Your task is to analyze a job description and identify the top 3 best-fit consultants from a provided list.
 
 Here's your process:
-1.  **Analyze the Job Description**: Carefully read the job description to identify the key required skills, technologies, and desired experience level.
-2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their profile against the job requirements. Pay close attention to their 'status', 'skills', and their overall 'efficiencyScore'. Consultants 'On Bench' are preferred candidates.
-3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score should be a weighted average based on:
-    *   **Skill Alignment (60% weight)**: How many of the required skills does the consultant possess and how high are their ratings?
-    *   **Efficiency Score (30% weight)**: How does their overall efficiency score reflect their reliability and performance?
-    *   **Status (10% weight)**: Give a higher weight to consultants who are 'On Bench' as they are immediately available.
+1.  **Analyze the Job Description**: Carefully read the job description to identify the key required skills, technologies, and desired experience level (e.g., Junior, Mid-level, Senior).
+2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their profile against the job requirements.
+3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score MUST be a weighted average based on the following criteria:
+    *   **Skill Alignment (60% weight)**: How many of the required skills does the consultant possess and how high are their ratings? A rating of 8-10 is senior, 5-7 is mid-level, and 1-4 is junior. The consultant's experience level should align with the JD's required seniority.
+    *   **Efficiency Score (30% weight)**: How does their overall efficiency score reflect their reliability and performance? A higher efficiency score should result in a higher match score.
+    *   **Status (10% weight)**: Give a higher score to consultants who are 'On Bench' as they are immediately available.
 4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their efficiency and experience level.
 5.  **Filter and Rank**: Return a ranked list of the top 3 consultants.
     
