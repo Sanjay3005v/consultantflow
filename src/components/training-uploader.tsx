@@ -39,12 +39,16 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
   const downloadReport = (reportContent: string) => {
     const doc = new jsPDF();
     
+    doc.setFontSize(18);
+    doc.text(`Training Feedback for ${consultant.name}`, 14, 22);
+    doc.setFontSize(11);
+    
     // Add the report text. The splitTextToSize function handles line breaks.
     const splitText = doc.splitTextToSize(reportContent, 180);
-    doc.text(splitText, 10, 10);
+    doc.text(splitText, 14, 32);
     
     // Save the PDF
-    doc.save(`training_report_${consultant.name.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`training_feedback_${consultant.name.replace(/\s+/g, '_')}.pdf`);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -94,7 +98,7 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
             <Award className="w-6 h-6 text-primary" />
             <span>Training Agent</span>
         </CardTitle>
-        <CardDescription>Upload a training certificate to verify it and add the new skill.</CardDescription>
+        <CardDescription>Upload a training certificate to verify it and get actionable feedback.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -126,7 +130,7 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Verify Certificate
+                  Verify & Get Feedback
                 </>
               )}
             </Button>
@@ -135,7 +139,7 @@ export default function TrainingUploader({ consultant, onAnalysisComplete }: Tra
         {result && (
             <Alert className="mt-6 bg-background/80">
                 <CheckCircle className="h-4 w-4" />
-                <AlertTitle>Verification Successful!</AlertTitle>
+                <AlertTitle>Training Feedback</AlertTitle>
                 <AlertDescription className="mt-2 space-y-4">
                    <p className="text-sm whitespace-pre-wrap">{result.report}</p>
                    <Button variant="outline" size="sm" onClick={() => downloadReport(result.report)} className="w-full bg-transparent">
