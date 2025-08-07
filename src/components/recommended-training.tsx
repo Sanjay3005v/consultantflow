@@ -15,12 +15,12 @@ const RECOMMENDED_TRAINING_THRESHOLD = 7;
 
 export default function RecommendedTraining({ skills }: RecommendedTrainingProps) {
   const isSkillAnalysis = (skill: string | SkillAnalysis): skill is SkillAnalysis => {
-    return typeof skill === 'object' && skill !== null && 'rating' in skill;
+    return typeof skill === 'object' && skill !== null && 'rating' in skill && 'skill' in skill;
   };
 
   const lowRatedSkills = (skills || [])
     .filter(isSkillAnalysis)
-    .filter(skill => skill.rating < RECOMMENDED_TRAINING_THRESHOLD)
+    .filter(skill => skill.rating < RECOMMENDED_TRAINING_THRESHOLD && skill.skill.toLowerCase() !== 'unknown')
     .sort((a, b) => a.rating - b.rating);
 
   if (lowRatedSkills.length === 0) {
