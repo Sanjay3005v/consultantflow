@@ -4,13 +4,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Consultant, AttendanceRecord, SkillAnalysis } from '@/lib/types';
+import type { MatchResumesOutput } from '@/ai/flows/jd-resume-matcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus, createOpportunity } from '@/app/actions';
+import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus, createOpportunity, matchResumes } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,6 +45,8 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Textarea } from './ui/textarea';
 import { Progress } from './ui/progress';
+import { Separator } from './ui/separator';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 
 const createConsultantSchema = z.object({
@@ -58,6 +61,10 @@ const createOpportunitySchema = z.object({
     neededYOE: z.coerce.number().min(0, 'Years of experience must be a positive number'),
     neededSkills: z.string().min(1, 'At least one skill is required'),
     responsibilities: z.string().min(1, 'Responsibilities are required'),
+});
+
+const jdMatcherSchema = z.object({
+    jobDescription: z.string().min(50, 'Job description must be at least 50 characters long.'),
 });
 
 
@@ -76,11 +83,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [isCreateOpportunityDialogOpen, setIsCreateOpportunityDialogOpen] = useState(false);
   const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
   const [isEditDaysDialogOpen, setIsEditDaysDialogOpen] = useState(false);
+  const [isJdMatcherDialogOpen, setIsJdMatcherDialogOpen] = useState(false);
 
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const [editableTotalDays, setEditableTotalDays] = useState(22);
+  const [jdMatcherResult, setJdMatcherResult] = useState<MatchResumesOutput | null>(null);
+  const [isMatching, setIsMatching] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -103,6 +113,13 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
       neededYOE: 0,
       neededSkills: '',
       responsibilities: '',
+    },
+  });
+  
+  const jdMatcherForm = useForm<z.infer<typeof jdMatcherSchema>>({
+    resolver: zodResolver(jdMatcherSchema),
+    defaultValues: {
+      jobDescription: '',
     },
   });
 
@@ -240,6 +257,49 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
             description: 'Could not create the new opportunity.',
             variant: 'destructive',
         })
+    }
+  };
+
+  const onJdMatcherSubmit = async (values: z.infer<typeof jdMatcherSchema>) => {
+    setIsMatching(true);
+    setJdMatcherResult(null);
+    try {
+        const onBenchConsultants = consultants.filter(c => c.status === 'On Bench' && hasSkillAnalysis(c));
+        
+        if (onBenchConsultants.length === 0) {
+            toast({
+                title: 'No Eligible Consultants',
+                description: 'There are no consultants currently "On Bench" with an analyzed resume to match against.',
+                variant: 'destructive'
+            });
+            setIsMatching(false);
+            return;
+        }
+
+        const consultantProfiles = onBenchConsultants.map(c => ({
+            id: c.id,
+            name: c.name,
+            // Assuming experience is not tracked, defaulting to a placeholder.
+            // In a real app, this would come from the consultant's profile.
+            experienceInYears: 5, 
+            skills: (c.skills as SkillAnalysis[]).map(s => ({ skill: s.skill, rating: s.rating })),
+        }));
+        
+        const result = await matchResumes({
+            jobDescription: values.jobDescription,
+            consultants: consultantProfiles,
+        });
+        
+        setJdMatcherResult(result);
+
+    } catch (error) {
+        toast({
+            title: 'Matching Failed',
+            description: 'The AI engine could not process the request. Please try again.',
+            variant: 'destructive',
+        });
+    } finally {
+        setIsMatching(false);
     }
   };
 
@@ -384,7 +444,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <CardTitle>Consultant Directory</CardTitle>
-            <div className='flex gap-2'>
+            <div className='flex flex-wrap gap-2'>
               <Dialog open={isCreateConsultantDialogOpen} onOpenChange={setIsCreateConsultantDialogOpen}>
                   <DialogTrigger asChild>
                        <Button>
@@ -547,20 +607,74 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       </Form>
                   </DialogContent>
               </Dialog>
-              <Dialog>
+              <Dialog open={isJdMatcherDialogOpen} onOpenChange={(isOpen) => { setIsJdMatcherDialogOpen(isOpen); if (!isOpen) { setJdMatcherResult(null); jdMatcherForm.reset(); }}}>
                 <DialogTrigger asChild>
-                  <Button>Generate Report</Button>
+                    <Button>
+                        <Search className="mr-2 h-4 w-4" />
+                        Find Best Talent
+                    </Button>
                 </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Consultant Status Report</DialogTitle>
-                    <DialogDescription>
-                      A summary of the currently filtered consultants.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <pre className="mt-2 w-full rounded-md bg-slate-950 p-4">
-                      <code className="text-white">{generateReport()}</code>
-                  </pre>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Find Best Talent</DialogTitle>
+                        <DialogDescription>
+                            Paste a job description below. The AI will find the top 3 consultants from the bench.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Form {...jdMatcherForm}>
+                        <form onSubmit={jdMatcherForm.handleSubmit(onJdMatcherSubmit)} className="space-y-4">
+                            <FormField
+                                control={jdMatcherForm.control}
+                                name="jobDescription"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Job Description</FormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Paste the full job description here..." className="min-h-48" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <DialogFooter>
+                                <Button type="submit" disabled={isMatching}>
+                                    {isMatching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Find Candidates
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                    {jdMatcherResult && (
+                        <div className="mt-6">
+                            <Separator />
+                            <h3 className="text-lg font-semibold my-4">Top Candidates</h3>
+                            {jdMatcherResult.topCandidates.length > 0 ? (
+                                <div className="space-y-4">
+                                    {jdMatcherResult.topCandidates.map((candidate) => (
+                                        <Card key={candidate.consultantId}>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center justify-between">
+                                                    <span>{candidate.consultantName}</span>
+                                                    <Badge>Score: {candidate.matchScore}</Badge>
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm text-muted-foreground">{candidate.justification}</p>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <Alert>
+                                    <Sparkles className="h-4 w-4" />
+                                    <AlertTitle>No Matches Found</AlertTitle>
+                                    <AlertDescription>
+                                        The AI could not find any suitable candidates for this job description.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                        </div>
+                    )}
                 </DialogContent>
               </Dialog>
             </div>

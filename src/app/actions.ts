@@ -33,6 +33,11 @@ import {
     type TrackResumeEvolutionInput,
     type TrackResumeEvolutionOutput,
 } from '@/ai/flows/resume-evolution-tracker';
+import {
+    matchResumesToJobDescription,
+    type MatchResumesInput,
+    type MatchResumesOutput,
+} from '@/ai/flows/jd-resume-matcher';
 import { 
     updateConsultantSkillsInDb, 
     createConsultant, 
@@ -199,6 +204,16 @@ export async function getProjectAllocations(input: ProjectAllocationInput): Prom
     } catch (error) {
         console.error('Error getting project allocations:', error);
         throw new Error('Failed to get AI-powered project allocations.');
+    }
+}
+
+export async function matchResumes(input: MatchResumesInput): Promise<MatchResumesOutput> {
+    try {
+        const result = await matchResumesToJobDescription(input);
+        return result;
+    } catch (error) {
+        console.error('Error matching resumes:', error);
+        throw new Error('Failed to get AI-powered resume matching results.');
     }
 }
 
