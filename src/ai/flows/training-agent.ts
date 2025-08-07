@@ -23,7 +23,7 @@ export type AnalyzeCertificateInput = z.infer<typeof AnalyzeCertificateInputSche
 
 const AnalyzeCertificateOutputSchema = z.object({
   skillAnalysis: z.object({
-        skill: z.string().describe('The name of the primary skill or technology learned.'),
+        skill: z.string().describe('The name of the primary skill or technology learned. If the skill cannot be determined, return "Unknown".'),
         rating: z
           .number()
           .describe(
@@ -53,9 +53,10 @@ const prompt = ai.definePrompt({
 
 Your task is to analyze the provided training certificate image and perform the following actions:
 1. Identify the primary skill or technology the consultant was trained in.
-2. Assign a proficiency rating from 1-10. A standard course completion should be rated around 5. If the certificate indicates an "advanced" or "expert" level, you can assign a higher rating.
-3. Provide a brief reasoning for the rating, mentioning the course name from the certificate.
-4. Generate a detailed report that acts as "Training Feedback". The report must include:
+2. If you cannot determine the skill from the image, you MUST return "Unknown" in the 'skill' field. Do not describe the failure in the skill field.
+3. Assign a proficiency rating from 1-10. A standard course completion should be rated around 5. If the certificate indicates an "advanced" or "expert" level, you can assign a higher rating.
+4. Provide a brief reasoning for the rating, mentioning the course name from the certificate.
+5. Generate a detailed report that acts as "Training Feedback". The report must include:
     - The name of the course/program.
     - The name of the issuing body/provider.
     - The completion date (if visible).
@@ -84,5 +85,6 @@ const analyzeCertificateFlow = ai.defineFlow(
     return output!;
   }
 );
+
 
 
