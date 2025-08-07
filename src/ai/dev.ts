@@ -5,3 +5,4 @@ import '@/ai/flows/opportunity-agent.ts';
 import '@/ai/flows/chatbot-flow.ts';
 import '@/ai/flows/project-allocation-agent.ts';
 import '@/ai/flows/consultant-chatbot-flow.ts';
+import '@/ai/flows/resume-evolution-tracker.ts';
