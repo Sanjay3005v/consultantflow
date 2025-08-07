@@ -72,7 +72,9 @@ Here's your process:
     *   **Efficiency Score (30% weight)**: How does their overall efficiency score reflect their reliability and performance?
     *   **Status (10% weight)**: Give a higher weight to consultants who are 'On Bench' as they are immediately available.
 4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their efficiency and experience level.
-5.  **Filter and Rank**: Return a list of the top 3 consultants who have a 'matchScore' of 60 or higher. If no consultants meet this threshold, return an empty list.
+5.  **Filter and Rank**: Return a ranked list of the top 3 consultants.
+    
+IMPORTANT: You MUST ONLY return consultants with a 'matchScore' of 60 or higher. If no consultants meet this threshold, return an empty list.
 
 **Job Description:**
 \`\`\`
