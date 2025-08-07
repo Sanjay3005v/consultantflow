@@ -34,9 +34,9 @@ import {
     type TrackResumeEvolutionOutput,
 } from '@/ai/flows/resume-evolution-tracker';
 import {
-    matchResumesToJobDescription,
-    type MatchResumesInput,
-    type MatchResumesOutput,
+    findMatchingConsultants,
+    type JdMatcherInput,
+    type JdMatcherOutput,
 } from '@/ai/flows/jd-resume-matcher';
 import { 
     updateConsultantSkillsInDb, 
@@ -207,9 +207,9 @@ export async function getProjectAllocations(input: ProjectAllocationInput): Prom
     }
 }
 
-export async function matchResumes(input: MatchResumesInput): Promise<MatchResumesOutput> {
+export async function matchResumes(input: JdMatcherInput): Promise<JdMatcherOutput> {
     try {
-        const result = await matchResumesToJobDescription(input);
+        const result = await findMatchingConsultants(input);
         return result;
     } catch (error) {
         console.error('Error matching resumes:', error);

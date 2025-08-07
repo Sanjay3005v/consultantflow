@@ -2,100 +2,105 @@
 'use server';
 
 /**
- * @fileOverview A JD-to-Resume matching engine.
+ * @fileOverview A JD-to-Resume matching AI agent.
  *
- * - matchResumesToJobDescription - A function that identifies the top 3 consultants for a job description.
- * - MatchResumesInput - The input type for the matchResumesToJobDescription function.
- * - MatchResumesOutput - The return type for the matchResumesToJobDescription function.
+ * - findMatchingConsultants - A function that identifies the best-matching consultants for a job description.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const ConsultantProfileSchema = z.object({
-  id: z.string().describe('The unique identifier for the consultant.'),
-  name: z.string().describe('The name of the consultant.'),
-  experienceInYears: z.number().describe('The total years of professional experience for the consultant.'),
-  skills: z
-    .array(
-      z.object({
-        skill: z.string(),
-        rating: z.number(),
-      })
-    )
-    .describe("The consultant's skills with proficiency ratings (1-10)."),
+  id: z.string(),
+  name: z.string(),
+  status: z.string().describe("The consultant's current project status (e.g., 'On Bench', 'On Project')."),
+  skills: z.array(
+    z.object({
+      skill: z.string(),
+      rating: z.number().describe('Proficiency rating from 1 to 10.'),
+    })
+  ),
 });
 
-const MatchResumesInputSchema = z.object({
+const JdMatcherInputSchema = z.object({
   jobDescription: z.string().describe('The full text of the job description.'),
-  consultants: z.array(ConsultantProfileSchema).describe('A list of available consultant profiles.'),
+  consultants: z
+    .array(ConsultantProfileSchema)
+    .describe('A list of available consultants with their skills and status.'),
+  consultantsString: z.string().optional().describe('A JSON string representation of the consultants list. This is for the prompt template.'),
 });
-
-export type MatchResumesInput = z.infer<typeof MatchResumesInputSchema>;
+export type JdMatcherInput = z.infer<typeof JdMatcherInputSchema>;
 
 const MatchedConsultantSchema = z.object({
-  consultantId: z.string().describe('The ID of the matched consultant.'),
-  consultantName: z.string().describe('The name of the matched consultant.'),
-  matchScore: z.number().min(0).max(100).describe('A score from 0 to 100 indicating the match quality.'),
-  justification: z.string().describe('A two-line explanation for the score, based on skill match and experience.'),
+  consultantId: z.string().describe("The ID of the matched consultant."),
+  consultantName: z.string().describe("The name of the matched consultant."),
+  matchScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe('A score from 0 to 100 indicating the match quality.'),
+  explanation: z
+    .string()
+    .describe('A brief, two-line explanation for the score, based on skill match and experience level.'),
 });
 
-const MatchResumesOutputSchema = z.object({
-  topCandidates: z
+const JdMatcherOutputSchema = z.object({
+  topMatches: z
     .array(MatchedConsultantSchema)
-    .describe('The top 3 consultants that best match the job description.'),
+    .describe('A list of the top 3 consultants who match the job description with a score of 60% or higher.'),
 });
+export type JdMatcherOutput = z.infer<typeof JdMatcherOutputSchema>;
 
-export type MatchResumesOutput = z.infer<typeof MatchResumesOutputSchema>;
 
-export async function matchResumesToJobDescription(input: MatchResumesInput): Promise<MatchResumesOutput> {
-  return await jdResumeMatcherFlow(input);
+export async function findMatchingConsultants(input: JdMatcherInput): Promise<JdMatcherOutput> {
+  return await jdMatcherFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'jdResumeMatcherPrompt',
-  input: { schema: MatchResumesInputSchema },
-  output: { schema: MatchResumesOutputSchema },
-  prompt: `You are an expert JD-to-resume matching engine for a technology consulting firm. Your task is to analyze a job description and a list of consultant profiles to find the top 3 best-fit candidates.
+  name: 'jdMatcherPrompt',
+  input: { schema: JdMatcherInputSchema },
+  output: { schema: JdMatcherOutputSchema },
+  prompt: `You are an expert JD-to-Resume Matching Engine for a technology consulting firm. Your task is to analyze a job description and identify the top 3 best-fit consultants from a provided list.
 
-For each consultant, you must:
-1.  Carefully compare their skills and proficiency ratings against the requirements listed in the job description.
-2.  Consider their years of experience in relation to what the job requires.
-3.  Calculate a "matchScore" from 0 to 100, where 100 is a perfect match. The score should be a weighted average of skill alignment, skill proficiency, and experience level.
-4.  Provide a concise, two-line "justification" for the score. The first line should summarize the skill match, and the second line should comment on their experience alignment.
+Here's your process:
+1.  **Analyze the Job Description**: Carefully read the job description to identify the key required skills, technologies, and desired experience level.
+2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their skill set and proficiency ratings against the job requirements. Pay close attention to their 'status' - consultants 'On Bench' are preferred candidates.
+3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score should be based on:
+    *   **Skill Alignment**: How many of the required skills does the consultant possess?
+    *   **Proficiency Depth**: How high are their ratings in those key skills? A rating of 8-10 is senior, 5-7 is mid-level, and 1-4 is junior. Match this to the JD's seniority.
+    *   **Status**: Give a higher weight to consultants who are 'On Bench' as they are immediately available.
+4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their experience level and suitability.
+5.  **Filter and Rank**: Return a list of the top 3 consultants who have a 'matchScore' of 60 or higher. If no consultants meet this threshold, return an empty list.
 
-Return only the top 3 candidates, ordered from highest to lowest score.
+**Job Description:**
+\`\`\`
+{{{jobDescription}}}
+\`\`\`
 
-JOB DESCRIPTION:
----
-{{jobDescription}}
----
+**Consultant Profiles (JSON String):**
+\`\`\`
+{{{consultantsString}}}
+\`\`\`
 
-CONSULTANT PROFILES:
----
-{{#each consultants}}
-- Consultant ID: {{id}}
-- Name: {{name}}
-- Experience: {{experienceInYears}} years
-- Skills:
-  {{#each skills}}
-  - {{skill}} (Rating: {{rating}}/10)
-  {{/each}}
----
-{{/each}}
-
-Analyze the information and provide the top 3 matches in the specified JSON format.
+Now, perform the analysis and provide the output in the specified JSON format.
 `,
 });
 
-const jdResumeMatcherFlow = ai.defineFlow(
+const jdMatcherFlow = ai.defineFlow(
   {
-    name: 'jdResumeMatcherFlow',
-    inputSchema: MatchResumesInputSchema,
-    outputSchema: MatchResumesOutputSchema,
+    name: 'jdMatcherFlow',
+    inputSchema: JdMatcherInputSchema,
+    outputSchema: JdMatcherOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Manually stringify the consultants array.
+    const consultantsString = JSON.stringify(input.consultants, null, 2);
+
+    const { output } = await prompt({
+        jobDescription: input.jobDescription,
+        consultants: input.consultants, // Pass it through for schema validation
+        consultantsString: consultantsString, // Pass the string for the prompt
+    });
     return output!;
   }
 );

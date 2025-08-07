@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Consultant, AttendanceRecord, SkillAnalysis } from '@/lib/types';
-import type { MatchResumesOutput } from '@/ai/flows/jd-resume-matcher';
+import type { JdMatcherOutput } from '@/ai/flows/jd-resume-matcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -90,7 +90,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const [editableTotalDays, setEditableTotalDays] = useState(22);
-  const [jdMatcherResult, setJdMatcherResult] = useState<MatchResumesOutput | null>(null);
+  const [jdMatcherResult, setJdMatcherResult] = useState<JdMatcherOutput | null>(null);
   const [isMatching, setIsMatching] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -280,9 +280,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         const consultantProfiles = onBenchConsultants.map(c => ({
             id: c.id,
             name: c.name,
-            // Assuming experience is not tracked, defaulting to a placeholder.
-            // In a real app, this would come from the consultant's profile.
-            experienceInYears: 5, 
+            status: c.status,
             skills: (c.skills as SkillAnalysis[]).map(s => ({ skill: s.skill, rating: s.rating })),
         }));
         
@@ -650,9 +648,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             <Separator />
                             <h3 className="text-lg font-semibold my-4">Top Candidates</h3>
                             <ScrollArea className="h-64">
-                                {jdMatcherResult.topCandidates.length > 0 ? (
+                                {jdMatcherResult.topMatches.length > 0 ? (
                                     <div className="space-y-4 pr-4">
-                                        {jdMatcherResult.topCandidates.map((candidate) => (
+                                        {jdMatcherResult.topMatches.map((candidate) => (
                                             <Card key={candidate.consultantId}>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center justify-between">
@@ -661,7 +659,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                                     </CardTitle>
                                                 </CardHeader>
                                                 <CardContent>
-                                                    <p className="text-sm text-muted-foreground">{candidate.justification}</p>
+                                                    <p className="text-sm text-muted-foreground">{candidate.explanation}</p>
                                                 </CardContent>
                                             </Card>
                                         ))}
