@@ -152,11 +152,29 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     const total = filteredConsultants.length;
     const onBench = filteredConsultants.filter(c => c.status === 'On Bench').length;
     const onProject = filteredConsultants.filter(c => c.status === 'On Project').length;
-    return `
-      Showing ${total} of ${consultants.length} consultants.
+    const reportContent = `
+      Consultant Report - ${new Date().toLocaleDateString()}
+      ======================================================
+      Total Consultants Matching Filter: ${total} (out of ${consultants.length} total)
+
+      Status Breakdown:
       - On Bench: ${onBench}
       - On Project: ${onProject}
+
+      Filtered Consultant List:
+      ------------------------------------------------------
+      ${filteredConsultants.map(c => `${c.name} (${c.email}) - ${c.status}`).join('\n')}
     `;
+    
+    const blob = new Blob([reportContent.trim()], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'consultant_report.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleOpenAttendanceDialog = (consultant: Consultant) => {
@@ -606,6 +624,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       </Form>
                   </DialogContent>
               </Dialog>
+              <Button variant="outline" onClick={generateReport}>
+                <Download className="mr-2 h-4 w-4" />
+                Generate Report
+              </Button>
               <Dialog open={isJdMatcherDialogOpen} onOpenChange={(isOpen) => { setIsJdMatcherDialogOpen(isOpen); if (!isOpen) { setJdMatcherResult(null); jdMatcherForm.reset(); }}}>
                 <DialogTrigger asChild>
                     <Button>
@@ -1062,3 +1084,5 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
