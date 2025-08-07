@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,7 @@ import ResumeAnalyzer from './resume-analyzer';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Textarea } from './ui/textarea';
+import { Progress } from './ui/progress';
 
 
 const createConsultantSchema = z.object({
@@ -555,6 +556,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                   <TableHead>Status</TableHead>
                   <TableHead>Attendance (P/T)</TableHead>
                   <TableHead>Resume</TableHead>
+                  <TableHead>Opportunities</TableHead>
                   <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -619,6 +621,19 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             {consultant.resumeStatus}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                            <div className="flex items-center gap-2">
+                                <Progress
+                                value={(consultant.opportunities / 5) * 100}
+                                className="w-20"
+                                indicatorClassName={cn({
+                                    'bg-green-400': consultant.opportunities > 0,
+                                })}
+                                label={`${consultant.opportunities}`}
+                                />
+                                <Target className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
@@ -654,7 +669,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       </TableRow>
                       {expandedRow === consultant.id && hasSkillAnalysis(consultant) && (
                          <TableRow>
-                            <TableCell colSpan={7} className="p-0">
+                            <TableCell colSpan={8} className="p-0">
                                 <div className="p-4 bg-muted/50">
                                 <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                 <div className="h-64">
@@ -686,7 +701,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       No results found.
                     </TableCell>
                   </TableRow>
