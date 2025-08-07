@@ -207,27 +207,27 @@ export default function ConsultantDashboard({
                         )}
                         </CardContent>
                     </Card>
-                    <ResumeAnalyzer
-                        consultant={consultant}
-                        onAnalysisComplete={handleAnalysisComplete}
-                    />
-                    <TrainingUploader
-                        consultant={consultant}
-                        onAnalysisComplete={handleCertificateAnalysisComplete}
-                    />
                     <RecommendedTraining skills={consultant.skills} />
+                    <AttendanceFeedback consultant={consultant} />
+                    <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Attendance Report
+                    </Button>
                 </div>
 
                 {/* Right Column */}
                 <div className="space-y-8">
+                    <ResumeAnalyzer
+                        consultant={consultant}
+                        onAnalysisComplete={handleAnalysisComplete}
+                    />
+                     <TrainingUploader
+                        consultant={consultant}
+                        onAnalysisComplete={handleCertificateAnalysisComplete}
+                    />
                     <SkillsDisplay skills={consultant.skills} />
                     {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
                     <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
-                    <AttendanceFeedback consultant={consultant} />
-                     <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Attendance Report
-                    </Button>
                 </div>
             </div>
         </div>
