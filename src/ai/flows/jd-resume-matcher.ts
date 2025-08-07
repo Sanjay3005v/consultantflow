@@ -27,6 +27,7 @@ const JdMatcherInputSchema = z.object({
   consultants: z
     .array(ConsultantProfileSchema)
     .describe('A list of available consultants with their skills and status.'),
+  consultantsString: z.string().optional().describe('A JSON string representation of the consultants list. This is for the prompt template.'),
 });
 export type JdMatcherInput = z.infer<typeof JdMatcherInputSchema>;
 
@@ -63,7 +64,7 @@ const prompt = ai.definePrompt({
 
 Here's your process:
 1.  **Analyze the Job Description**: Carefully read the job description to identify the key required skills, technologies, and desired experience level.
-2.  **Evaluate Each Consultant**: For each consultant in the provided list, compare their skill set and proficiency ratings against the job requirements. Pay close attention to their 'status' - consultants 'On Bench' are preferred candidates.
+2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their skill set and proficiency ratings against the job requirements. Pay close attention to their 'status' - consultants 'On Bench' are preferred candidates.
 3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score should be based on:
     *   **Skill Alignment**: How many of the required skills does the consultant possess?
     *   **Proficiency Depth**: How high are their ratings in those key skills? A rating of 8-10 is senior, 5-7 is mid-level, and 1-4 is junior. Match this to the JD's seniority.
@@ -76,15 +77,9 @@ Here's your process:
 {{{jobDescription}}}
 \`\`\`
 
-**Consultant Profiles:**
+**Consultant Profiles (JSON String):**
 \`\`\`
-{{#each consultants}}
-- Name: {{name}} (ID: {{id}}, Status: {{status}})
-  Skills:
-  {{#each skills}}
-  - {{skill}}: {{rating}}/10
-  {{/each}}
-{{/each}}
+{{{consultantsString}}}
 \`\`\`
 
 Now, perform the analysis and provide the output in the specified JSON format.
@@ -98,7 +93,14 @@ const jdMatcherFlow = ai.defineFlow(
     outputSchema: JdMatcherOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Manually stringify the consultants array.
+    const consultantsString = JSON.stringify(input.consultants, null, 2);
+
+    const { output } = await prompt({
+        jobDescription: input.jobDescription,
+        consultants: input.consultants, // Pass it through for schema validation
+        consultantsString: consultantsString, // Pass the string for the prompt
+    });
     return output!;
   }
 );
