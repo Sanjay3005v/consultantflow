@@ -47,6 +47,7 @@ import { Textarea } from './ui/textarea';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { ScrollArea } from './ui/scroll-area';
 
 
 const createConsultantSchema = z.object({
@@ -648,31 +649,33 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                         <div className="mt-6">
                             <Separator />
                             <h3 className="text-lg font-semibold my-4">Top Candidates</h3>
-                            {jdMatcherResult.topCandidates.length > 0 ? (
-                                <div className="space-y-4">
-                                    {jdMatcherResult.topCandidates.map((candidate) => (
-                                        <Card key={candidate.consultantId}>
-                                            <CardHeader>
-                                                <CardTitle className="flex items-center justify-between">
-                                                    <span>{candidate.consultantName}</span>
-                                                    <Badge>Score: {candidate.matchScore}</Badge>
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm text-muted-foreground">{candidate.justification}</p>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <Alert>
-                                    <Sparkles className="h-4 w-4" />
-                                    <AlertTitle>No Matches Found</AlertTitle>
-                                    <AlertDescription>
-                                        The AI could not find any suitable candidates for this job description.
-                                    </AlertDescription>
-                                </Alert>
-                            )}
+                            <ScrollArea className="h-64">
+                                {jdMatcherResult.topCandidates.length > 0 ? (
+                                    <div className="space-y-4 pr-4">
+                                        {jdMatcherResult.topCandidates.map((candidate) => (
+                                            <Card key={candidate.consultantId}>
+                                                <CardHeader>
+                                                    <CardTitle className="flex items-center justify-between">
+                                                        <span>{candidate.consultantName}</span>
+                                                        <Badge>Score: {candidate.matchScore}</Badge>
+                                                    </CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground">{candidate.justification}</p>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Alert>
+                                        <Sparkles className="h-4 w-4" />
+                                        <AlertTitle>No Matches Found</AlertTitle>
+                                        <AlertDescription>
+                                            The AI could not find any suitable candidates for this job description.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </ScrollArea>
                         </div>
                     )}
                 </DialogContent>
@@ -1061,3 +1064,5 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
