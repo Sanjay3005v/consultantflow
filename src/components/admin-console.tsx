@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -309,6 +309,28 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         { name: 'Present', value: present, fill: 'hsl(var(--chart-2))' },
         { name: 'Absent', value: absent, fill: 'hsl(var(--destructive))' },
     ];
+  };
+
+  const calculateEfficiency = (consultant: Consultant) => {
+    const skills = (consultant.skills as SkillAnalysis[]).filter(s => s && s.skill);
+    const skillScore = skills.length > 0
+        ? skills.reduce((acc, s) => acc + s.rating, 0) / skills.length
+        : 0;
+
+    const attendanceScore = consultant.totalWorkingDays > 0
+        ? (consultant.presentDays / consultant.totalWorkingDays) * 100
+        : 0;
+
+    // Simplified opportunity score, assuming 2 accepted, 1 rejected, 1 waitlisted, 1 pending from the hardcoded UI
+    const oppTotal = 5;
+    const oppAccepted = 2;
+    const oppWaitlisted = 1;
+    const opportunityScore = oppTotal > 0 ? ((oppAccepted + oppWaitlisted * 0.5) / oppTotal) * 100 : 0;
+    
+    // Weighted average: Skills 50%, Attendance 30%, Opportunities 20%
+    const weightedScore = (skillScore * 10 * 0.5) + (attendanceScore * 0.3) + (opportunityScore * 0.2);
+    
+    return Math.round(Math.min(weightedScore, 100)); // Cap at 100
   };
 
   return (
@@ -698,8 +720,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       {expandedRow === consultant.id && hasSkillAnalysis(consultant) && (
                          <TableRow>
                             <TableCell colSpan={8} className="p-0">
-                                <div className="p-4 bg-muted/50 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="lg:col-span-2">
+                                <div className="p-4 bg-muted/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="md:col-span-2">
                                         <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                         <div className="h-64">
                                             <ResponsiveContainer width="100%" height="100%">
@@ -723,12 +745,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                             </ResponsiveContainer>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div className='space-y-4'>
                                         <h4 className="font-bold mb-2 flex items-center gap-2"><PieChartIcon className="w-4 h-4" /> Attendance Summary</h4>
-                                        <div className="h-64">
+                                        <div className="h-40">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
-                                                    <Pie data={getAttendanceDataForPie(consultant)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                                    <Pie data={getAttendanceDataForPie(consultant)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                                                         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                                                         const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
                                                         const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
@@ -755,7 +777,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                             </ResponsiveContainer>
                                         </div>
                                     </div>
-                                    <div className="lg:col-span-3">
+                                    <div className="md:col-span-2">
                                         <h4 className="font-bold mb-2">Opportunity Engagement</h4>
                                         <div className="space-y-2">
                                             <div className="relative h-6 w-full overflow-hidden rounded-full bg-secondary">
@@ -778,6 +800,16 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                                 </div>
                                                  <span>Pending (1)</span>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-blue-900 via-slate-900 to-slate-900 p-4 rounded-lg">
+                                        <h4 className="font-bold mb-2 flex items-center gap-2 text-white">
+                                            <TrendingUp className="w-4 h-4" />
+                                            Consultant Efficiency
+                                        </h4>
+                                        <div className="text-center">
+                                            <p className="text-4xl font-bold text-cyan-300">{calculateEfficiency(consultant)}%</p>
+                                            <p className="text-xs text-cyan-100/70">Overall Performance Score</p>
                                         </div>
                                     </div>
                                 </div>
