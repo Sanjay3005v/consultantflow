@@ -195,7 +195,7 @@ export default function ConsultantDashboard({
             </div>
 
             <div className="grid gap-8 lg:grid-cols-2">
-                {/* Left Column - Overview & Progress */}
+                {/* Left Column */}
                 <div className="space-y-8">
                     <Card className="bg-card/60 backdrop-blur-xl">
                         <CardHeader>
@@ -207,16 +207,6 @@ export default function ConsultantDashboard({
                         )}
                         </CardContent>
                     </Card>
-                    <AttendanceFeedback consultant={consultant} />
-                    <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Attendance Report
-                    </Button>
-                    <RecommendedTraining skills={consultant.skills} />
-                </div>
-
-                {/* Right Column - Analysis, Actions & Reports */}
-                <div className="space-y-8">
                     <ResumeAnalyzer
                         consultant={consultant}
                         onAnalysisComplete={handleAnalysisComplete}
@@ -225,9 +215,19 @@ export default function ConsultantDashboard({
                         consultant={consultant}
                         onAnalysisComplete={handleCertificateAnalysisComplete}
                     />
+                    <RecommendedTraining skills={consultant.skills} />
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-8">
                     <SkillsDisplay skills={consultant.skills} />
                     {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
                     <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
+                    <AttendanceFeedback consultant={consultant} />
+                     <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Attendance Report
+                    </Button>
                 </div>
             </div>
         </div>
