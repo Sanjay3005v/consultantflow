@@ -733,8 +733,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       {expandedRow === consultant.id && hasSkillAnalysis(consultant) && (
                          <TableRow>
                             <TableCell colSpan={8} className="p-0">
-                                <div className="p-4 bg-muted/50 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="md:col-span-2">
+                                <div className="p-4 bg-muted/50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
                                         <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                         <div className="h-64">
                                             <ResponsiveContainer width="100%" height="100%">
@@ -758,12 +758,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                             </ResponsiveContainer>
                                         </div>
                                     </div>
-                                    <div className='space-y-4'>
+                                    <div>
                                         <h4 className="font-bold mb-2 flex items-center gap-2"><PieChartIcon className="w-4 h-4" /> Attendance Summary</h4>
-                                        <div className="h-40">
+                                        <div className="h-64">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
-                                                    <Pie data={getAttendanceDataForPie(consultant)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                                    <Pie data={getAttendanceDataForPie(consultant)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                                                         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                                                         const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
                                                         const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
@@ -790,9 +790,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                             </ResponsiveContainer>
                                         </div>
                                     </div>
-                                    <div className="md:col-span-2">
+                                    <div>
                                         <h4 className="font-bold mb-2">Opportunity Engagement</h4>
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 h-64 flex flex-col justify-center">
                                             <div className="relative h-6 w-full overflow-hidden rounded-full bg-secondary">
                                                 <div className="absolute h-full bg-green-500" style={{ width: '40%' }}></div>
                                                 <div className="absolute h-full bg-red-500" style={{ left: '40%', width: '20%' }}></div>
@@ -815,7 +815,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="relative bg-gradient-to-b from-blue-900/50 to-slate-900 p-4 rounded-lg overflow-hidden">
+                                    <div className="relative bg-gradient-to-b from-blue-900/50 to-slate-900 p-4 rounded-lg overflow-hidden h-64 flex flex-col justify-center">
                                         <h4 className="font-bold mb-2 flex items-center gap-2 text-white z-10 relative">
                                             <TrendingUp className="w-4 h-4" />
                                             Consultant Efficiency
@@ -947,4 +947,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
