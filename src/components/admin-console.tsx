@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
-import { Bar, ResponsiveContainer, XAxis, YAxis, BarChart as RechartsBarChart } from 'recharts';
+import { Bar, ResponsiveContainer, XAxis, YAxis, BarChart as RechartsBarChart, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ResumeAnalyzer from './resume-analyzer';
 import { cn } from '@/lib/utils';
@@ -301,6 +301,15 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     });
   };
 
+  const getAttendanceDataForPie = (consultant: Consultant) => {
+    const present = consultant.presentDays;
+    const total = consultant.totalWorkingDays;
+    const absent = total - present;
+    return [
+        { name: 'Present', value: present, fill: 'hsl(var(--chart-2))' },
+        { name: 'Absent', value: absent, fill: 'hsl(var(--destructive))' },
+    ];
+  };
 
   return (
     <div className="space-y-6">
@@ -689,8 +698,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       {expandedRow === consultant.id && hasSkillAnalysis(consultant) && (
                          <TableRow>
                             <TableCell colSpan={8} className="p-0">
-                                <div className="p-4 bg-muted/50 space-y-4">
-                                    <div>
+                                <div className="p-4 bg-muted/50 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="lg:col-span-2">
                                         <h4 className="font-bold mb-2">Skill Proficiency</h4>
                                         <div className="h-64">
                                             <ResponsiveContainer width="100%" height="100%">
@@ -715,6 +724,31 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                         </div>
                                     </div>
                                     <div>
+                                        <h4 className="font-bold mb-2 flex items-center gap-2"><PieChartIcon className="w-4 h-4" /> Attendance Summary</h4>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie data={getAttendanceDataForPie(consultant)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                                        const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+                                                        const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+                                                        return (
+                                                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+                                                            {`${(percent * 100).toFixed(0)}%`}
+                                                            </text>
+                                                        );
+                                                        }}>
+                                                         {getAttendanceDataForPie(consultant).map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip />
+                                                    <Legend />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                    <div className="lg:col-span-3">
                                         <h4 className="font-bold mb-2">Opportunity Engagement</h4>
                                         <div className="space-y-2">
                                             <div className="relative h-6 w-full overflow-hidden rounded-full bg-secondary">
