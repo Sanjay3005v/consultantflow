@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,12 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -632,6 +638,19 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                 label={`${consultant.opportunities}`}
                                 />
                                 <Target className="h-4 w-4 text-muted-foreground" />
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">More actions</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>Accept</DropdownMenuItem>
+                                        <DropdownMenuItem>Decline</DropdownMenuItem>
+                                        <DropdownMenuItem>Waitlist</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -798,3 +817,5 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
