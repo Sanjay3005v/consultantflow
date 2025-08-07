@@ -41,7 +41,7 @@ export default function RecommendedTraining({ skills }: RecommendedTrainingProps
       <CardContent>
         <ul className="space-y-4">
           {lowRatedSkills.map((skill, index) => (
-            <li key={skill.skill}>
+            <li key={`${skill.skill}-${index}`}>
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-semibold">{`Advanced ${skill.skill} Workshop`}</h4>
