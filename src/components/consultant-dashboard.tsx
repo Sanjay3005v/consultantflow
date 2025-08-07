@@ -195,7 +195,7 @@ export default function ConsultantDashboard({
             </div>
 
             <div className="grid gap-8 lg:grid-cols-2">
-                {/* Left Column */}
+                {/* Left Column - Overview & Progress */}
                 <div className="space-y-8">
                     <Card className="bg-card/60 backdrop-blur-xl">
                         <CardHeader>
@@ -215,7 +215,7 @@ export default function ConsultantDashboard({
                     <RecommendedTraining skills={consultant.skills} />
                 </div>
 
-                {/* Right Column */}
+                {/* Right Column - Analysis, Actions & Reports */}
                 <div className="space-y-8">
                     <ResumeAnalyzer
                         consultant={consultant}
