@@ -10,6 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
+// Define schemas locally, do not export them.
 const ConsultantProfileSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -29,7 +30,7 @@ const JdMatcherInputSchema = z.object({
     .describe('A list of available consultants with their skills and status.'),
   consultantsString: z.string().optional().describe('A JSON string representation of the consultants list. This is for the prompt template.'),
 });
-export type JdMatcherInput = z.infer<typeof JdMatcherInputSchema>;
+type JdMatcherInput = z.infer<typeof JdMatcherInputSchema>;
 
 const MatchedConsultantSchema = z.object({
   consultantId: z.string().describe("The ID of the matched consultant."),
@@ -49,7 +50,7 @@ const JdMatcherOutputSchema = z.object({
     .array(MatchedConsultantSchema)
     .describe('A list of the top 3 consultants who match the job description with a score of 60% or higher.'),
 });
-export type JdMatcherOutput = z.infer<typeof JdMatcherOutputSchema>;
+type JdMatcherOutput = z.infer<typeof JdMatcherOutputSchema>;
 
 
 export async function findMatchingConsultants(input: JdMatcherInput): Promise<JdMatcherOutput> {

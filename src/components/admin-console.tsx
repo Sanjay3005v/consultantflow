@@ -315,6 +315,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         setIsMatching(false);
     }
   };
+  
 
   const handleOpenAnalyzeDialog = (consultant: Consultant) => {
     setSelectedConsultant(consultant);
