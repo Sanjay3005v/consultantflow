@@ -48,7 +48,7 @@ export default function RecommendedTraining({ skills }: RecommendedTrainingProps
                   <p className="text-sm text-muted-foreground">Focus: Practical application and advanced concepts.</p>
                 </div>
                 <Button variant="ghost" size="sm" asChild>
-                    <a href="#" onClick={(e) => e.preventDefault()}>
+                    <a href={`https://www.udemy.com/courses/search/?q=${encodeURIComponent(`Advanced ${skill.skill} Workshop`)}`} target="_blank" rel="noopener noreferrer">
                         View <ArrowRight className="ml-2 h-4 w-4" />
                     </a>
                 </Button>
