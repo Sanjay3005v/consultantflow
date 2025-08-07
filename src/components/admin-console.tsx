@@ -150,10 +150,11 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const departments = ['all', 'Technology', 'Healthcare', 'Finance', 'Retail'];
   const statuses = ['all', 'On Bench', 'On Project'];
 
-  const generateReport = () => {
+  const handleGenerateReport = () => {
     const total = filteredConsultants.length;
     const onBench = filteredConsultants.filter(c => c.status === 'On Bench').length;
     const onProject = filteredConsultants.filter(c => c.status === 'On Project').length;
+    
     const reportText = `
       Consultant Report - ${new Date().toLocaleDateString()}
       ======================================================
@@ -619,7 +620,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       </Form>
                   </DialogContent>
               </Dialog>
-              <Button variant="outline" onClick={generateReport}>
+              <Button variant="outline" onClick={handleGenerateReport}>
                 <FileText className="mr-2 h-4 w-4" />
                 Generate Report
               </Button>
