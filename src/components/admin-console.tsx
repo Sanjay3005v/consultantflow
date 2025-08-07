@@ -275,6 +275,28 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     }
   };
 
+  const calculateEfficiency = (consultant: Consultant) => {
+    const skills = (consultant.skills as SkillAnalysis[]).filter(s => s && s.skill);
+    const skillScore = skills.length > 0
+        ? skills.reduce((acc, s) => acc + s.rating, 0) / skills.length
+        : 0;
+
+    const attendanceScore = consultant.totalWorkingDays > 0
+        ? (consultant.presentDays / consultant.totalWorkingDays) * 100
+        : 0;
+
+    // Simplified opportunity score, assuming 2 accepted, 1 rejected, 1 waitlisted, 1 pending from the hardcoded UI
+    const oppTotal = 5;
+    const oppAccepted = 2;
+    const oppWaitlisted = 1;
+    const opportunityScore = oppTotal > 0 ? ((oppAccepted + oppWaitlisted * 0.5) / oppTotal) * 100 : 0;
+    
+    // Weighted average: Skills 50%, Attendance 30%, Opportunities 20%
+    const weightedScore = (skillScore * 10 * 0.5) + (attendanceScore * 0.3) + (opportunityScore * 0.2);
+    
+    return Math.round(Math.min(weightedScore, 100)); // Cap at 100
+  };
+
   const onJdMatcherSubmit = async (values: z.infer<typeof jdMatcherSchema>) => {
     setIsMatching(true);
     setJdMatcherResult(null);
@@ -296,6 +318,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
             name: c.name,
             status: c.status,
             skills: (c.skills as SkillAnalysis[]).map(s => ({ skill: s.skill, rating: s.rating })),
+            efficiencyScore: calculateEfficiency(c),
         }));
         
         const result = await matchResumes({
@@ -384,28 +407,6 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
         { name: 'Present', value: present, fill: 'hsl(var(--chart-2))' },
         { name: 'Absent', value: absent, fill: 'hsl(var(--destructive))' },
     ];
-  };
-
-  const calculateEfficiency = (consultant: Consultant) => {
-    const skills = (consultant.skills as SkillAnalysis[]).filter(s => s && s.skill);
-    const skillScore = skills.length > 0
-        ? skills.reduce((acc, s) => acc + s.rating, 0) / skills.length
-        : 0;
-
-    const attendanceScore = consultant.totalWorkingDays > 0
-        ? (consultant.presentDays / consultant.totalWorkingDays) * 100
-        : 0;
-
-    // Simplified opportunity score, assuming 2 accepted, 1 rejected, 1 waitlisted, 1 pending from the hardcoded UI
-    const oppTotal = 5;
-    const oppAccepted = 2;
-    const oppWaitlisted = 1;
-    const opportunityScore = oppTotal > 0 ? ((oppAccepted + oppWaitlisted * 0.5) / oppTotal) * 100 : 0;
-    
-    // Weighted average: Skills 50%, Attendance 30%, Opportunities 20%
-    const weightedScore = (skillScore * 10 * 0.5) + (attendanceScore * 0.3) + (opportunityScore * 0.2);
-    
-    return Math.round(Math.min(weightedScore, 100)); // Cap at 100
   };
 
   const generateEfficiencyData = (finalScore: number) => {

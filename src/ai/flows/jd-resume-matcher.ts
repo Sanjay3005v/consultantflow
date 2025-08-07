@@ -21,6 +21,7 @@ const ConsultantProfileSchema = z.object({
       rating: z.number().describe('Proficiency rating from 1 to 10.'),
     })
   ),
+  efficiencyScore: z.number().describe("A score from 0-100 representing the consultant's overall performance (skills, attendance, etc.)."),
 });
 
 const JdMatcherInputSchema = z.object({
@@ -42,7 +43,7 @@ const MatchedConsultantSchema = z.object({
     .describe('A score from 0 to 100 indicating the match quality.'),
   explanation: z
     .string()
-    .describe('A brief, two-line explanation for the score, based on skill match and experience level.'),
+    .describe('A brief, two-line explanation for the score, based on skill match, efficiency, and experience level.'),
 });
 
 const JdMatcherOutputSchema = z.object({
@@ -65,12 +66,12 @@ const prompt = ai.definePrompt({
 
 Here's your process:
 1.  **Analyze the Job Description**: Carefully read the job description to identify the key required skills, technologies, and desired experience level.
-2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their skill set and proficiency ratings against the job requirements. Pay close attention to their 'status' - consultants 'On Bench' are preferred candidates.
-3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score should be based on:
-    *   **Skill Alignment**: How many of the required skills does the consultant possess?
-    *   **Proficiency Depth**: How high are their ratings in those key skills? A rating of 8-10 is senior, 5-7 is mid-level, and 1-4 is junior. Match this to the JD's seniority.
-    *   **Status**: Give a higher weight to consultants who are 'On Bench' as they are immediately available.
-4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their experience level and suitability.
+2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their profile against the job requirements. Pay close attention to their 'status', 'skills', and their overall 'efficiencyScore'. Consultants 'On Bench' are preferred candidates.
+3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score should be a weighted average based on:
+    *   **Skill Alignment (60% weight)**: How many of the required skills does the consultant possess and how high are their ratings?
+    *   **Efficiency Score (30% weight)**: How does their overall efficiency score reflect their reliability and performance?
+    *   **Status (10% weight)**: Give a higher weight to consultants who are 'On Bench' as they are immediately available.
+4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their efficiency and experience level.
 5.  **Filter and Rank**: Return a list of the top 3 consultants who have a 'matchScore' of 60 or higher. If no consultants meet this threshold, return an empty list.
 
 **Job Description:**
