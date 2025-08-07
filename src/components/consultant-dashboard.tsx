@@ -197,16 +197,7 @@ export default function ConsultantDashboard({
             <div className="grid gap-8 lg:grid-cols-2">
                 {/* Left Column */}
                 <div className="space-y-8">
-                    <Card className="bg-card/60 backdrop-blur-xl">
-                        <CardHeader>
-                        <CardTitle>Workflow Progress</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                        {consultant.workflow && (
-                            <WorkflowTracker workflow={consultant.workflow} />
-                        )}
-                        </CardContent>
-                    </Card>
+                    <WorkflowTracker workflow={consultant.workflow} />
                     <AttendanceFeedback consultant={consultant} />
                     <RecommendedTraining skills={consultant.skills} />
                     <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
@@ -235,7 +226,7 @@ export default function ConsultantDashboard({
             <DialogTrigger asChild>
                 <Button
                 variant="default"
-                className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg"
+                className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg z-20"
                 >
                 <MessageSquare className="w-8 h-8" />
                 <span className="sr-only">Open Chat</span>
