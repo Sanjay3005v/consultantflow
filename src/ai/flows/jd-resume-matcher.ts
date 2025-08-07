@@ -29,7 +29,6 @@ const JdMatcherInputSchema = z.object({
   consultants: z
     .array(ConsultantProfileSchema)
     .describe('A list of available consultants with their skills and status.'),
-  consultantsString: z.string().optional().describe('A JSON string representation of the consultants list. This is for the prompt template.'),
 });
 type JdMatcherInput = z.infer<typeof JdMatcherInputSchema>;
 
@@ -66,10 +65,10 @@ const prompt = ai.definePrompt({
 
 Here's your process:
 1.  **Analyze the Job Description**: Carefully read the job description to identify the key required skills, technologies, and desired experience level (e.g., Junior, Mid-level, Senior).
-2.  **Evaluate Each Consultant**: For each consultant in the provided JSON string, compare their profile against the job requirements.
+2.  **Evaluate Each Consultant**: For each consultant in the provided list, compare their profile against the job requirements.
 3.  **Score the Match**: Assign a 'matchScore' from 0 to 100 for each consultant. The score MUST be a weighted average based on the following criteria:
     *   **Skill Alignment (60% weight)**: How many of the required skills does the consultant possess and how high are their ratings? A rating of 8-10 is senior, 5-7 is mid-level, and 1-4 is junior. The consultant's experience level should align with the JD's required seniority.
-    *   **Proficiency Depth (30% weight)**: How high are their ratings in those key skills? More depth in required skills means a higher score.
+    *   **Proficiency Depth (30% weight)**: How high are their ratings in those key skills? More depth in required skills means a higher score. This should also factor in their overall 'efficiencyScore'.
     *   **Status (10% weight)**: Give a higher score to consultants who are 'On Bench' as they are immediately available.
 4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their experience level and suitability.
 5.  **Filter and Rank**: Return a ranked list of the top 3 consultants.
@@ -81,9 +80,18 @@ IMPORTANT: You MUST ONLY return consultants with a 'matchScore' of 60 or higher.
 {{{jobDescription}}}
 \`\`\`
 
-**Consultant Profiles (JSON String):**
-\`\`\`
-{{{consultantsString}}}
+**Consultant Profiles:**
+\`\`\`json
+{{#each consultants}}
+  - ID: {{id}}
+    Name: {{name}}
+    Status: {{status}}
+    Efficiency: {{efficiencyScore}}
+    Skills:
+    {{#each skills}}
+      - {{skill}}: {{rating}}/10
+    {{/each}}
+{{/each}}
 \`\`\`
 
 Now, perform the analysis and provide the output in the specified JSON format.
@@ -97,14 +105,7 @@ const jdMatcherFlow = ai.defineFlow(
     outputSchema: JdMatcherOutputSchema,
   },
   async (input) => {
-    // Manually stringify the consultants array.
-    const consultantsString = JSON.stringify(input.consultants, null, 2);
-
-    const { output } = await prompt({
-        jobDescription: input.jobDescription,
-        consultants: input.consultants, // Pass it through for schema validation
-        consultantsString: consultantsString, // Pass the string for the prompt
-    });
+    const { output } = await prompt(input);
     return output!;
   }
 );
