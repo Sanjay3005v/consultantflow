@@ -48,7 +48,7 @@ const MatchedConsultantSchema = z.object({
 const JdMatcherOutputSchema = z.object({
   topMatches: z
     .array(MatchedConsultantSchema)
-    .describe('A list of the top 3 consultants who match the job description with a score of 60% or higher.'),
+    .describe('A list of the top 3 consultants who match the job description.'),
 });
 type JdMatcherOutput = z.infer<typeof JdMatcherOutputSchema>;
 
@@ -72,8 +72,6 @@ Here's your process:
     *   **Status (10% weight)**: Give a higher score to consultants who are 'On Bench' as they are immediately available.
 4.  **Write the Explanation**: For each match, provide a concise, two-line 'explanation' justifying the score. The first line should cover the skill match, and the second should comment on their experience level and suitability.
 5.  **Filter and Rank**: Return a ranked list of the top 3 consultants.
-    
-IMPORTANT: You MUST ONLY return consultants with a 'matchScore' of 60 or higher. If no consultants meet this threshold, return an empty list.
 
 **Job Description:**
 \`\`\`
