@@ -23,7 +23,7 @@ export type AnalyzeCertificateInput = z.infer<typeof AnalyzeCertificateInputSche
 
 const AnalyzeCertificateOutputSchema = z.object({
   skillAnalysis: z.object({
-        skill: z.string().describe('The name of the primary skill or technology learned. If the skill cannot be determined, return "Unknown".'),
+        skill: z.string().describe('The name of the primary skill or technology learned. If the skill cannot be determined, you MUST return the single word "Unknown".'),
         rating: z
           .number()
           .describe(
