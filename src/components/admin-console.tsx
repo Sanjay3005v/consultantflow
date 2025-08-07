@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -689,29 +689,56 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       {expandedRow === consultant.id && hasSkillAnalysis(consultant) && (
                          <TableRow>
                             <TableCell colSpan={8} className="p-0">
-                                <div className="p-4 bg-muted/50">
-                                <h4 className="font-bold mb-2">Skill Proficiency</h4>
-                                <div className="h-64">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                    <RechartsBarChart data={(consultant.skills as SkillAnalysis[]).filter(s => s && s.skill)}>
-                                        <XAxis
-                                        dataKey="skill"
-                                        stroke="#888888"
-                                        fontSize={12}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        />
-                                        <YAxis
-                                        stroke="#888888"
-                                        fontSize={12}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        domain={[0, 10]}
-                                        />
-                                        <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                    </RechartsBarChart>
-                                    </ResponsiveContainer>
-                                </div>
+                                <div className="p-4 bg-muted/50 space-y-4">
+                                    <div>
+                                        <h4 className="font-bold mb-2">Skill Proficiency</h4>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                            <RechartsBarChart data={(consultant.skills as SkillAnalysis[]).filter(s => s && s.skill)}>
+                                                <XAxis
+                                                dataKey="skill"
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                />
+                                                <YAxis
+                                                stroke="#888888"
+                                                fontSize={12}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                domain={[0, 10]}
+                                                />
+                                                <Bar dataKey="rating" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                            </RechartsBarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold mb-2">Opportunity Engagement</h4>
+                                        <div className="space-y-2">
+                                            <div className="relative h-6 w-full overflow-hidden rounded-full bg-secondary">
+                                                <div className="absolute h-full bg-green-500" style={{ width: '40%' }}></div>
+                                                <div className="absolute h-full bg-red-500" style={{ left: '40%', width: '20%' }}></div>
+                                                <div className="absolute h-full bg-yellow-500" style={{ left: '60%', width: '15%' }}></div>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <ThumbsUp className="w-3 h-3 text-green-500" />
+                                                    <span>Accepted (2)</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <ThumbsDown className="w-3 h-3 text-red-500" />
+                                                    <span>Rejected (1)</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <History className="w-3 h-3 text-yellow-500" />
+                                                    <span>Waitlisted (1)</span>
+                                                </div>
+                                                 <span>Pending (1)</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </TableCell>
                         </TableRow>
@@ -817,5 +844,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
 
     
