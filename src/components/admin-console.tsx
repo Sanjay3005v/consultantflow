@@ -732,18 +732,25 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                                         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                                                         const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
                                                         const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+                                                        if (percent === 0) return null;
                                                         return (
-                                                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+                                                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight="bold">
                                                             {`${(percent * 100).toFixed(0)}%`}
                                                             </text>
                                                         );
                                                         }}>
                                                          {getAttendanceDataForPie(consultant).map((entry, index) => (
-                                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                            <Cell key={`cell-${index}`} fill={entry.fill} stroke={entry.fill} />
                                                         ))}
                                                     </Pie>
-                                                    <Tooltip />
-                                                    <Legend />
+                                                    <Tooltip
+                                                        contentStyle={{
+                                                            backgroundColor: 'hsl(var(--background))',
+                                                            border: '1px solid hsl(var(--border))',
+                                                            borderRadius: 'var(--radius)'
+                                                        }}
+                                                    />
+                                                    <Legend wrapperStyle={{fontSize: "12px"}}/>
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -878,7 +885,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
-    
-
-    
