@@ -209,10 +209,7 @@ export default function ConsultantDashboard({
                     </Card>
                     <RecommendedTraining skills={consultant.skills} />
                     <AttendanceFeedback consultant={consultant} />
-                    <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Attendance Report
-                    </Button>
+                    <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
                 </div>
 
                 {/* Right Column */}
@@ -227,7 +224,10 @@ export default function ConsultantDashboard({
                     />
                     <SkillsDisplay skills={consultant.skills} />
                     {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
-                    <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
+                     <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Attendance Report
+                    </Button>
                 </div>
             </div>
         </div>
