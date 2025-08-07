@@ -1062,5 +1062,3 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
-
-    
