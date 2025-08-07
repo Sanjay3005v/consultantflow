@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -85,12 +85,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
   const [isEditDaysDialogOpen, setIsEditDaysDialogOpen] = useState(false);
   const [isJdMatcherDialogOpen, setIsJdMatcherDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const [editableTotalDays, setEditableTotalDays] = useState(22);
   const [jdMatcherResult, setJdMatcherResult] = useState<JdMatcherOutput | null>(null);
+  const [reportContent, setReportContent] = useState('');
   const [isMatching, setIsMatching] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -152,7 +154,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     const total = filteredConsultants.length;
     const onBench = filteredConsultants.filter(c => c.status === 'On Bench').length;
     const onProject = filteredConsultants.filter(c => c.status === 'On Project').length;
-    const reportContent = `
+    const reportText = `
       Consultant Report - ${new Date().toLocaleDateString()}
       ======================================================
       Total Consultants Matching Filter: ${total} (out of ${consultants.length} total)
@@ -166,15 +168,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
       ${filteredConsultants.map(c => `${c.name} (${c.email}) - ${c.status}`).join('\n')}
     `;
     
-    const blob = new Blob([reportContent.trim()], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'consultant_report.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setReportContent(reportText.trim());
+    setIsReportDialogOpen(true);
   };
 
   const handleOpenAttendanceDialog = (consultant: Consultant) => {
@@ -625,7 +620,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                   </DialogContent>
               </Dialog>
               <Button variant="outline" onClick={generateReport}>
-                <Download className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 h-4 w-4" />
                 Generate Report
               </Button>
               <Dialog open={isJdMatcherDialogOpen} onOpenChange={(isOpen) => { setIsJdMatcherDialogOpen(isOpen); if (!isOpen) { setJdMatcherResult(null); jdMatcherForm.reset(); }}}>
@@ -1081,8 +1076,22 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
             </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Consultant Report</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-96 w-full rounded-md border p-4">
+            <pre className="whitespace-pre-wrap text-sm">{reportContent}</pre>
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-    
