@@ -1,9 +1,8 @@
 
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import type { Consultant, AttendanceRecord, SkillAnalysis } from '@/lib/types';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import type { Consultant, AttendanceRecord, SkillAnalysis, JobOpportunity } from '@/lib/types';
 import type { JdMatcherOutput } from '@/ai/flows/jd-resume-matcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star, FileText } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star, FileText, Trash2, FolderKanban } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +31,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus, createOpportunity, matchResumes } from '@/app/actions';
+import { createNewConsultant, markAttendance, updateTotalWorkingDays, updateConsultantStatus, createOrUpdateOpportunity, matchResumes, getJobOpportunities, deleteOpportunity } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,6 +47,7 @@ import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { ScrollArea } from './ui/scroll-area';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 
 const createConsultantSchema = z.object({
@@ -57,7 +57,8 @@ const createConsultantSchema = z.object({
     department: z.enum(['Technology', 'Healthcare', 'Finance', 'Retail']),
 });
 
-const createOpportunitySchema = z.object({
+const opportunitySchema = z.object({
+    id: z.string().optional(),
     title: z.string().min(1, 'Title is required'),
     neededYOE: z.coerce.number().min(0, 'Years of experience must be a positive number'),
     neededSkills: z.string().min(1, 'At least one skill is required'),
@@ -81,13 +82,16 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
   const [isCreateConsultantDialogOpen, setIsCreateConsultantDialogOpen] = useState(false);
-  const [isCreateOpportunityDialogOpen, setIsCreateOpportunityDialogOpen] = useState(false);
+  const [isOpportunityFormOpen, setIsOpportunityFormOpen] = useState(false);
+  const [isManageOpportunitiesOpen, setIsManageOpportunitiesOpen] = useState(false);
   const [isAnalyzeDialogOpen, setIsAnalyzeDialogOpen] = useState(false);
   const [isEditDaysDialogOpen, setIsEditDaysDialogOpen] = useState(false);
   const [isJdMatcherDialogOpen, setIsJdMatcherDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<JobOpportunity | null>(null);
+  const [opportunities, setOpportunities] = useState<JobOpportunity[]>([]);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent'>('Present');
   const [editableTotalDays, setEditableTotalDays] = useState(22);
@@ -109,9 +113,10 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     },
   });
   
-  const opportunityForm = useForm<z.infer<typeof createOpportunitySchema>>({
-    resolver: zodResolver(createOpportunitySchema),
+  const opportunityForm = useForm<z.infer<typeof opportunitySchema>>({
+    resolver: zodResolver(opportunitySchema),
     defaultValues: {
+      id: '',
       title: '',
       neededYOE: 0,
       neededSkills: '',
@@ -129,6 +134,21 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   useEffect(() => {
     setConsultants(initialConsultants);
   }, [initialConsultants]);
+
+  const fetchOpportunities = useCallback(async () => {
+    try {
+        const fetchedOpportunities = await getJobOpportunities();
+        setOpportunities(fetchedOpportunities);
+    } catch (error) {
+        toast({ title: 'Error', description: 'Could not fetch opportunities.', variant: 'destructive'});
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (isManageOpportunitiesOpen) {
+        fetchOpportunities();
+    }
+  }, [isManageOpportunitiesOpen, fetchOpportunities]);
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter((consultant) => {
@@ -257,23 +277,64 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     }
   };
   
-  const onOpportunityCreateSubmit = async (values: z.infer<typeof createOpportunitySchema>) => {
+  const onOpportunitySubmit = async (values: z.infer<typeof opportunitySchema>) => {
     try {
-        await createOpportunity(values);
+        await createOrUpdateOpportunity(values);
         toast({
-            title: 'Opportunity Created',
-            description: `Successfully created the "${values.title}" role.`
+            title: values.id ? 'Opportunity Updated' : 'Opportunity Created',
+            description: `Successfully saved the "${values.title}" role.`
         });
-        setIsCreateOpportunityDialogOpen(false);
-        opportunityForm.reset();
+        setIsOpportunityFormOpen(false);
+        fetchOpportunities(); // Refresh the list
     } catch (error) {
         toast({
-            title: 'Creation Failed',
-            description: 'Could not create the new opportunity.',
+            title: 'Save Failed',
+            description: 'Could not save the opportunity.',
             variant: 'destructive',
         })
     }
   };
+
+  const handleEditOpportunity = (opportunity: JobOpportunity) => {
+    setSelectedOpportunity(opportunity);
+    opportunityForm.reset({
+        id: opportunity.id,
+        title: opportunity.title,
+        neededYOE: opportunity.neededYOE,
+        neededSkills: opportunity.neededSkills.join(', '),
+        responsibilities: opportunity.responsibilities,
+    });
+    setIsOpportunityFormOpen(true);
+  };
+
+  const handleCreateOpportunity = () => {
+    setSelectedOpportunity(null);
+    opportunityForm.reset({
+        id: '',
+        title: '',
+        neededYOE: 0,
+        neededSkills: '',
+        responsibilities: '',
+    });
+    setIsOpportunityFormOpen(true);
+  };
+
+  const handleDeleteOpportunity = async (opportunityId: string) => {
+    try {
+        await deleteOpportunity(opportunityId);
+        toast({
+            title: "Opportunity Deleted",
+            description: "The opportunity has been archived.",
+        });
+        fetchOpportunities();
+    } catch (error) {
+         toast({
+            title: 'Deletion Failed',
+            description: 'Could not delete the opportunity.',
+            variant: 'destructive',
+        })
+    }
+  }
 
   const calculateEfficiency = (consultant: Consultant) => {
     const skills = (consultant.skills as SkillAnalysis[]).filter(s => s && s.skill);
@@ -545,82 +606,73 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                       </Form>
                   </DialogContent>
               </Dialog>
-               <Dialog open={isCreateOpportunityDialogOpen} onOpenChange={setIsCreateOpportunityDialogOpen}>
-                  <DialogTrigger asChild>
-                       <Button variant="secondary">
-                          <Briefcase className="mr-2 h-4 w-4" />
-                          Create Opportunity
-                       </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                      <DialogHeader>
-                          <DialogTitle>Create New Opportunity</DialogTitle>
-                          <DialogDescription>Fill in the details for the new job role.</DialogDescription>
-                      </DialogHeader>
-                      <Form {...opportunityForm}>
-                          <form onSubmit={opportunityForm.handleSubmit(onOpportunityCreateSubmit)} className="space-y-4">
-                              <FormField
-                                  control={opportunityForm.control}
-                                  name="title"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel>Job Title</FormLabel>
-                                          <FormControl>
-                                              <Input placeholder="e.g., Senior React Developer" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                              <FormField
-                                  control={opportunityForm.control}
-                                  name="neededYOE"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel>Years of Experience</FormLabel>
-                                          <FormControl>
-                                              <Input type="number" placeholder="e.g., 5" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                              <FormField
-                                  control={opportunityForm.control}
-                                  name="neededSkills"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel>Required Skills</FormLabel>
-                                          <FormControl>
-                                              <Input placeholder="e.g., React, TypeScript, Next.js" {...field} />
-                                          </FormControl>
-                                           <p className="text-xs text-muted-foreground">Enter skills separated by commas.</p>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                               <FormField
-                                  control={opportunityForm.control}
-                                  name="responsibilities"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Responsibilities</FormLabel>
-                                      <FormControl>
-                                        <Textarea placeholder="Describe the job responsibilities..." {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              <DialogFooter>
-                                  <DialogClose asChild>
-                                      <Button variant="outline">Cancel</Button>
-                                  </DialogClose>
-                                  <Button type="submit">Create Opportunity</Button>
-                              </DialogFooter>
-                          </form>
-                      </Form>
-                  </DialogContent>
+              <Dialog open={isManageOpportunitiesOpen} onOpenChange={setIsManageOpportunitiesOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="secondary">
+                    <FolderKanban className="mr-2 h-4 w-4" />
+                    Manage Opportunities
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Manage Job Opportunities</DialogTitle>
+                    <DialogDescription>
+                      View, create, edit, or delete job opportunities.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex justify-end">
+                    <Button onClick={handleCreateOpportunity}>
+                      <Briefcase className="mr-2 h-4 w-4" /> Create New
+                    </Button>
+                  </div>
+                  <ScrollArea className="h-96 w-full mt-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Title</TableHead>
+                                <TableHead>Experience (YOE)</TableHead>
+                                <TableHead>Skills</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {opportunities.map(opp => (
+                                <TableRow key={opp.id}>
+                                    <TableCell className="font-medium">{opp.title}</TableCell>
+                                    <TableCell>{opp.neededYOE}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {opp.neededSkills.map(skill => <Badge key={skill} variant="secondary">{skill}</Badge>)}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => handleEditOpportunity(opp)}>
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>This action will archive the opportunity. It will no longer be visible to candidates.</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteOpportunity(opp.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </DialogContent>
               </Dialog>
               <Button variant="outline" onClick={handleGenerateReport}>
                 <FileText className="mr-2 h-4 w-4" />
@@ -1093,6 +1145,78 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
               <Button>Close</Button>
             </DialogClose>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isOpportunityFormOpen} onOpenChange={setIsOpportunityFormOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{selectedOpportunity ? 'Edit' : 'Create'} Opportunity</DialogTitle>
+                <DialogDescription>Fill in the details for the job role.</DialogDescription>
+            </DialogHeader>
+            <Form {...opportunityForm}>
+                <form onSubmit={opportunityForm.handleSubmit(onOpportunitySubmit)} className="space-y-4">
+                    <FormField
+                        control={opportunityForm.control}
+                        name="title"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Job Title</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g., Senior React Developer" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={opportunityForm.control}
+                        name="neededYOE"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Years of Experience</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="e.g., 5" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={opportunityForm.control}
+                        name="neededSkills"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Required Skills</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g., React, TypeScript, Next.js" {...field} />
+                                </FormControl>
+                                <p className="text-xs text-muted-foreground">Enter skills separated by commas.</p>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={opportunityForm.control}
+                        name="responsibilities"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Responsibilities</FormLabel>
+                            <FormControl>
+                            <Textarea placeholder="Describe the job responsibilities..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit">Save Opportunity</Button>
+                    </DialogFooter>
+                </form>
+            </Form>
         </DialogContent>
       </Dialog>
     </div>

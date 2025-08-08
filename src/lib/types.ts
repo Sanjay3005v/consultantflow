@@ -39,6 +39,7 @@ export type JobOpportunity = {
     neededSkills: string[];
     neededYOE: number;
     responsibilities: string;
+    isArchived?: boolean;
 }
 
 export type Candidate = {

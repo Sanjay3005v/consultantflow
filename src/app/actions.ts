@@ -35,9 +35,9 @@ import {
 } from '@/ai/flows/resume-evolution-tracker';
 import {
     findMatchingConsultants,
-    type JdMatcherInput,
-    type JdMatcherOutput,
 } from '@/ai/flows/jd-resume-matcher';
+import type { JdMatcherInput, JdMatcherOutput } from '@/ai/flows/jd-resume-matcher';
+
 import { 
     updateConsultantSkillsInDb, 
     createConsultant, 
@@ -49,6 +49,9 @@ import {
     updateConsultantStatusInDb,
     updateConsultantOpportunities as updateConsultantOpportunitiesAction,
     createJobOpportunity,
+    getJobOpportunities as getJobOpportunitiesFromDb,
+    updateJobOpportunityInDb,
+    deleteJobOpportunityInDb,
 } from '@/lib/data';
 import type { Consultant, SkillAnalysis, JobOpportunity } from '@/lib/types';
 import { ChatMessage } from '@/lib/chatbot-schema';
@@ -277,7 +280,18 @@ export async function updateConsultantStatus(consultantId: string, status: 'On B
     }
 }
 
-export async function createOpportunity(data: {
+// Opportunity Actions
+export async function getJobOpportunities(): Promise<JobOpportunity[]> {
+    try {
+        return await getJobOpportunitiesFromDb();
+    } catch (error) {
+        console.error('Error fetching job opportunities:', error);
+        throw new Error('Failed to fetch job opportunities.');
+    }
+}
+
+export async function createOrUpdateOpportunity(data: {
+  id?: string;
   title: string;
   neededYOE: number;
   neededSkills: string;
@@ -286,16 +300,29 @@ export async function createOpportunity(data: {
     try {
         const skillsArray = data.neededSkills.split(',').map(skill => skill.trim());
         
-        const opportunityData: Omit<JobOpportunity, 'id'> = {
+        const opportunityData = {
             title: data.title,
             neededYOE: data.neededYOE,
             neededSkills: skillsArray,
             responsibilities: data.responsibilities,
         };
 
-        await createJobOpportunity(opportunityData);
+        if (data.id) {
+            await updateJobOpportunityInDb(data.id, opportunityData);
+        } else {
+            await createJobOpportunity(opportunityData);
+        }
     } catch (error) {
-        console.error('Error creating opportunity:', error);
-        throw new Error('Failed to create new opportunity in the database.');
+        console.error('Error creating/updating opportunity:', error);
+        throw new Error('Failed to save opportunity in the database.');
+    }
+}
+
+export async function deleteOpportunity(opportunityId: string): Promise<void> {
+    try {
+        await deleteJobOpportunityInDb(opportunityId);
+    } catch (error) {
+        console.error('Error deleting opportunity:', error);
+        throw new Error('Failed to delete opportunity in the database.');
     }
 }

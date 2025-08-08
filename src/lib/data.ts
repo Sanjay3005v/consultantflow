@@ -225,7 +225,7 @@ export const createConsultant = async (data: { name: string; email: string; pass
 
 export const getJobOpportunities = async (): Promise<JobOpportunity[]> => {
     const opportunitiesCol = collection(db, 'opportunities');
-    const opportunitySnapshot = await getDocs(opportunitiesCol);
+    const opportunitySnapshot = await getDocs(query(opportunitiesCol, where("isArchived", "!=", true)));
     const opportunities: JobOpportunity[] = opportunitySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
@@ -234,6 +234,7 @@ export const getJobOpportunities = async (): Promise<JobOpportunity[]> => {
             neededSkills: data.neededSkills,
             neededYOE: data.neededYOE,
             responsibilities: data.responsibilities,
+            isArchived: data.isArchived || false,
         }
     });
     return opportunities;
@@ -282,8 +283,22 @@ export const updateConsultantStatusInDb = async (consultantId: string, status: '
     return getConsultantById(consultantId);
 };
 
-export const createJobOpportunity = async (opportunityData: Omit<JobOpportunity, 'id'>): Promise<string> => {
+export const createJobOpportunity = async (opportunityData: Omit<JobOpportunity, 'id' | 'isArchived'>): Promise<string> => {
     const opportunitiesColRef = collection(db, 'opportunities');
-    const docRef = await addDoc(opportunitiesColRef, opportunityData);
+    const docRef = await addDoc(opportunitiesColRef, {
+        ...opportunityData,
+        isArchived: false
+    });
     return docRef.id;
+};
+
+export const updateJobOpportunityInDb = async (opportunityId: string, opportunityData: Partial<Omit<JobOpportunity, 'id' | 'isArchived'>>): Promise<void> => {
+    const opportunityDocRef = doc(db, 'opportunities', opportunityId);
+    await updateDoc(opportunityDocRef, opportunityData);
+};
+
+export const deleteJobOpportunityInDb = async (opportunityId: string): Promise<void> => {
+    const opportunityDocRef = doc(db, 'opportunities', opportunityId);
+    // Soft delete by archiving
+    await updateDoc(opportunityDocRef, { isArchived: true });
 };
