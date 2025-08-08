@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from './ui/button';
-import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star, FileText, Trash2, FolderKanban } from 'lucide-react';
+import { BarChart, Clock, ServerCrash, CalendarPlus, Download, Brain, ChevronDown, UserPlus, Edit, Briefcase, Target, MoreHorizontal, ThumbsUp, ThumbsDown, History, PieChartIcon, TrendingUp, Search, Sparkles, Loader2, Star, FileText, Trash2, FolderKanban, Users, UserCheck, UserX } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -482,37 +482,40 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
       return data;
   };
 
+  const onBenchCount = useMemo(() => consultants.filter(c => c.status === 'On Bench').length, [consultants]);
+  const onProjectCount = useMemo(() => consultants.filter(c => c.status === 'On Project').length, [consultants]);
+
   return (
     <div className="space-y-6">
        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Agent Queue</CardTitle>
-                <BarChart className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Total Consultants</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">145</div>
-                <p className="text-xs text-muted-foreground">Resumes pending analysis</p>
+                <div className="text-2xl font-bold">{consultants.length}</div>
+                <p className="text-xs text-muted-foreground">Total registered consultants</p>
             </CardContent>
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Average Latency</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">On Bench</CardTitle>
+                <UserX className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">32s</div>
-                <p className="text-xs text-muted-foreground">For skill vector generation</p>
+                <div className="text-2xl font-bold">{onBenchCount}</div>
+                <p className="text-xs text-muted-foreground">Consultants awaiting projects</p>
             </CardContent>
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
-                <ServerCrash className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">On Project</CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">1.2%</div>
-                <p className="text-xs text-muted-foreground">In the last 24 hours</p>
+                <div className="text-2xl font-bold">{onProjectCount}</div>
+                <p className="text-xs text-muted-foreground">Consultants currently allocated</p>
             </CardContent>
         </Card>
       </div>
@@ -1222,3 +1225,5 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
