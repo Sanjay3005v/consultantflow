@@ -198,7 +198,7 @@ export default function ConsultantDashboard({
                 {/* Left Column */}
                 <div className="space-y-8">
                     <WorkflowTracker workflow={consultant.workflow} />
-                    <AttendanceFeedback consultant={consultant} />
+                    <AttendanceFeedback consultant={consultant} onDownloadReport={downloadAttendanceReport} />
                     <RecommendedTraining skills={consultant.skills} />
                     <OpportunityCenter consultant={consultant} onAllocationComplete={handleAllocationComplete} />
                 </div>
@@ -215,10 +215,6 @@ export default function ConsultantDashboard({
                     />
                     <SkillsDisplay skills={consultant.skills} />
                     {evolutionResult && <ResumeEvolutionReport evolutionData={evolutionResult} />}
-                     <Button onClick={downloadAttendanceReport} variant="outline" className='w-full bg-card/60 backdrop-blur-xl'>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Attendance Report
-                    </Button>
                 </div>
             </div>
         </div>

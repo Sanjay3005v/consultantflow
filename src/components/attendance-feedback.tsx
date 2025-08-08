@@ -7,15 +7,16 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceFeedback } from '@/app/actions';
-import { Loader2, Sparkles, MessageSquareQuote } from 'lucide-react';
+import { Loader2, Sparkles, MessageSquareQuote, Download } from 'lucide-react';
 import type { Consultant } from '@/lib/types';
 import { format } from 'date-fns';
 
 type AttendanceFeedbackProps = {
   consultant: Consultant;
+  onDownloadReport: () => void;
 };
 
-export default function AttendanceFeedback({ consultant }: AttendanceFeedbackProps) {
+export default function AttendanceFeedback({ consultant, onDownloadReport }: AttendanceFeedbackProps) {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const { toast } = useToast();
@@ -78,19 +79,25 @@ export default function AttendanceFeedback({ consultant }: AttendanceFeedbackPro
             <p className="text-xs text-muted-foreground">(Present / Total Logged Days)</p>
         </div>
 
-        <Button onClick={handleGetFeedback} disabled={loading} className="w-full">
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating Feedback...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Get AI Feedback
-            </>
-          )}
-        </Button>
+        <div className="space-y-2">
+            <Button onClick={handleGetFeedback} disabled={loading} className="w-full">
+            {loading ? (
+                <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating Feedback...
+                </>
+            ) : (
+                <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Get AI Feedback
+                </>
+            )}
+            </Button>
+            <Button onClick={onDownloadReport} variant="outline" className='w-full bg-transparent'>
+                <Download className="mr-2 h-4 w-4" />
+                Download Attendance Report
+            </Button>
+        </div>
 
         {feedback && (
           <Alert className="bg-background/80">
