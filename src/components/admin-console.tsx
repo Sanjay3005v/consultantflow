@@ -833,6 +833,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                             onValueChange={(value: 'On Bench' | 'On Project') => {
                               handleStatusChange(consultant.id, value);
                             }}
+                            onOpenChange={(open) => {
+                                if (open) {
+                                    // This is a workaround to stop the row's onClick from firing
+                                    // when the select is opened.
+                                    const e = window.event as MouseEvent;
+                                    if (e) e.stopPropagation();
+                                }
+                            }}
                           >
                             <SelectTrigger className={cn("w-28", consultant.status === 'On Project' ? "bg-green-100 dark:bg-green-900" : "bg-yellow-100 dark:bg-yellow-900")}>
                                 <SelectValue />
@@ -876,7 +884,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                                 <Target className="h-4 w-4 text-muted-foreground" />
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}>
                                             <MoreHorizontal className="h-4 w-4" />
                                             <span className="sr-only">More actions</span>
                                         </Button>
@@ -1227,6 +1235,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
 
     
 
