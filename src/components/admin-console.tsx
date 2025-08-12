@@ -280,6 +280,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const onOpportunitySubmit = async (values: z.infer<typeof opportunitySchema>) => {
     try {
         await createOrUpdateOpportunity(values);
+        router.refresh();
         toast({
             title: values.id ? 'Opportunity Updated' : 'Opportunity Created',
             description: `Successfully saved the "${values.title}" role.`
@@ -322,6 +323,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const handleDeleteOpportunity = async (opportunityId: string) => {
     try {
         await deleteOpportunity(opportunityId);
+        router.refresh();
         toast({
             title: "Opportunity Deleted",
             description: "The opportunity has been archived.",
@@ -1225,5 +1227,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
 
     
