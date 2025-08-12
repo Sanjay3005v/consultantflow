@@ -201,18 +201,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   
  const handleSaveAttendance = async () => {
     if (selectedConsultant && selectedDates && selectedDates.length > 0) {
-      let updatedConsultant: Consultant | undefined;
       for (const date of selectedDates) {
-        updatedConsultant = await markAttendance(selectedConsultant.id, format(date, 'yyyy-MM-dd'), attendanceStatus);
+        await markAttendance(selectedConsultant.id, format(date, 'yyyy-MM-dd'), attendanceStatus);
       }
-      
-      if (updatedConsultant) {
-        setConsultants(prev => 
-            prev.map(c => c.id === updatedConsultant!.id ? updatedConsultant! : c)
-        );
-      }
-
-      router.refresh();
       
       toast({
         title: 'Attendance Marked',
@@ -220,6 +211,7 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
       });
       setIsAttendanceDialogOpen(false);
       setSelectedConsultant(null);
+      router.refresh();
     } else {
         toast({
             title: 'No Dates Selected',
@@ -259,15 +251,14 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const onConsultantCreateSubmit = async (values: z.infer<typeof createConsultantSchema>) => {
     try {
-        const newConsultant = await createNewConsultant(values);
-        setConsultants(prev => [...prev, newConsultant]);
-        router.refresh();
+        await createNewConsultant(values);
         toast({
             title: 'Consultant Created',
             description: `Successfully created ${values.name}.`,
         });
         setIsCreateConsultantDialogOpen(false);
         consultantForm.reset();
+        router.refresh();
     } catch (error) {
          toast({
             title: 'Creation Failed',
@@ -280,13 +271,13 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const onOpportunitySubmit = async (values: z.infer<typeof opportunitySchema>) => {
     try {
         await createOrUpdateOpportunity(values);
-        router.refresh();
         toast({
             title: values.id ? 'Opportunity Updated' : 'Opportunity Created',
             description: `Successfully saved the "${values.title}" role.`
         });
         setIsOpportunityFormOpen(false);
-        fetchOpportunities(); // Refresh the list
+        fetchOpportunities(); // This is ok to keep as it's fetching separate data
+        router.refresh();
     } catch (error) {
         toast({
             title: 'Save Failed',
@@ -323,12 +314,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   const handleDeleteOpportunity = async (opportunityId: string) => {
     try {
         await deleteOpportunity(opportunityId);
-        router.refresh();
         toast({
             title: "Opportunity Deleted",
             description: "The opportunity has been archived.",
         });
         fetchOpportunities();
+        router.refresh();
     } catch (error) {
          toast({
             title: 'Deletion Failed',
@@ -416,26 +407,20 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
 
   const handleSaveTotalDays = async () => {
     if (selectedConsultant) {
-        const updatedConsultant = await updateTotalWorkingDays(selectedConsultant.id, editableTotalDays);
-        if (updatedConsultant) {
-            setConsultants(prev => 
-                prev.map(c => c.id === updatedConsultant!.id ? updatedConsultant! : c)
-            );
-        }
-        router.refresh();
+        await updateTotalWorkingDays(selectedConsultant.id, editableTotalDays);
         toast({
             title: 'Total Days Updated',
             description: `Total working days for ${selectedConsultant.name} set to ${editableTotalDays}.`,
         });
         setIsEditDaysDialogOpen(false);
         setSelectedConsultant(null);
+        router.refresh();
     }
   };
 
   const handleAnalysisComplete = (updatedConsultant: Consultant) => {
-    setConsultants(prev => prev.map(c => c.id === updatedConsultant.id ? updatedConsultant : c));
-    router.refresh();
     setIsAnalyzeDialogOpen(false);
+    router.refresh();
   };
   
   const hasSkillAnalysis = (consultant: Consultant) => {
@@ -449,17 +434,12 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
   };
 
   const handleStatusChange = async (consultantId: string, status: 'On Bench' | 'On Project') => {
-    const updatedConsultant = await updateConsultantStatus(consultantId, status);
-    if (updatedConsultant) {
-        setConsultants(prev => 
-            prev.map(c => c.id === updatedConsultant!.id ? updatedConsultant! : c)
-        );
-    }
-    router.refresh();
+    await updateConsultantStatus(consultantId, status);
     toast({
         title: 'Status Updated',
         description: `Consultant status has been updated to ${status}.`
     });
+    router.refresh();
   };
 
   const getAttendanceDataForPie = (consultant: Consultant) => {
@@ -834,11 +814,9 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
                               handleStatusChange(consultant.id, value);
                             }}
                             onOpenChange={(open) => {
-                                if (open) {
-                                    // This is a workaround to stop the row's onClick from firing
-                                    // when the select is opened.
-                                    const e = window.event as MouseEvent;
-                                    if (e) e.stopPropagation();
+                                const e = window.event as MouseEvent;
+                                if (open && e) {
+                                    e.stopPropagation();
                                 }
                             }}
                           >
@@ -1235,6 +1213,8 @@ export default function AdminConsole({ consultants: initialConsultants }: AdminC
     </div>
   );
 }
+
+    
 
     
 
